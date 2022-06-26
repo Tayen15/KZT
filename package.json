@@ -1,0 +1,25 @@
+{
+  "name": "kz",
+  "version": "1.0.0",
+  "description": "A powerfull bot discord with many commands and fun.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ."
+  },
+  "keywords": [
+    "Discord",
+    "Bot",
+    "Music",
+    "Moderation",
+    "Information"
+  ],
+  "author": "Kyonezet",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^13.8.1",
+    "fs": "^0.0.1-security",
+    "moment": "^2.29.3",
+    "ms": "^2.1.3",
+    "os": "^0.1.2"
+  }
+}
