@@ -29,7 +29,7 @@ module.exports = {
             console.log(e);
             message.reply('An error occurred while executing the command!');
         } finally {
-            console.log(`User: ${message.author.tag} | command: ${commandName}`);
+            console.log(`User: ${message.author.tag} | command: ${commandName} | guild: ${message.guild.id}`);
         };
     },
 };
