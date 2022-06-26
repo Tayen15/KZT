@@ -1,7 +1,9 @@
 const { Client, Intents, Collection } = require('discord.js')
-const { token, prefix } = require('./config.json')
 
 const fs = require('fs')
+
+require('dotenv').config()
+var token = process.env.DISCORD_TOKEN;
 
 const client = new Client({
     intents: [
@@ -25,7 +27,6 @@ fs.readdirSync('./commands').forEach(dirs => {
         } else {
             console.log(`${file} - is missing a help.name, or content.`);
         }
-        
     };
 });
 
@@ -40,4 +41,4 @@ for (const file of events) {
     }
 }
 
-client.login(token)
+client.login(token).catch(() => { console.log('Invalid TOKEN!') });

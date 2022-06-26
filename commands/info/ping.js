@@ -6,6 +6,7 @@ module.exports = {
     aliases: [],
     category: "info",
     usage: "{prefix}ping",
+    cooldown: 5,
     execute(client, message) {
 
         const embed = {
