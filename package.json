@@ -16,6 +16,7 @@
   "author": "Kyonezet",
   "license": "ISC",
   "dependencies": {
+    "discord-player": "^5.2.2",
     "discord.js": "^13.8.1",
     "dotenv": "^16.0.1",
     "fs": "^0.0.1-security",
