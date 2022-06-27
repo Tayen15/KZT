@@ -22,7 +22,10 @@ module.exports = {
         let seconds = Math.floor(totalSeconds % 60);     
 
         const usedMemory = os.totalmem() -os.freemem(), totalMemory = os.totalmem();
-        const getPercentage = ((usedMemory/totalMemory) * 100).toFixed(2) + '%'
+        const getPercentage = ((usedMemory/totalMemory) * 100).toFixed(2) + '%';
+
+        const cpu = Math.round(process.cpuUsage().system);
+        const cpuPercent = Math.round(( cpu * max ) / 1000) / 10;
 
         const statsEmbed = new MessageEmbed()
             .setTitle(client.user.username)
@@ -33,7 +36,7 @@ module.exports = {
                 { name: 'Guilds', value: `${client.guilds.cache.size}`, inline: true },
                 { name: 'Users', value: `${client.users.cache.size}`, inline: true },
                 { name: 'Channels', value: `${client.channels.cache.size}`, inline: true },
-                { name: 'Process Uptime', value: `${ms(Math.round(process.uptime() * 1000))}`, inline: true },
+                { name: 'CPU Usage', value: `${cpuPercent}`, inline: true },
                 { name: 'OS Uptime', value: `${ms(os.uptime() ?? 0, { long: true })}`, inline: true },
                 { name: 'Uptime', value: `\`\`\`${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds\`\`\``, inline: false },
                 { name: 'Mem Usage', value: `\`\`\`${formatBytes(process.memoryUsage.rss())} | ${getPercentage}\`\`\``, inline: false },
