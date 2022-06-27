@@ -3,6 +3,7 @@ const { version, MessageEmbed } = require('discord.js')
 const ms = require('ms')
 const packageJson = require('../../package.json')
 const os = require('os')
+const cpuStat = require('cpu-stat')
 
 module.exports = {
     name: "stats",
@@ -24,10 +25,8 @@ module.exports = {
         const usedMemory = os.totalmem() -os.freemem(), totalMemory = os.totalmem();
         const getPercentage = ((usedMemory/totalMemory) * 100).toFixed(2) + '%';
 
-        const cpu = Math.round(process.cpuUsage().system);
-        const cpuPercent = Math.round(( cpu * max ) / 1000) / 10;
-
-        const statsEmbed = new MessageEmbed()
+        cpuStat.usagePercent((err, percent) => {
+            const statsEmbed = new MessageEmbed()
             .setTitle(client.user.username)
             .addFields(
                 { name: 'Version', value: `${packageJson.version}`, inline: true },
@@ -36,7 +35,7 @@ module.exports = {
                 { name: 'Guilds', value: `${client.guilds.cache.size}`, inline: true },
                 { name: 'Users', value: `${client.users.cache.size}`, inline: true },
                 { name: 'Channels', value: `${client.channels.cache.size}`, inline: true },
-                { name: 'CPU Usage', value: `${cpuPercent}`, inline: true },
+                { name: 'CPU Usage', value: `${percent.toFixed(2)}%`, inline: true },
                 { name: 'OS Uptime', value: `${ms(os.uptime() ?? 0, { long: true })}`, inline: true },
                 { name: 'Uptime', value: `\`\`\`${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds\`\`\``, inline: false },
                 { name: 'Mem Usage', value: `\`\`\`${formatBytes(process.memoryUsage.rss())} | ${getPercentage}\`\`\``, inline: false },
@@ -46,7 +45,8 @@ module.exports = {
                 text: `Latency ${Math.round(client.ws.ping)}ms`
             })
             .setTimestamp();
-        return message.channel.send({ embeds: [statsEmbed] });
+            return message.channel.send({ embeds: [statsEmbed] });
+        });
     },
 };
 
