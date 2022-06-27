@@ -33,8 +33,8 @@ module.exports = {
                 { name: 'Guilds', value: `${client.guilds.cache.size}`, inline: true },
                 { name: 'Users', value: `${client.users.cache.size}`, inline: true },
                 { name: 'Channels', value: `${client.channels.cache.size}`, inline: true },
-                { name: 'Process Uptime', value: `${ms(Math.round(process.uptime() * 1000))}`, inline: false },
-                { name: 'OS Uptime', value: `${ms(os.uptime() ?? 0, { long: true })}`, inline: false },
+                { name: 'Process Uptime', value: `${ms(Math.round(process.uptime() * 1000))}`, inline: true },
+                { name: 'OS Uptime', value: `${ms(os.uptime() ?? 0, { long: true })}`, inline: true },
                 { name: 'Uptime', value: `\`\`\`${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds\`\`\``, inline: false },
                 { name: 'Mem Usage', value: `\`\`\`${formatBytes(process.memoryUsage.rss())} | ${getPercentage}\`\`\``, inline: false },
             )
