@@ -33,10 +33,10 @@ module.exports = {
                 { name: 'Guilds', value: `${client.guilds.cache.size}`, inline: true },
                 { name: 'Users', value: `${client.users.cache.size}`, inline: true },
                 { name: 'Channels', value: `${client.channels.cache.size}`, inline: true },
+                { name: 'Process Uptime', value: `${ms(Math.round(process.uptime() * 1000))}`, inline: false },
+                { name: 'OS Uptime', value: `${ms(os.uptime() ?? 0, { long: true })}`, inline: false },
                 { name: 'Uptime', value: `\`\`\`${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds\`\`\``, inline: false },
                 { name: 'Mem Usage', value: `\`\`\`${formatBytes(process.memoryUsage.rss())} | ${getPercentage}\`\`\``, inline: false },
-                { name: 'Process Uptime', value: `${ms(Math.round(process.uptime() * 1000))}`, inline: false },
-                { name: 'OS Uptime', value: `${ms(os.uptime() ?? 0, { long: true })}`, inline: false }
             )
             .setThumbnail('https://cdn.discordapp.com/avatars/785398919923892264/fe7115806c2f0e77d9a999bfdf79d408.png')
             .setFooter({
