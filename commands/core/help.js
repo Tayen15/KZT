@@ -1,5 +1,5 @@
 const { MessageEmbed } = require('discord.js');
-const prefix = require('../../config');
+const { prefix } = require('../../config.json');
 
 module.exports = {
     name: "help",
@@ -42,8 +42,8 @@ module.exports = {
             })
             .addFields(
                 { name: 'Category', value: `${command.category}`, inline: true },
-                { name: 'Aliases', value: `${command.aliases.length < 1 ? 'None' : command.aliases.join(', ')}`, inline: false },
-                { name: 'Usage', value: `${command.utilisation.replace('{prefix}', prefix)}`, inline: false }
+                { name: 'Aliases', value: `${command.aliases.length < 1 ? 'None' : command.aliases.join(', ')}`, inline: true },
+                { name: 'Usage', value: `${prefix}${command.name}`, inline: false }
             )
             .setDescription(`${command.description}`)
             .setFooter({
