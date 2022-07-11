@@ -10,7 +10,7 @@ module.exports = {
         const args = message.content.slice(prefix.length).trim().split(/ +/g);
         const command = args.shift().toLowerCase();
 
-        const cmd = client.commands.get(command) || client.commands.find((x) => x.aliases && x.aliases(command));
+        const cmd = client.commands.get(command) || client.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(command));
 
         if (!cmd) return;
 
@@ -25,8 +25,8 @@ module.exports = {
             cmd.execute(client, message, args);
             client.CommandsRan++;
         }
-        catch (e) {
-            console.log(e);
+        catch (err) {
+            console.log(err);
             message.reply('An error occurred while executing the command!');
         } finally {
             console.log(`User: ${message.author.tag} | command: ${commandName} | guild: ${message.guild.id}`);

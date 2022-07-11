@@ -1,6 +1,7 @@
 const { Client, Intents, Collection } = require('discord.js')
-
 const fs = require('fs')
+
+const { Player } = require('discord-player')
 
 require('dotenv').config()
 var token = process.env.DISCORD_TOKEN;
@@ -14,7 +15,11 @@ const client = new Client({
     ],
 });
 
+const player = new Player(client)
+
+client.player = player;
 client.commands = new Collection();
+
 
 fs.readdirSync('./commands').forEach(dirs => {
     const commands = fs.readdirSync(`./commands/${dirs}`).filter((files) => files.endsWith('.js'));
@@ -39,6 +44,7 @@ for (const file of events) {
     } else {
         client.on(event.name, (args) => event.execute(args, client));
     }
-}
+};
+
 
 client.login(token).catch(() => { console.log('Invalid TOKEN!') });
