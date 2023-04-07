@@ -7,8 +7,8 @@ const express = require('express');
 
 const app = express();
 
-app.get('/', (req, res) => {
-    res.send('Bot Is Going online and Ready to help You!')
+app.get('/views/home.html', (req, res) => {
+    
 });
 
 app.listen(300, () => {
