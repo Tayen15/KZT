@@ -1,7 +1,10 @@
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, SlashCommandBuilder } = require('discord.js');
 const { prefix } = require('../../config.json');
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName("help")
+        .setDescription("Displays all command in this bot."),
     name: "help",
     description: "Displays all command in this bot.",
     aliases: [],

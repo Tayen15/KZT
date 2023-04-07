@@ -1,6 +1,10 @@
 const { QueryType } = require('discord-player');
+const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName("play")
+        .setDescription("Play a song or playlist"),
     name: "play",
     description: "Play a song or playlist",
     aliases: ['p'],

@@ -1,6 +1,9 @@
-const { MessageEmbed } = require('discord.js')
+const { MessageEmbed, SlashCommandBuilder } = require('discord.js')
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName("reload")
+        .setDescription("Reloads a specific file or command"),
     name: 'reload',
     description: 'Reloads a specific file or command',
     aliases: ['r'],

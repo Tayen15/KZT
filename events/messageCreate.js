@@ -1,7 +1,8 @@
-const { prefix, ownerID } = require('../config')
+const { prefix, ownerID } = require('../config');
+const { Events } = require('discord.js');
 
 module.exports = {
-    name: "messageCreate",
+    name: Events.MessageCreate,
     once: false,
     execute(message, client) {
 

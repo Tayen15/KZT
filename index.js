@@ -1,17 +1,30 @@
-const { Client, Intents, Collection } = require('discord.js')
+const { Client, GatewayIntentBits, Collection, Events } = require('discord.js')
 const fs = require('fs')
 
 const { Player } = require('discord-player')
 
+const express = require('express');
+
+const app = express();
+
+app.get('/', (req, res) => {
+    res.send('Bot Is Going online and Ready to help You!')
+});
+
+app.listen(300, () => {
+    console.log('server started')
+});
+
 require('dotenv').config()
-var token = process.env.DISCORD_TOKEN;
+const token = process.env.DISCORD_TOKEN;
 
 const client = new Client({
     intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_VOICE_STATES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildVoiceStates
     ],
 });
 
@@ -26,11 +39,15 @@ fs.readdirSync('./commands').forEach(dirs => {
 
     for (const file of commands) {
         const command = require(`./commands/${dirs}/${file}`);
-        client.commands.set(command.name, command);
-        if (command.name) {
-            console.log(`Command: ${command.name} - ${command.category} Category Load.`);
+        if ('data' in command && 'execute' in command) {
+            client.commands.set(command.data.name, command);
+            if (command.data.name) {
+                console.log(`Command: ${command.data.name} - ${command.category} Category Load.`);
+            } else {
+                console.log(`${file} - is missing a help.name, or content.`);
+            }
         } else {
-            console.log(`${file} - is missing a help.name, or content.`);
+            console.log(`[WARNING] The command at ${dirs} is missing a required "data" or "execute" property.`);
         }
     };
 });
@@ -45,6 +62,5 @@ for (const file of events) {
         client.on(event.name, (args) => event.execute(args, client));
     }
 };
-
 
 client.login(token).catch(() => { console.log('Invalid TOKEN!') });

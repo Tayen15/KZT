@@ -1,11 +1,14 @@
 const moment = require('moment')
-const { version, MessageEmbed } = require('discord.js')
+const { version, EmbedBuilder, SlashCommandBuilder } = require('discord.js')
 const ms = require('ms')
 const packageJson = require('../../package.json')
 const os = require('os')
 const cpuStat = require('cpu-stat')
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName("stats")
+        .setDescription("Display statistic the bot."),
     name: "stats",
     description: "Displays statistic the bot",
     aliases: [],
@@ -26,7 +29,7 @@ module.exports = {
         const getPercentage = ((usedMemory/totalMemory) * 100).toFixed(2) + '%';
 
         cpuStat.usagePercent((err, percent) => {
-            const statsEmbed = new MessageEmbed()
+            const statsEmbed = new EmbedBuilder()
             .setTitle(client.user.username)
             .addFields(
                 { name: 'Version', value: `${packageJson.version}`, inline: true },
