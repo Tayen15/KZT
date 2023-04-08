@@ -29,7 +29,11 @@ module.exports = {
                         delete require.cache[require.resolve(`../dev/${commandName}.js`)];
                         directory = "dev";
                     } catch {
-                        return message.channel.send('The command was not found!');
+                        try {
+                            delete require.cache[require.resolve(`../../events/${commandName}.js`)];
+                        } catch {
+                            return message.channel.send('The command was not found!');
+                        }
                     }
                 }
             }
