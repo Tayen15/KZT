@@ -16,7 +16,7 @@ app.listen(300, () => {
 });
 
 require('dotenv').config()
-const token = process.env.DISCORD_TOKEN;
+const token = process.env.token;
 
 const client = new Client({
     intents: [
