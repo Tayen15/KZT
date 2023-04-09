@@ -5,7 +5,7 @@ module.exports = {
     name: Events.ClientReady,
     once: true,
     execute(client) {
-        console.log('%s is online: %s servers, and %s members', client.user.username, client.guilds.cache.size, message.guild.memberCount);
+        console.log('%s is online: %s servers, and %s members', client.user.username, client.guilds.cache.size, client.guild.memberCount);
 
         const statusType = ActivityType.Listening;
         client.user.setPresence({
