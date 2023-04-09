@@ -7,12 +7,12 @@ const express = require('express');
 
 const app = express();
 
-app.get('/views/home.html', (req, res) => {
-    
+app.get('/', (req, res) => {
+    res.send('Bots are online and can perform tasks!')
 });
 
 app.listen(300, () => {
-    console.log('server started')
+    console.log('WEB started')
 });
 
 require('dotenv').config()

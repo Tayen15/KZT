@@ -2,7 +2,8 @@ const { REST, Routes } = require('discord.js');
 const { clientID, guildID } = require('./config.json');
 const fs = require('fs');
 
-const token = require('./index.js');
+require('dotenv').config()
+const token = process.env.token;
 
 const commands = [];
 fs.readdirSync('./commands').forEach(dirs => {
