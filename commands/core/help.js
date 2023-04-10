@@ -1,4 +1,4 @@
-const { MessageEmbed, SlashCommandBuilder } = require('discord.js');
+const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const { prefix } = require('../../config.json');
 
 module.exports = {
@@ -18,7 +18,7 @@ module.exports = {
             const mod = message.client.commands.filter(x => x.category == 'moderation').map((x) => '`' + x.name + '`').join(', ');
             const musik = message.client.commands.filter(x => x.category == 'music').map((x) => '`' + x.name + '`').join(', ');
 
-            const helpEmbed = new MessageEmbed()
+            const helpEmbed = new EmbedBuilder()
             .setAuthor({
                 name: `${client.user.username}`,
                 iconURL: 'https://cdn.discordapp.com/avatars/785398919923892264/fe7115806c2f0e77d9a999bfdf79d408.png'
