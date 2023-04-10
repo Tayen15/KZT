@@ -39,7 +39,7 @@ module.exports = {
                 `Cannot find command: **${args}**`
             );
 
-            const moreHelp = new MessageEmbed()
+            const moreHelp = new EmbedBuilder()
             .setAuthor({
                 name: `Command ${command.name}`
             })
