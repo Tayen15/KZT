@@ -23,7 +23,7 @@ const rest = new REST({ version: '10' }).setToken(token);
 
 		// Menggunakan metode put untuk memperbarui daftar perintah di guild yang ditentukan
 		const data = await rest.put(
-			Routes.applicationGuildCommands(clientID, guildID),
+			Routes.applicationCommands(clientID),
 			{ body: commands },
 		);
 

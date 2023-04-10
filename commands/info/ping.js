@@ -10,12 +10,12 @@ module.exports = {
     category: "info",
     usage: "{prefix}ping",
     cooldown: 5,
-    async execute(client, message, interaction) {
+    async execute(interaction) {
 
         const embed = {
-            description: `:stopwatch: ${Date.now() - message.createdTimestamp}ms\n:satellite: ${Math.round(client.ws.ping)}ms`,
+            description: `:stopwatch: ${Date.now() - interaction.createdTimestamp}ms\n:satellite: ${Math.round(interaction.client.ws.ping)}ms`,
             timestamp: new Date(),
         };
-        message.channel.send({ embeds: [embed]} ); 
+        await interaction.reply({ embeds: [embed] });
     },
 };

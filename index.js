@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, Collection, Events } = require('discord.js')
 const fs = require('fs')
 
-const { Player } = require('discord-player')
+//const { Player } = require('discord-player')
 
 const express = require('express');
 
@@ -28,12 +28,11 @@ const client = new Client({
     ],
 });
 
-const player = new Player(client)
+//const player = new Player(client)
 
-client.player = player;
+// client.player = player;
+
 client.commands = new Collection();
-
-
 fs.readdirSync('./commands').forEach(dirs => {
     const commands = fs.readdirSync(`./commands/${dirs}`).filter((files) => files.endsWith('.js'));
 
