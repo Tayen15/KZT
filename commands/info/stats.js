@@ -45,7 +45,7 @@ module.exports = {
             )
             .setThumbnail('https://cdn.discordapp.com/avatars/785398919923892264/fe7115806c2f0e77d9a999bfdf79d408.png')
             .setFooter({
-                text: `Latency ${Math.round(interaction.ws.ping)}ms`
+                text: `Latency ${Math.round(interaction.client.ws.ping)}ms`
             })
             .setTimestamp();
             interaction.reply({ embeds: [statsEmbed] });
