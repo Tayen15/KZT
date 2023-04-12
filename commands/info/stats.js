@@ -48,8 +48,8 @@ module.exports = {
                 text: `Latency ${Math.round(interaction.ws.ping)}ms`
             })
             .setTimestamp();
+            interaction.reply({ embeds: [statsEmbed] });
         });
-        await interaction.reply({ embeds: [statsEmbed] });
     },
 };
 
