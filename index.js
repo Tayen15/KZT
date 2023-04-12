@@ -1,3 +1,5 @@
+require('./deploy-commands.js');
+
 const { Client, GatewayIntentBits, Collection, Events } = require('discord.js')
 const fs = require('fs')
 

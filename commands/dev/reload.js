@@ -1,48 +1,45 @@
-const { MessageEmbed, SlashCommandBuilder } = require('discord.js')
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("reload")
-        .setDescription("Reloads a specific file or command"),
+        .setName('reload')
+        .setDescription('Reloads a specific file or command')
+        .addStringOption(option => 
+            option.setName('command')
+                .setDescription('The command you want to reload')
+                .setRequired(true)
+        ),
     name: 'reload',
     description: 'Reloads a specific file or command',
-    aliases: ['r'],
+    aliases:['r'],
     category: 'dev',
-    execute(client, message, args) {
-        if(!args[0]) return message.channel.send('Please include the command you want to reload').then(message => message.delete({ timeout:5000 }));
-        let commandName = args[0].toLowerCase();
-
+    async execute(interaction) {
+        const commandName = interaction.options.getString('command').toLowerCase();
+        const directories = ['info', 'music', 'core', 'dev'];
         let directory;
-        try {
-            delete require.cache[require.resolve(`../info/${commandName}.js`)];
-            directory = "info";
-        } catch {
+
+        for (const dir of directories) {
             try {
-                delete require.cache[require.resolve(`../music/${commandName}.js`)];
-                directory = "music";
+                delete require.cache[require.resolve(`../${dir}/${commandName}.js`)];
+                directory = dir;
+                break;
             } catch {
-                try {
-                    delete require.cache[require.resolve(`../core/${commandName}.js`)];
-                    directory = "core";
-                } catch {
-                    try {
-                        delete require.cache[require.resolve(`../dev/${commandName}.js`)];
-                        directory = "dev";
-                    } catch {
-                        try {
-                            delete require.cache[require.resolve(`../../events/${commandName}.js`)];
-                        } catch {
-                            return message.channel.send('The command was not found!');
-                        }
-                    }
-                }
+                continue;
             }
         }
 
-        client.commands.delete(commandName);
+        if (!directory) {
+            return interaction.reply('The command was not found!');
+        }
+
         const pull = require(`../${directory}/${commandName}.js`);
-        client.commands.set(commandName, pull);
-        message.channel.send(`Command \**${args[0].toUpperCase()}\** has been reloaded.`);
-        console.log(`Command: ${args[0].toUpperCase()} Reload By: ${message.author.id}`);
-    }
-}
+        interaction.client.commands.set(commandName, pull);
+        await interaction.reply(`Command **${commandName.toUpperCase()}** has been reloaded.`);
+
+        setTimeout(() => {
+            interaction.deleteReply();
+        }, 7000);
+        
+        console.log(`Command: ${commandName.toUpperCase()} Reload By: ${interaction.user.tag}`);
+    },
+};

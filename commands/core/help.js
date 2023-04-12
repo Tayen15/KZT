@@ -4,22 +4,24 @@ const { prefix } = require('../../config.json');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("help")
-        .setDescription("Displays all command in this bot and Information about command."),
+        .setDescription("Displays all command in this bot and Information about command.")
+        .addStringOption(option => option.setName('command')
+        .setDescription('The name of the command to get more information about.')),
     name: "help",
     description: "Displays all command in this bot.",
     aliases: [],
     usage: "{prefix}help",
     category: "core",
     cooldown: 5,
-    async execute(interaction) {
+    async execute(interaction, args) {
         const { options, user } = interaction;
-        const args = options.getString('args');
+        const commandArg  = options.getString('command');
         const { client } = interaction;
         
-        if (!args) {
+        if (!commandArg) {
             const infoCommands = client.commands.filter(x => x.category === 'info').map((x) => `\`${x.name}\``).join(', ');
             const musicCommands = client.commands.filter(x => x.category === 'music').map((x) => `\`${x.name}\``).join(', ');
-
+    
             await interaction.reply({
                 content: 'Here are the available commands:',
                 embeds: [
@@ -39,10 +41,11 @@ module.exports = {
                 ]
             });
         } else {
-            const command = client.commands.get(args.toLowerCase()) || client.commands.find(x => x.aliases && x.aliases.includes(args.toLowerCase()));
-
-            if (!command) return await interaction.reply(`Cannot find command: **${args}**`);
-
+            const commandName = commandArg.toLowerCase();
+            const command = client.commands.get(commandName) || client.commands.find(x => x.aliases && x.aliases.includes(commandName));
+    
+            if (!command) return await interaction.reply(`Cannot find command: **${commandArg}**`);
+    
             await interaction.reply({
                 content: '',
                 embeds: [
@@ -64,4 +67,4 @@ module.exports = {
             });
         }
     },
-};
+};    

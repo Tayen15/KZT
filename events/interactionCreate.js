@@ -12,8 +12,10 @@ module.exports = {
 			return;
 		}
 
+		const args = interaction.options ? interaction.options._hoistedOptions.map(option => option.value) : [];
+
 		try {
-			await command.execute(interaction);
+			await command.execute(interaction, args);
 		} catch (error) {
 			console.error(`Error executing ${interaction.commandName}`);
 			console.error(error);

@@ -10,7 +10,7 @@ module.exports = {
     category: "info",
     usage: "{prefix}ping",
     cooldown: 5,
-    async execute(interaction) {
+    async execute(interaction, args) {
 
         const embed = {
             description: `:stopwatch: ${Date.now() - interaction.createdTimestamp}ms\n:satellite: ${Math.round(interaction.client.ws.ping)}ms`,
