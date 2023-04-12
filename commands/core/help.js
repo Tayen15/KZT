@@ -4,55 +4,64 @@ const { prefix } = require('../../config.json');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("help")
-        .setDescription("Displays all command in this bot."),
+        .setDescription("Displays all command in this bot and Information about command."),
     name: "help",
     description: "Displays all command in this bot.",
     aliases: [],
     usage: "{prefix}help",
     category: "core",
     cooldown: 5,
-    execute(client, message, args) {
+    async execute(interaction) {
+        const { options, user } = interaction;
+        const args = options.getString('args');
+        const { client } = interaction;
         
-        if (!args[0]) {
-            const infor = message.client.commands.filter(x => x.category == 'info').map((x) => '`' + x.name + '`').join(', ');
-            const mod = message.client.commands.filter(x => x.category == 'moderation').map((x) => '`' + x.name + '`').join(', ');
-            const musik = message.client.commands.filter(x => x.category == 'music').map((x) => '`' + x.name + '`').join(', ');
+        if (!args) {
+            const infoCommands = client.commands.filter(x => x.category === 'info').map((x) => `\`${x.name}\``).join(', ');
+            const musicCommands = client.commands.filter(x => x.category === 'music').map((x) => `\`${x.name}\``).join(', ');
 
-            const helpEmbed = new EmbedBuilder()
-            .setAuthor({
-                name: `${client.user.username}`,
-                iconURL: 'https://cdn.discordapp.com/avatars/785398919923892264/fe7115806c2f0e77d9a999bfdf79d408.png'
-            })
-            .addFields(
-                { name: 'Info', value: `${infor}`, inline: true },
-                { name: 'Music', value: `${musik}`, inline: false }
-
-            )
-            .setFooter({
-                text: `For more information an a command: ${prefix}help <command>`
-            })
-            message.channel.send({ embeds: [helpEmbed] })
+            await interaction.reply({
+                content: 'Here are the available commands:',
+                embeds: [
+                    {
+                        author: {
+                            name: `${client.user.username}`,
+                            iconURL: 'https://cdn.discordapp.com/avatars/785398919923892264/fe7115806c2f0e77d9a999bfdf79d408.png'
+                        },
+                        fields: [
+                            { name: 'Info', value: infoCommands, inline: true },
+                            { name: 'Music', value: musicCommands, inline: false }
+                        ],
+                        footer: {
+                            text: `For more information on a command: /help <command>`
+                        }
+                    }
+                ]
+            });
         } else {
-            const command = message.client.commands.get(args.join(" ").toLowerCase()) || message.client.commands.find(x => x.aliases && x.aliases.includes(args.join(" ").toLowerCase()));
+            const command = client.commands.get(args.toLowerCase()) || client.commands.find(x => x.aliases && x.aliases.includes(args.toLowerCase()));
 
-            if (!command) return message.channel.send(
-                `Cannot find command: **${args}**`
-            );
+            if (!command) return await interaction.reply(`Cannot find command: **${args}**`);
 
-            const moreHelp = new EmbedBuilder()
-            .setAuthor({
-                name: `Command ${command.name}`
-            })
-            .addFields(
-                { name: 'Category', value: `${command.category}`, inline: true },
-                { name: 'Aliases', value: `${command.aliases.length < 1 ? 'None' : command.aliases.join(', ')}`, inline: true },
-                { name: 'Usage', value: `${prefix}${command.name}`, inline: false }
-            )
-            .setDescription(`${command.description}`)
-            .setFooter({
-                text: `${message.author.username}`
-            })
-            message.channel.send({ embeds: [moreHelp] });
+            await interaction.reply({
+                content: '',
+                embeds: [
+                    {
+                        author: {
+                            name: `Command ${command.name}`
+                        },
+                        fields: [
+                            { name: 'Category', value: command.category, inline: true },
+                            { name: 'Aliases', value: command.aliases.length < 1 ? 'None' : command.aliases.join(', '), inline: true },
+                            { name: 'Usage', value: `/${command.name}`, inline: false }
+                        ],
+                        description: command.description,
+                        footer: {
+                            text: `${user.username}`
+                        }
+                    }
+                ]
+            });
         }
     },
 };
