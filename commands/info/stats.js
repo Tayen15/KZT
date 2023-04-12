@@ -15,9 +15,9 @@ module.exports = {
     category: "info",
     usage: "{prefix}stats",
     cooldown: 5,
-    execute(client, message) {
+    async execute(interaction) {
 
-        let totalSeconds = (client.uptime / 1000);
+        let totalSeconds = (interaction.uptime / 1000);
         let days = Math.floor(totalSeconds / 86400);
         totalSeconds %= 86400;
         let hours = Math.floor(totalSeconds / 3600);
@@ -30,14 +30,14 @@ module.exports = {
 
         cpuStat.usagePercent((err, percent) => {
             const statsEmbed = new EmbedBuilder()
-            .setTitle(client.user.username)
+            .setTitle(interaction.user.username)
             .addFields(
                 { name: 'Version', value: `${packageJson.version}`, inline: true },
                 { name: 'Discord.js', value: `${version}`, inline: true },
                 { name: 'Creator', value: `${packageJson.author}`, inline: true },
-                { name: 'Guilds', value: `${client.guilds.cache.size}`, inline: true },
-                { name: 'Users', value: `${client.users.cache.size}`, inline: true },
-                { name: 'Channels', value: `${client.channels.cache.size}`, inline: true },
+                { name: 'Guilds', value: `${interaction.guilds.cache.size}`, inline: true },
+                { name: 'Users', value: `${interaction.users.cache.size}`, inline: true },
+                { name: 'Channels', value: `${interaction.channels.cache.size}`, inline: true },
                 { name: 'CPU Usage', value: `${percent.toFixed(2)}%`, inline: true },
                 { name: 'OS Uptime', value: `${ms(os.uptime() ?? 0, { long: true })}`, inline: true },
                 { name: 'Uptime', value: `\`\`\`${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds\`\`\``, inline: false },
@@ -45,11 +45,11 @@ module.exports = {
             )
             .setThumbnail('https://cdn.discordapp.com/avatars/785398919923892264/fe7115806c2f0e77d9a999bfdf79d408.png')
             .setFooter({
-                text: `Latency ${Math.round(client.ws.ping)}ms`
+                text: `Latency ${Math.round(interaction.ws.ping)}ms`
             })
             .setTimestamp();
-            return message.channel.send({ embeds: [statsEmbed] });
         });
+        await interaction.reply({ embeds: [statsEmbed] });
     },
 };
 
