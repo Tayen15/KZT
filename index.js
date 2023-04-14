@@ -1,9 +1,15 @@
 require('./deploy-commands.js');
 
-const { Client, GatewayIntentBits, Collection, Events } = require('discord.js')
-const fs = require('fs')
+const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
+const fs = require('fs');
+const adhan = require('namaz');
+const moment = require('moment-timezone');
 
-//const { Player } = require('discord-player')
+// const { Player } = require('discord-player');
+// const player = new Player(client, {
+//     leaveOnEmpty: true,
+//     leaveOnEmptyCooldown: 30000
+// });
 
 const express = require('express');
 
