@@ -30,18 +30,21 @@ module.exports = {
                         { name: 'Met Puasa Yagesya!', type: statusType }
                     ]
                 });
+                console.log(`${fajrTime} | Telah tiba.`);
             } else if (currentTime === maghribTime) {
                 client.user.setPresence({
                     activities: [
                         { name: 'Met Buka Puasa Yagesya!', type: statusType }
                     ]
                 });
+                console.log(`${maghribTime} | Telah tiba.`);
             } else {
                 client.user.setPresence({
                     activities: [
                         { name: 'Met Puasa Yagesya!', type: statusType }
                     ]
                 });
+                console.log(`Puasa Telah tiba.`);
             }
         }
 
