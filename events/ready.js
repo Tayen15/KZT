@@ -19,7 +19,7 @@ module.exports = {
     execute(client) {
         console.log('%s is online: %s servers, and %s members', client.user.username, client.guilds.cache.size, client.users.cache.size);
 
-        const statusType = ActivityType.Listening;
+        const statusType = ActivityType.Watching;
 
         // Fungsi untuk mengubah presence berdasarkan waktu shalat
         function updatePresence() {
@@ -44,7 +44,6 @@ module.exports = {
                         { name: 'Met Puasa Yagesya!', type: statusType }
                     ]
                 });
-                console.log(`Puasa Telah tiba.`);
             }
         }
 
@@ -52,6 +51,6 @@ module.exports = {
 
         setInterval(() => {
             updatePresence();
-        }, 60000);
+        }, 1000);
     }
 };
