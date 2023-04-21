@@ -25,5 +25,7 @@ module.exports = {
                { name: 'Mohon Maaf Lahir Dan Batin | Idul Fitri 1444 H', type: statusType }
             ]
         });
+
+        const channelIDs = ['868376924764925957', '889302084095197199'];
     }
 };
