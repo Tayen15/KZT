@@ -14,14 +14,7 @@ module.exports = {
           option.setName('message')
           .setDescription('The message to send')
           .setRequired(true)
-     )
-     .setDefaultMemberPermissions([
-          {
-               id: '746598982049988619',
-               type: 'USER',
-               permission: true
-          }
-     ]),
+     ),
      name: 'announce',
      description: 'Send multiple messages to channel ID',
      aliases: ['an'],
@@ -33,7 +26,7 @@ module.exports = {
      channelIds.forEach(async channelId => {
           const channel = await interaction.client.channels.fetch(channelId);
           if (channel instanceof TextChannel) {
-          await channel.send(message);
+               await channel.send(message);
           } else {
           console.log(`Channel with ID ${channelId} is not a text channel.`);
           }
