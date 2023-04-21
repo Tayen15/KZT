@@ -19,38 +19,11 @@ module.exports = {
     execute(client) {
         console.log('%s is online: %s servers, and %s members', client.user.username, client.guilds.cache.size, client.users.cache.size);
 
-        const statusType = ActivityType.Watching;
-
-        // Fungsi untuk mengubah presence berdasarkan waktu shalat
-        function updatePresence() {
-            const currentTime = moment().tz('Asia/Jakarta').format('h:mm:ss A');
-            if (currentTime === fajrTime) {
-                client.user.setPresence({
-                    activities: [
-                        { name: 'Met Puasa Yagesya!', type: statusType }
-                    ]
-                });
-                console.log(`${fajrTime} | Telah tiba.`);
-            } else if (currentTime === maghribTime) {
-                client.user.setPresence({
-                    activities: [
-                        { name: 'Met Buka Puasa Yagesya!', type: statusType }
-                    ]
-                });
-                console.log(`${maghribTime} | Telah tiba.`);
-            } else {
-                client.user.setPresence({
-                    activities: [
-                        { name: 'Met Puasa Yagesya!', type: statusType }
-                    ]
-                });
-            }
-        }
-
-        updatePresence();
-
-        setInterval(() => {
-            updatePresence();
-        }, 1000);
+        const statusType = ActivityType.Listening;
+        client.user.setPresence({
+            activities: [
+               { name: 'Mohon Maaf Lahir Dan Batin | Idul Fitri 1444 H', type: statusType }
+            ]
+        });
     }
 };
