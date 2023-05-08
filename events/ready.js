@@ -22,7 +22,7 @@ module.exports = {
         const statusType = ActivityType.Listening;
         client.user.setPresence({
             activities: [
-               { name: 'Mohon Maaf Lahir Dan Batin | Idul Fitri 1444 H', type: statusType }
+               { name: 'PANAS ANJING', type: statusType }
             ]
         });
     }
