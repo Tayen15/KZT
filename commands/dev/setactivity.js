@@ -9,12 +9,13 @@ module.exports = {
                option.setName('type')
                     .setDescription('The type of activity')
                     .setRequired(true)
-                    .addChoice('Playing', 'PLAYING')
-                    .addChoice('Streaming', 'STREAMING')
-                    .addChoice('Listening', 'LISTENING')
-                    .addChoice('Watching', 'WATCHING')
-                    .addChoice('Competing', 'COMPETING')
-          )
+                    .addChoice(
+                         { name: 'Playing', value: 'PLAYING' },
+                         { name: 'Streaming', value: 'STREAMING'},
+                         { name: 'Listening', value: 'LISTENING'},
+                         { name: 'Watching', value: 'WATCHING'},
+                         { name: 'Competing', value: 'COMPETING'},
+                    ))
           .addStringOption(option =>
                option.setName('name')
                    .setDescription('The name of the activity')
