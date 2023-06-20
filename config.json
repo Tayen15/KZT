@@ -2,5 +2,7 @@
     "prefix": "rpl ",
     "clientID": "1006542146628751400",
     "guildID": "990148600422084638",
-    "ownerID": "746598982049988619"
+    "ownerID": "746598982049988619",
+    "SERVER_IP": "playpplgcraft.aternos.me",
+    "SERVER_PORT": 51282
 }
