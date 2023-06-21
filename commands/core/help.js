@@ -1,5 +1,5 @@
 const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
-const { prefix } = require('../../config.json');
+const { prefix, iconLink } = require('../../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,7 +28,7 @@ module.exports = {
                     {
                         author: {
                             name: `${client.user.username}`,
-                            iconURL: 'https://cdn.discordapp.com/avatars/785398919923892264/fe7115806c2f0e77d9a999bfdf79d408.png'
+                            iconURL: `${iconLink}`
                         },
                         fields: [
                             { name: 'Info', value: infoCommands, inline: true },

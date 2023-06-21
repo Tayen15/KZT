@@ -43,7 +43,7 @@ module.exports = {
                 { name: 'Uptime', value: `\`\`\`${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds\`\`\``, inline: false },
                 { name: 'Mem Usage', value: `\`\`\`${formatBytes(process.memoryUsage.rss())} | ${getPercentage}\`\`\``, inline: false },
             )
-            .setThumbnail('https://cdn.discordapp.com/avatars/785398919923892264/fe7115806c2f0e77d9a999bfdf79d408.png')
+            .setThumbnail('https://cdn.discordapp.com/attachments/990148601101570090/1121123222239334530/minecraft1Point-removebg-preview.png')
             .setFooter({
                 text: `Latency ${Math.round(interaction.client.ws.ping)}ms`
             })

@@ -1,14 +1,15 @@
 const { Events, ActivityType } = require('discord.js');
 const moment = require('moment-timezone');
 const axios = require('axios');
+const config = require('../config.json');
 
-const serverStatusURL = 'https://api.mcstatus.io/v2/status/java/playpplgcraft.aternos.me:51282';
+const serverStatusURL = `https://api.mcstatus.io/v2/status/java/${config.SERVER_IP}:${config.SERVER_PORT}`;
 
 async function getServerStatus() {
     try {
         const response = await axios.get(serverStatusURL);
         const data = response.data;
-        return data.online;
+        return data.players.online;
     } catch (error) {
         console.error('Failed to fetch server status:', error);
         return false;
@@ -19,27 +20,29 @@ module.exports = {
     name: Events.ClientReady,
     once: true,
     async execute(client) {
+
         console.log('%s is online: %s servers, and %s members', client.user.username, client.guilds.cache.size, client.users.cache.size);
 
-        const statusType = ActivityType.Listening;
+        const statusType = ActivityType.Watching;
+    
         async function updatePresence() {
-        const serverStatus = await getServerStatus();
-        const currentTime = moment().tz('Asia/Jakarta').format('h:mm:ss A');
-        let presenceActivity;
+            const serverStatus = await getServerStatus();
+            const currentTime = moment().tz('Asia/Jakarta').format('h:mm:ss A');
+            let presenceActivity;
 
-        if (serverStatus) {
-            presenceActivity = `Online Players: ${serverStatus}`;
-        } else {
-            presenceActivity = 'Wandek Selalu Dihati';
+            if (serverStatus) {
+                presenceActivity = `Online Players: ${serverStatus}`;
+            } else {
+                presenceActivity = 'Wandek Jaya Jaya';
+            }
+            
+            client.user.setPresence({
+                activities: [{ name: presenceActivity, type: statusType }]
+            });
+
+            console.log(`Presence updated at ${currentTime}: ${presenceActivity}`);
         }
 
-        client.user.setPresence({
-            activities: [{ name: presenceActivity, type: statusType }]
-        });
-
-        console.log(`Presence updated at ${currentTime}: ${presenceActivity}`);
-        }
-
-        setInterval(updatePresence, 60000);
+        setInterval(updatePresence, 30000);
     }
 };
