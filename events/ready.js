@@ -16,6 +16,17 @@ async function getServerStatus() {
     }
 }
 
+async function getPlayersMax() {
+    try {
+        const response = await axios.get(serverStatusURL);
+        const data = response.data;
+        return data.players.maxplayers;
+    } catch (error) {
+        console.error('Failed to fetch server status:', error);
+        return false;
+    }
+}
+
 module.exports = {
     name: Events.ClientReady,
     once: true,
@@ -31,7 +42,7 @@ module.exports = {
             let presenceActivity;
 
             if (serverStatus) {
-                presenceActivity = `Online Players: ${serverStatus}`;
+                presenceActivity = `Online Players: ${serverStatus}/${getPlayersMax}`;
             } else {
                 presenceActivity = 'Wandek Jaya Jaya';
             }
