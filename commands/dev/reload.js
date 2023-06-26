@@ -15,7 +15,7 @@ module.exports = {
     category: 'dev',
     async execute(interaction) {
         const commandName = interaction.options.getString('command').toLowerCase();
-        const directories = ['info', 'music', 'core', 'dev'];
+        const directories = ['info', 'music', 'core', 'dev', 'minecraft'];
         let directory;
 
         for (const dir of directories) {
