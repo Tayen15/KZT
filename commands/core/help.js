@@ -25,7 +25,7 @@ module.exports = {
             // Iterate through the files in the commands directory
             const commandFiles = readdirSync('./commands');
             for (const file of commandFiles) {
-                const command = require(`../../commands/${file}`);
+                const command = require(`../../commands/${dirs}/${file}`);
                 const category = command.category || 'uncategorized';
                 commandCategories[category] = commandCategories[category] || [];
                 commandCategories[category].push(command.name);
