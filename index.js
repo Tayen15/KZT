@@ -2,8 +2,6 @@ require('./deploy-commands.js');
 
 const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
 const fs = require('fs');
-const adhan = require('namaz');
-const moment = require('moment-timezone');
 
 // const { Player } = require('discord-player');
 // const player = new Player(client, {
@@ -35,10 +33,6 @@ const client = new Client({
         GatewayIntentBits.GuildVoiceStates
     ],
 });
-
-//const player = new Player(client)
-
-// client.player = player;
 
 client.commands = new Collection();
 fs.readdirSync('./commands').forEach(dirs => {
