@@ -49,6 +49,6 @@ module.exports = {
  
             }
         }
-        setInterval(updatePresence, 30000);
+        setInterval(updatePresence, 2500);
     }
 };

@@ -21,7 +21,6 @@ const rest = new REST({ version: '10' }).setToken(token);
 	try {
 		console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-		// Menggunakan metode put untuk memperbarui daftar perintah di guild yang ditentukan
 		const data = await rest.put(
 			Routes.applicationCommands(clientID),
 			{ body: commands },
@@ -29,7 +28,6 @@ const rest = new REST({ version: '10' }).setToken(token);
 
 		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
 	} catch (error) {
-		// Pastikan untuk menangkap dan mencatat kesalahan
 		console.error(error);
 	}
 })();
