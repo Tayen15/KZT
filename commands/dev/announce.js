@@ -28,7 +28,7 @@ module.exports = {
           if (channel instanceof TextChannel) {
                await channel.send(message);
           } else {
-          console.log(`Channel with ID ${channelId} is not a text channel.`);
+               await channel.send(`Channel with ID ${channelId} is not a text channel.`);
           }
      });
 
