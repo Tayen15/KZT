@@ -2,27 +2,10 @@ require('./deploy-commands.js');
 
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('fs');
-
-// const { Player } = require('discord-player');
-// const player = new Player(client, {
-//     leaveOnEmpty: true,
-//     leaveOnEmptyCooldown: 30000
-// });
-
 const express = require('express');
 
 const app = express();
-
-app.get('/', (req, res) => {
-    res.send('Bots are online and can perform tasks!')
-});
-
-app.listen(300, () => {
-    console.log('WEB started')
-});
-
-require('dotenv').config()
-const token = process.env.token;
+const { token } = require('./config.json');
 
 const client = new Client({
     intents: [
@@ -34,34 +17,40 @@ const client = new Client({
     ],
 });
 
-client.commands = new Collection();
-fs.readdirSync('./commands').forEach(dirs => {
-    const commands = fs.readdirSync(`./commands/${dirs}`).filter((files) => files.endsWith('.js'));
-
-    for (const file of commands) {
-        const command = require(`./commands/${dirs}/${file}`);
-        if ('data' in command && 'execute' in command) {
-            client.commands.set(command.data.name, command);
-            if (command.data.name) {
-                console.log(`Command: ${command.data.name} - ${command.category} Category Load.`);
-            } else {
-                console.log(`${file} - is missing a help.name, or content.`);
-            }
-        } else {
-            console.log(`[WARNING] The command at ${dirs} is missing a required "data" or "execute" property.`);
-        }
-    };
+app.get('/', (req, res) => {
+    res.send('Bots are online and can perform tasks!');
 });
 
-const events = fs.readdirSync(`./events`).filter((file) => file.endsWith('.js'));
+app.listen(3000, () => {
+    console.log('WEB started');
+});
 
-for (const file of events) {
+client.commands = new Collection();
+
+const commandFolders = fs.readdirSync('./commands');
+for (const folder of commandFolders) {
+    const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+        const command = require(`./commands/${folder}/${file}`);
+        if ('data' in command && 'execute' in command) {
+            client.commands.set(command.data.name, command);
+            console.log(`Command: ${command.data.name} - ${command.category} Category Load.`);
+        } else {
+            console.log(`[WARNING] The command at ${folder}/${file} is missing a required "data" or "execute" property.`);
+        }
+    }
+}
+
+const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
+for (const file of eventFiles) {
     const event = require(`./events/${file}`);
     if (event.once) {
-        client.once(event.name, (args) => event.execute(args, client));
+        client.once(event.name, (...args) => event.execute(...args, client));
     } else {
-        client.on(event.name, (args) => event.execute(args, client));
+        client.on(event.name, (...args) => event.execute(...args, client));
     }
-};
+}
 
-client.login(token).catch(() => { console.log('Invalid TOKEN!') });
+client.login(token).catch(() => {
+    console.log('Invalid TOKEN!');
+});
