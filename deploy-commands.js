@@ -1,8 +1,10 @@
 const { REST, Routes } = require('discord.js');
 const { clientID } = require('./config.json');
 const fs = require('fs');
+require('dotenv').config();
 
-const { token } = './config.json';
+// const { token } = './config.json';
+const token = process.env.token;
 
 const commands = [];
 fs.readdirSync('./commands').forEach(dirs => {
