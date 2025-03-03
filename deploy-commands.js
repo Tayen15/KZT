@@ -3,32 +3,38 @@ const { clientID } = require('./config.json');
 const fs = require('fs');
 require('dotenv').config();
 
-// const { token } = './config.json';
 const token = process.env.token;
-
 const commands = [];
-fs.readdirSync('./commands').forEach(dirs => {
-	const commandFiles = fs.readdirSync(`./commands/${dirs}`).filter((files) => files.endsWith('.js'));
-	
+
+const commandFolders = fs.readdirSync('./slashCommands');
+
+for (const folder of commandFolders) {
+	const commandFiles = fs.readdirSync(`./slashCommands/${folder}`).filter(file => file.endsWith('.js'));
+
 	for (const file of commandFiles) {
-		const command = require(`./commands/${dirs}/${file}`);
-		commands.push(command.data);
+		const command = require(`./slashCommands/${folder}/${file}`);
+		if (command.data) {
+			commands.push(command.data.toJSON());
+			console.log(`✅ Loaded slash command: ${command.data.name}`);
+		} else {
+			console.log(`⚠️ Skipped: ${folder}/${file} (Missing "data")`);
+		}
 	}
-})
+}
 
 const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
 	try {
-		console.log(`Started refreshing ${commands.length} application (/) commands.`);
+		console.log(`🚀 Deploying ${commands.length} application (/) commands.`);
 
 		const data = await rest.put(
 			Routes.applicationCommands(clientID),
-			{ body: commands },
+			{ body: commands }
 		);
 
-		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+		console.log(`✅ Successfully deployed ${data.length} slash commands.`);
 	} catch (error) {
-		console.error(error);
+		console.error('❌ Error deploying commands:', error);
 	}
 })();

@@ -13,7 +13,7 @@ module.exports = {
     description: 'Reloads a specific file or command',
     aliases:['r'],
     category: 'dev',
-    async execute(interaction) {
+    async execute(client, interaction) {
         const commandName = interaction.options.getString('command').toLowerCase();
         const directories = ['info', 'music', 'core', 'dev', 'minecraft'];
         let directory;

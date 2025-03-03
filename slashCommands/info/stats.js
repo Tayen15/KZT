@@ -14,7 +14,7 @@ module.exports = {
     category: "info",
     usage: "{prefix}stats",
     cooldown: 5,
-    async execute(interaction) {
+    async execute(client, interaction) {
         const botUptime = formatUptime(interaction.client.uptime);
         const osUptime = formatUptime(os.uptime() * 1000);
         const usedMemory = os.totalmem() - os.freemem();
