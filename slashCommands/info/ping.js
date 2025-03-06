@@ -1,4 +1,4 @@
-const { MessageEmbed, SlashCommandBuilder } = require('discord.js'); 
+const { EmbedBuilder, SlashCommandBuilder } = require('discord.js'); 
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -10,12 +10,11 @@ module.exports = {
     category: "info",
     usage: "{prefix}ping",
     cooldown: 5,
-    async execute(interaction, args) {
+    async execute(client, interaction) {
 
-        const embed = {
-            description: `:stopwatch: ${Date.now() - interaction.createdTimestamp}ms\n:satellite: ${Math.round(interaction.client.ws.ping)}ms`,
-            timestamp: new Date(),
-        };
-        await interaction.reply({ embeds: [embed] });
+        const pingEmbed = new EmbedBuilder()
+            .setDescription(`:stopwatch: ${Date.now() - interaction.createdTimestamp}ms\n:satellite: ${Math.round(interaction.client.ws.ping)}ms`)
+            .setTimestamp();
+        await interaction.reply({ embeds: [pingEmbed] });
     },
 };

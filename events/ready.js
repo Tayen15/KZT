@@ -9,46 +9,30 @@ module.exports = {
     name: Events.ClientReady,
     once: true,
     async execute(client) {
-
-        console.log('%s is online: %s servers, and %s members', client.user.username, client.guilds.cache.size, client.users.cache.size);
+        console.log(`[BOT READY] ${client.user.username} is online!`);
+        console.log(`[INFO] Connected to ${client.guilds.cache.size} servers and ${client.users.cache.size} members.`);
 
         async function updatePresence() {
             try {
                 const response = await axios.get(serverStatusURL);
-                const data = response.data;
-        
-                if (data && data.players && typeof data.players.online !== 'undefined') {
-                    const serverStatus = data.players.online;
-                    const playerMax = data.players.max;
-                    const currentTime = moment().tz('Asia/Jakarta').format('h:mm:ss A');
-                    let presenceActivity;
-        
-                    if (serverStatus) {
-                        presenceActivity = `${serverStatus}/${playerMax} Players on PPLGCraft`;
-                    } else {
-                        presenceActivity = 'PPLGCraft Server is Offline';
-                    }
-                    const statusType = ActivityType.Watching;
-        
-                    client.user.setPresence({
-                        activities: [{ name: presenceActivity, type: statusType }]
-                    });
-        
-                    // console.log(`Presence updated at ${currentTime}: ${presenceActivity}`);
-                } else {
-                    console.error('Invalid or unexpected response format:', data);
+                const { players } = response.data;
 
-                    const statusType = ActivityType.Watching;
-                    client.user.setPresence({
-                        activities: [{ name: 'PPLGCraft Server is Offline', type: statusType }]
-                    });
+                let presenceActivity = `${config.SERVER_NAME} Server is Offline`;
+                if (players?.online !== undefined) {
+                    presenceActivity = `${players.online}/${players.max} Villagers on ${config.SERVER_NAME}`;
                 }
-            } catch (error) {
-                console.error('Failed to fetch server status:', error);
 
- 
+                client.user.setPresence({
+                    activities: [{ name: presenceActivity, type: ActivityType.Watching }]
+                });
+
+            } catch (error) {
+                console.error(`[ERROR] Failed to fetch server status:`, error.message);
+            } finally {
+                setTimeout(updatePresence, 5000); 
             }
         }
-        setInterval(updatePresence, 2500);
+
+        updatePresence(); 
     }
 };
