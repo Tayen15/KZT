@@ -3,7 +3,7 @@ const moment = require('moment-timezone');
 const axios = require('axios');
 const config = require('../config.json');
 
-const serverStatusURL = `https://api.mcstatus.io/v2/status/java/${config.SERVER_IP}:${config.SERVER_PORT}`;
+const serverStatusURL = `https://api.mcsrvstat.us/3/${config.SERVER_IP}`;
 
 module.exports = {
     name: Events.ClientReady,

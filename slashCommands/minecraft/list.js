@@ -4,52 +4,58 @@ const config = require('../../config.json');
 
 module.exports = {
      data: new SlashCommandBuilder()
-          .setName('list')
-          .setDescription('Displays the current list of players online'),
+          .setName('mcstatus')
+          .setDescription('Check the status of the Minecraft server.'),
      category: 'minecraft',
-     usage: '{prefix}list',
+     usage: '{prefix}mcstatus',
      async execute(client, interaction) {
           try {
-               const getServerStatus = await axios.get(`https://api.mcstatus.io/v2/status/java/${config.SERVER_IP}:${config.SERVER_PORT}`);
-               const getServerIcon = await axios.get(`https://api.mcstatus.io/v2/icon/${config.SERVER_IP}:${config.SERVER_PORT}`);
-               const { players } = getServerStatus.data;
-               const { icon } = getServerIcon.data;
+               const getServerStatus = await axios.get(`https://api.mcsrvstat.us/3/${config.SERVER_IP}`);
+               const { online, motd, version, players, ip, port, icon, debug, ping } = getServerStatus.data;
 
-               const playerList = players.list?.length
-                    ? `\n\`\`\`\n${players.list.map(p => ` ${p.name_clean} `).join('\n')}\n\`\`\``
-                    : 'No players online.';
+               const playerList = (players?.list && players.list.length > 0)
+                    ? `\n\`\`\`\n${players.list.map(p => `${p.name} (${p.uuid})`).join('\n')}\n\`\`\``
+                    : '```No players online.```';
 
+               const serverIcon = icon ? `https://api.mcsrvstat.us/icon/${config.SERVER_IP}` : client.user.displayAvatarURL();
+
+               const cleanMotd = motd.clean.join('\n');
 
                const embed = new EmbedBuilder()
-                    .setAuthor({ name: config.SERVER_NAME, iconURL: icon })
-                    .setURL('https://youtu.be/dQw4w9WgXcQ')
-                    .setThumbnail(icon)
+                    .setAuthor({ name: config.SERVER_NAME, iconURL: serverIcon })
+                    .setThumbnail(serverIcon)
+                    .setColor(online ? 0x00ff00 : 0xff0000)
                     .addFields(
-                         { name: 'Status', value: '```🟢 Online```', inline: false },
-                         { name: 'Players', value: `\`\`\`${players.online}/${players.max}\`\`\``, inline: true },
-                         { name: 'Connect Server', value: `\`\`\`${config.SERVER_IP}:${config.SERVER_PORT}\`\`\``, inline: false },
-                         { name: 'List Playing', value: playerList, inline: false }
+                         { name: '📡 Status', value: `\`\`\`${online ? '🟢 Online' : '🔴 Offline'}\`\`\``, inline: false },
+                         { name: '📌 MOTD', value: `\`\`\`${cleanMotd}\`\`\`` },
+                         { name: '🕹️ Version', value: `\`\`\`${version}\`\`\``, inline: true },
+                         { name: '👥 Players', value: `\`\`\`${players.online}/${players.max}\`\`\``, inline: false },
+                         { name: '🌍 Java Edition', value: `\`\`\`${config.SERVER_IP}\`\`\``, inline: true },
+                         { name: '🎮 Bedrock Edition', value: `\`\`\`${ip}:${port}\`\`\``, inline: true },
+                         { name: '🎭 List Playing', value: playerList }
                     )
-                    .setFooter({ text: client.user.username })
+                    .setFooter({ text: `Server Info | ${client.user.username}` })
                     .setTimestamp();
 
                await interaction.reply({ embeds: [embed] });
           } catch (error) {
+               console.error('[ERROR] Failed to fetch server status:', error.message);
+
                const errorEmbed = new EmbedBuilder()
                     .setAuthor({ name: config.SERVER_NAME, iconURL: client.user.displayAvatarURL({ dynamic: true }) })
-                    .setURL('https://youtu.be/dQw4w9wGxC')
                     .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
+                    .setColor(0xff0000) // Merah karena offline
+                    .setTitle('🔴 Server Offline')
                     .addFields(
-                         { name: 'Status', value: '```🔴 Offline```', inline: false },
-                         { name: 'Players', value: '```None```', inline: true },
-                         { name: 'Connect Server', value: `\`\`\`${config.SERVER_IP}:${config.SERVER_PORT}\`\`\``, inline: false },
-                         { name: 'List Playing', value: '```No players online.```', inline: false }
+                         { name: '📡 Status', value: '```Offline```', inline: false },
+                         { name: '🌍 Java Edition', value: `\`\`\`${config.SERVER_IP}\`\`\``, inline: true },
+                         { name: '🎮 Bedrock Edition', value: `\`\`\`${config.SERVER_IP}:${config.SERVER_PORT}\`\`\``, inline: true },
+                         { name: '👥 Players', value: '```None```', inline: false }
                     )
-                    .setFooter({ text: client.user.username })
+                    .setFooter({ text: `Server Info | ${client.user.username}` })
                     .setTimestamp();
 
                await interaction.reply({ embeds: [errorEmbed] });
-               console.log(error);
           }
      }
 };
