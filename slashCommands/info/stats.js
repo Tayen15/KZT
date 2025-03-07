@@ -41,7 +41,7 @@ module.exports = {
                     { name: 'Bot Uptime', value: `\`\`\`${botUptime}\`\`\``, inline: false },
                     { name: 'Memory Usage', value: `\`\`\`${memoryUsage}\`\`\``, inline: false }
                 )
-                .setThumbnail('https://cdn.discordapp.com/attachments/990148601101570090/1121123222239334530/minecraft1Point-removebg-preview.png')
+                .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
                 .setFooter({ text: `Latency: ${Math.round(interaction.client.ws.ping)}ms` })
                 .setTimestamp();
 

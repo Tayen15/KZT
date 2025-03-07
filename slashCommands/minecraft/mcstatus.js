@@ -7,7 +7,7 @@ module.exports = {
           .setName('mcstatus')
           .setDescription('Check the status of the Minecraft server.'),
      category: 'minecraft',
-     usage: '{prefix}mcstatus',
+     usage: '</mcstatus:1347476609929580597>',
      async execute(client, interaction) {
           try {
                const getServerStatus = await axios.get(`https://api.mcsrvstat.us/3/${config.SERVER_IP}`);
