@@ -1,9 +1,23 @@
 const { EmbedBuilder, Colors } = require("discord.js");
 const fetch = require("node-fetch");
+const fs = require("fs");
 
 const { UPTIME_API_KEY, MONITOR_CHANNELID } = require("../config.json");
-const UPDATE_INTERVAL = 60 * 1000; // 60 detik
-let lastMessageId = null; // Untuk menyimpan ID pesan terakhir
+const UPDATE_INTERVAL = 60 * 1000;
+const DATA_FILE = "./monitorData.json";
+
+function loadLastMessageId() {
+     try {
+          const data = fs.readFileSync(DATA_FILE, "utf8");
+          return JSON.parse(data).lastMessageId || null;
+     } catch {
+          return null;
+     }
+}
+
+function saveLastMessageId(messageId) {
+     fs.writeFileSync(DATA_FILE, JSON.stringify({ lastMessageId: messageId }, null, 2));
+}
 
 async function fetchServerStatus() {
      try {
@@ -14,14 +28,13 @@ async function fetchServerStatus() {
           });
 
           const data = await response.json();
-          if (data.stat !== "ok") throw new Error("Gagal mengambil data dari API UptimeRobot");
+          if (data.stat !== "ok") throw new Error("Gagal mengambil data dari API");
 
           return data.monitors.map(monitor => ({
                name: monitor.friendly_name,
-               url: monitor.url,
-               status: monitor.status, // 2 = Up, 9 = Down, 1 = Paused
-               uptime: monitor.average_response_time || "N/A", // Waktu respon rata-rata
-               last_check: monitor.logs?.[0]?.datetime || null // Waktu terakhir dicek
+               status: monitor.status,
+               uptime: monitor.average_response_time || "N/A",
+               last_check: monitor.logs?.[0]?.datetime || null
           }));
      } catch (error) {
           console.error("[Monitor] Gagal mengambil status server:", error);
@@ -36,29 +49,10 @@ async function sendMonitoringMessage(client) {
      const servers = await fetchServerStatus();
      if (servers.length === 0) return console.warn("[Monitor] Tidak ada server yang dimonitor.");
 
-     const nextUpdateTimestamp = Math.floor((Date.now() + UPDATE_INTERVAL) / 1000); // Timestamp UNIX untuk <t:xxx:R>
-
+     const nextUpdateTimestamp = Math.floor((Date.now() + UPDATE_INTERVAL) / 1000);
      let serverDetails = servers.map(server => {
-          let statusEmoji, statusText;
-          switch (server.status) {
-               case 2:
-                    statusEmoji = "🟢";
-                    statusText = "Online";
-                    break;
-               case 9:
-                    statusEmoji = "🔴";
-                    statusText = "Offline";
-                    break;
-               case 1:
-                    statusEmoji = "🟡";
-                    statusText = "Paused";
-                    break;
-               default:
-                    statusEmoji = "⚪";
-                    statusText = "Unknown";
-                    break;
-          }
-
+          let statusEmoji = server.status === 2 ? "🟢" : server.status === 9 ? "🔴" : "🟡";
+          let statusText = server.status === 2 ? "Online" : server.status === 9 ? "Offline" : "Paused";
           return `**${server.name}:** ${statusEmoji} **${statusText}**\n\`\`\`Uptime: ${server.uptime} ms\`\`\``;
      }).join("\n");
 
@@ -67,31 +61,27 @@ async function sendMonitoringMessage(client) {
           .setColor(Colors.Blue)
           .setDescription(`Next update <t:${nextUpdateTimestamp}:R>`)
           .setTimestamp()
-          .addFields(
-               { name: "Server Stats", value: serverDetails, inline: false }
-          )
+          .addFields({ name: "Server Stats", value: serverDetails })
           .setFooter({ text: `${client.user.username}`, iconURL: client.user.displayAvatarURL({ dynamic: true }) });
+
+     let lastMessageId = loadLastMessageId();
 
      if (lastMessageId) {
           try {
                const message = await channel.messages.fetch(lastMessageId);
                await message.edit({ embeds: [embed] });
-          } catch (error) {
+          } catch {
                const newMessage = await channel.send({ embeds: [embed] });
-               lastMessageId = newMessage.id;
+               saveLastMessageId(newMessage.id);
           }
      } else {
           const newMessage = await channel.send({ embeds: [embed] });
-          lastMessageId = newMessage.id;
+          saveLastMessageId(newMessage.id);
      }
 }
 
 module.exports = async (client) => {
      console.log("[Monitor] Memulai monitoring server...");
-
      await sendMonitoringMessage(client);
-
-     setInterval(async () => {
-          await sendMonitoringMessage(client);
-     }, UPDATE_INTERVAL);
+     setInterval(async () => await sendMonitoringMessage(client), UPDATE_INTERVAL);
 };
