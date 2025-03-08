@@ -31,7 +31,7 @@ module.exports = {
                          { name: '🕹️ Version', value: `\`\`\`${version}\`\`\``, inline: true },
                          { name: '👥 Players', value: `\`\`\`${players.online}/${players.max}\`\`\``, inline: false },
                          { name: '🌍 Java Edition', value: `\`\`\`${config.SERVER_IP}\`\`\``, inline: true },
-                         { name: '🎮 Bedrock Edition', value: `\`\`\`${ip}:${port}\`\`\``, inline: true },
+                         { name: '🎮 Bedrock Edition', value: `\`\`\`${ip}:19132\`\`\``, inline: true },
                          { name: '🎭 List Playing', value: playerList }
                     )
                     .setFooter({ text: `Server Info | ${client.user.username}` })
@@ -44,7 +44,7 @@ module.exports = {
                const errorEmbed = new EmbedBuilder()
                     .setAuthor({ name: config.SERVER_NAME, iconURL: client.user.displayAvatarURL({ dynamic: true }) })
                     .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
-                    .setColor(0xff0000) // Merah karena offline
+                    .setColor(0xff0000)
                     .setTitle('🔴 Server Offline')
                     .addFields(
                          { name: '📡 Status', value: '```Offline```', inline: false },
