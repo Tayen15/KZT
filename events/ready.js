@@ -2,6 +2,7 @@ const { Events, ActivityType } = require('discord.js');
 const moment = require('moment-timezone');
 const axios = require('axios');
 const config = require('../config.json');
+const monitorServer = require("../handlers/monitorServer");
 
 const serverStatusURL = `https://api.mcsrvstat.us/3/${config.SERVER_IP}`;
 
@@ -11,6 +12,8 @@ module.exports = {
     async execute(client) {
         console.log(`[BOT READY] ${client.user.username} is online!`);
         console.log(`[INFO] Connected to ${client.guilds.cache.size} servers and ${client.users.cache.size} members.`);
+
+        await monitorServer(client);
 
         async function updatePresence() {
             try {

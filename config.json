@@ -6,5 +6,7 @@
     "SERVER_IP": "play.firtiansyah.my.id",
     "SERVER_NAME": "Algorithmic Realms",
     "SERVER_PORT": 25565,
-    "iconLink": "https://cdn.discordapp.com/attachments/990148601101570090/1121124784164577380/minecraft1Point.png"
+    "iconLink": "https://cdn.discordapp.com/attachments/990148601101570090/1121124784164577380/minecraft1Point.png",
+    "UPTIME_API_KEY": "u1114523-5c3d20ee17ec0c14ccb66b38",
+    "MONITOR_CHANNELID": "1182534679157542993"
 }
