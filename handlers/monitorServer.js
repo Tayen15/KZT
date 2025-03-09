@@ -3,21 +3,9 @@ const fetch = require("node-fetch");
 const fs = require("fs");
 
 const { UPTIME_API_KEY, MONITOR_CHANNELID } = require("../config.json");
+const { getLastMessageId, saveLastMessageId } = require("../utils/jsonStorage");
+
 const UPDATE_INTERVAL = 60 * 1000;
-const DATA_FILE = "./monitorData.json";
-
-function loadLastMessageId() {
-     try {
-          const data = fs.readFileSync(DATA_FILE, "utf8");
-          return JSON.parse(data).lastMessageId || null;
-     } catch {
-          return null;
-     }
-}
-
-function saveLastMessageId(messageId) {
-     fs.writeFileSync(DATA_FILE, JSON.stringify({ lastMessageId: messageId }, null, 2));
-}
 
 async function fetchServerStatus() {
      try {
@@ -64,7 +52,7 @@ async function sendMonitoringMessage(client) {
           .addFields({ name: "Server Stats", value: serverDetails })
           .setFooter({ text: `${client.user.username}`, iconURL: client.user.displayAvatarURL({ dynamic: true }) });
 
-     let lastMessageId = loadLastMessageId();
+     let lastMessageId = getLastMessageId("monitorServer");
 
      if (lastMessageId) {
           try {
@@ -72,11 +60,11 @@ async function sendMonitoringMessage(client) {
                await message.edit({ embeds: [embed] });
           } catch {
                const newMessage = await channel.send({ embeds: [embed] });
-               saveLastMessageId(newMessage.id);
+               saveLastMessageId("monitorServer", newMessage.id);
           }
      } else {
           const newMessage = await channel.send({ embeds: [embed] });
-          saveLastMessageId(newMessage.id);
+          saveLastMessageId("monitorServer", newMessage.id);
      }
 }
 

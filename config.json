@@ -7,6 +7,13 @@
     "SERVER_NAME": "Algorithmic Realms",
     "SERVER_PORT": 25565,
     "iconLink": "https://cdn.discordapp.com/attachments/990148601101570090/1121124784164577380/minecraft1Point.png",
+
     "UPTIME_API_KEY": "u1114523-5c3d20ee17ec0c14ccb66b38",
-    "MONITOR_CHANNELID": "1182534679157542993"
+    "MONITOR_CHANNELID": "1182534679157542993",
+
+    "PTERODACTYL_API_KEY": "ptlc_CifsnLDJjvA0ExlY9DCxeq2ij8SJfbAqnAXstirNrTV",
+    "SERVER_ID": "cacd8168-83ed-4de1-958a-1cf287f2f555",
+    "PTERODACTYL_URL": "https://panel.firtiansyah.my.id",
+    "SERVERCONTROL_CHANNELID": "1348167357477949450",
+    "UPDATE_INTERVAL": 60000
 }

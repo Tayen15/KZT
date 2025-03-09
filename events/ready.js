@@ -3,6 +3,7 @@ const moment = require('moment-timezone');
 const axios = require('axios');
 const config = require('../config.json');
 const monitorServer = require("../handlers/monitorServer");
+const serverControl = require("../handlers/serverControl");
 
 const serverStatusURL = `https://api.mcsrvstat.us/3/${config.SERVER_IP}`;
 
@@ -14,6 +15,7 @@ module.exports = {
         console.log(`[INFO] Connected to ${client.guilds.cache.size} servers and ${client.users.cache.size} members.`);
 
         await monitorServer(client);
+        await serverControl(client);
 
         async function updatePresence() {
             try {
@@ -32,10 +34,10 @@ module.exports = {
             } catch (error) {
                 console.error(`[ERROR] Failed to fetch server status:`, error.message);
             } finally {
-                setTimeout(updatePresence, 5000); 
+                setTimeout(updatePresence, 5000);
             }
         }
 
-        updatePresence(); 
+        updatePresence();
     }
 };
