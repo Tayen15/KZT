@@ -1,6 +1,5 @@
 const { EmbedBuilder, Colors } = require("discord.js");
 const fetch = require("node-fetch");
-const fs = require("fs");
 
 const { UPTIME_API_KEY, MONITOR_CHANNELID } = require("../config.json");
 const { getLastMessageId, saveLastMessageId } = require("../utils/jsonStorage");
@@ -12,23 +11,36 @@ async function fetchServerStatus() {
           const response = await fetch("https://api.uptimerobot.com/v2/getMonitors", {
                method: "POST",
                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-               body: `api_key=${UPTIME_API_KEY}&format=json&response_times=1&logs=1`
+               body: `api_key=${UPTIME_API_KEY}&format=json&logs=1&custom_uptime_ratios=1-7-30-365&response_times=1`
           });
 
           const data = await response.json();
           if (data.stat !== "ok") throw new Error("Gagal mengambil data dari API");
 
-          return data.monitors.map(monitor => ({
-               name: monitor.friendly_name,
-               status: monitor.status,
-               uptime: monitor.average_response_time || "N/A",
-               last_check: monitor.logs?.[0]?.datetime || null
-          }));
+          return data.monitors.map(monitor => {
+               return {
+                    name: monitor.friendly_name,
+                    status: monitor.status,
+                    uptime: monitor.custom_uptime_ratios && monitor.custom_uptime_ratios.length > 0
+                         ? `${monitor.custom_uptime_ratios.split('-')[0]}%`
+                         : "N/A",
+
+                    response_time: monitor.average_response_time
+                         ? `${monitor.average_response_time} ms`
+                         : "N/A",
+                    last_check: monitor.logs?.[0]?.datetime
+                         ? new Date(monitor.logs[0].datetime * 1000).toLocaleString()
+                         : "N/A"
+               };
+               
+          });
+
      } catch (error) {
           console.error("[Monitor] Gagal mengambil status server:", error);
           return [];
      }
 }
+
 
 async function sendMonitoringMessage(client) {
      const channel = await client.channels.fetch(MONITOR_CHANNELID);
@@ -41,7 +53,7 @@ async function sendMonitoringMessage(client) {
      let serverDetails = servers.map(server => {
           let statusEmoji = server.status === 2 ? "🟢" : server.status === 9 ? "🔴" : "🟡";
           let statusText = server.status === 2 ? "Online" : server.status === 9 ? "Offline" : "Paused";
-          return `**${server.name}:** ${statusEmoji} **${statusText}**\n\`\`\`Uptime: ${server.uptime} ms\`\`\``;
+          return `**${server.name}:** ${statusEmoji} **${statusText}**\n\`\`\`Uptime: ${server.uptime}\nResponse Time: ${server.response_time}\n\`\`\``;
      }).join("\n");
 
      const embed = new EmbedBuilder()
