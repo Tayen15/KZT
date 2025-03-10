@@ -1,4 +1,4 @@
-const { Events } = require('discord.js');
+const { Events, MessageFlags } = require('discord.js');
 
 module.exports = {
 	name: Events.InteractionCreate,
@@ -9,7 +9,7 @@ module.exports = {
 
 		if (!command) {
 			console.error(`❌ No command matching "${interaction.commandName}" was found.`);
-			await interaction.reply({ content: '⚠️ Terjadi kesalahan! Command tidak ditemukan.', ephemeral: true });
+			await interaction.reply({ content: '⚠️ Terjadi kesalahan! Command tidak ditemukan.', flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -21,9 +21,9 @@ module.exports = {
 			console.error(error);
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: '⚠️ Terjadi kesalahan saat menjalankan perintah!', ephemeral: true });
+				await interaction.followUp({ content: '⚠️ Terjadi kesalahan saat menjalankan perintah!', flags: MessageFlags.Ephemeral });
 			} else {
-				await interaction.reply({ content: '⚠️ Terjadi kesalahan saat menjalankan perintah!', ephemeral: true });
+				await interaction.reply({ content: '⚠️ Terjadi kesalahan saat menjalankan perintah!', flags: MessageFlags.Ephemeral });
 			}
 		}
 	},
