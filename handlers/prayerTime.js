@@ -66,7 +66,7 @@ function formatPrayerTimesEmbed(client) {
      const currentTime = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
 
      const fields = Object.entries(prayerTimes).map(([prayer, time]) => {
-          const highlight = isWithinPrayerTime(time.hours, time.minutes) ? "**(Sedang Waktu Salat)**" : "";
+          const highlight = isWithinPrayerTime(time.hours, time.minutes) ? "(Sedang Waktu Salat)" : "";
           return { name: prayer, value: `\`\`\`${time.hours}:${time.minutes} WIB ${highlight}\`\`\``, inline: true };
      });
 
