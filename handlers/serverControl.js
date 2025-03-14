@@ -15,8 +15,11 @@ async function fetchServerStatus() {
           const data = await response.json();
           if (!data.attributes) throw new Error("Gagal mengambil data server.");
 
-          const uptimeSeconds = Math.floor(data.attributes.resources.uptime / 1000);
-          const uptime = `${Math.floor(uptimeSeconds / 3600)}h ${Math.floor((uptimeSeconds % 3600) / 60)}m ${uptimeSeconds % 60}s`;
+            const uptimeSeconds = Math.floor(data.attributes.resources.uptime / 1000);
+            const uptimeDays = Math.floor(uptimeSeconds / 86400);
+            const uptimeHours = Math.floor((uptimeSeconds % 86400) / 3600);
+            const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
+            const uptime = `${uptimeDays}d ${uptimeHours}h ${uptimeMinutes}m ${uptimeSeconds % 60}s`;
 
           return {
                status: data.attributes.current_state,
