@@ -18,7 +18,7 @@
     "UPDATE_INTERVAL": 60000,
 
     "PRAYER_API_URL": "https://api.aladhan.com/v1/timingsByCity",
-    "PRAYER_CHANNELID": "1349991746557317181",
+    "PRAYER_CHANNELID": "1350004539360808960",
     "CITY": "Depok",
     "COUNTRY": "Indonesia"
 }
