@@ -39,7 +39,7 @@ function isWithinPrayerTime(prayerHour, prayerMinute) {
      const currentTime = now.getHours() * 60 + now.getMinutes();
      const prayerTime = parseInt(prayerHour) * 60 + parseInt(prayerMinute);
 
-     return currentTime >= prayerTime && currentTime < prayerTime + 5;
+     return currentTime >= prayerTime && currentTime < prayerTime + 15;
 }
 
 // Dapatkan waktu salat berikutnya dan tampilkan dalam format timestamp Discord
