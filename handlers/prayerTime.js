@@ -73,7 +73,7 @@ function formatPrayerTimesEmbed(client) {
      return new EmbedBuilder()
           .setTitle(`🕌 Jadwal Salat (${CITY})`)
           .setColor(Colors.Green)
-          .setImage('https://cdn.discordapp.com/attachments/1008688176421933148/1350028133859987477/tob_tobitob.png?ex=67d53f2d&is=67d3edad&hm=18446e1e3299ec54f88f11583cb57a1799451f495e10afbedcc139005283d919&')
+          .setThumbnail('https://cdn.discordapp.com/attachments/1008688176421933148/1350028133859987477/tob_tobitob.png?ex=67d53f2d&is=67d3edad&hm=18446e1e3299ec54f88f11583cb57a1799451f495e10afbedcc139005283d919&')
           .setDescription(
                `⏰ Sekarang: **${currentTime} WIB**\n📅 ${now.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}\n${getNextPrayerTime()}\n\nUpdate in <t:${Math.floor((Date.now() + UPDATE_INTERVAL) / 1000)}:R>`
           )
