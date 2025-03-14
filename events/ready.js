@@ -4,6 +4,7 @@ const axios = require('axios');
 const config = require('../config.json');
 const monitorServer = require("../handlers/monitorServer");
 const serverControl = require("../handlers/serverControl");
+const prayerTime = require("../handlers/prayerTime");
 
 const serverStatusURL = `https://api.mcsrvstat.us/3/${config.SERVER_IP}`;
 
@@ -16,6 +17,7 @@ module.exports = {
 
         await monitorServer(client);
         await serverControl(client);
+        await prayerTime(client);
 
         async function updatePresence() {
             try {

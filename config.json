@@ -15,5 +15,10 @@
     "SERVER_ID": "cacd8168-83ed-4de1-958a-1cf287f2f555",
     "PTERODACTYL_URL": "https://panel.firtiansyah.my.id",
     "SERVERCONTROL_CHANNELID": "1348167357477949450",
-    "UPDATE_INTERVAL": 60000
+    "UPDATE_INTERVAL": 60000,
+
+    "PRAYER_API_URL": "https://api.aladhan.com/v1/timingsByCity",
+    "PRAYER_CHANNELID": "1349991746557317181",
+    "CITY": "Depok",
+    "COUNTRY": "Indonesia"
 }
