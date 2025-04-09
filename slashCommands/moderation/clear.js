@@ -9,5 +9,5 @@ module.exports = {
      usage: "",
      async execute(client, interaction) {
           await interaction.reply({ content: 'Coming Soon!', flags: MessageFlags.Ephemeral });
-     }
+     }    
 }
