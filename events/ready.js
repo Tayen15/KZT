@@ -5,6 +5,7 @@ const config = require('../config.json');
 const monitorServer = require("../handlers/monitorServer");
 const serverControl = require("../handlers/serverControl");
 const prayerTime = require("../handlers/prayerTime");
+const lofiReconnect = require("../handlers/lofiReconnect");
 
 const serverStatusURL = `https://api.mcsrvstat.us/3/${config.SERVER_IP}`;
 
@@ -18,6 +19,7 @@ module.exports = {
         await monitorServer(client);
         await serverControl(client);
         await prayerTime(client);
+        await lofiReconnect(client);
 
         async function updatePresence() {
             try {

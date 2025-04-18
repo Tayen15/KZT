@@ -2,7 +2,7 @@ const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
-const directories = ['info', 'core', 'dev', 'minecraft', 'moderation'];
+const directories = ['info', 'core', 'dev', 'minecraft', 'moderation', 'music'];
 
 module.exports = {
     data: new SlashCommandBuilder()
