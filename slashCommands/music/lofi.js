@@ -49,7 +49,7 @@ module.exports = {
                connection.subscribe(player);
 
                // Save lofi session to storage
-               saveLofiSession(interaction.guild.id, member.voice.channel.id);
+               saveLofiSession(interaction.guild.id, interaction.member.voice.channel.id);
 
                // Menangani event ketika player idle
                player.on(AudioPlayerStatus.Idle, async () => {
