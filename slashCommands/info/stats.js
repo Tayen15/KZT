@@ -1,4 +1,4 @@
-const { version, EmbedBuilder, SlashCommandBuilder } = require('discord.js');
+const { version, EmbedBuilder, SlashCommandBuilder, MessageFlags } = require('discord.js');
 const ms = require('ms');
 const os = require('os');
 const cpuStat = require('cpu-stat');
@@ -24,7 +24,7 @@ module.exports = {
         cpuStat.usagePercent((err, percent) => {
             if (err) {
                 console.error(err);
-                return interaction.reply({ content: "❌ Error fetching CPU usage.", ephemeral: true });
+                return interaction.reply({ content: "❌ Error fetching CPU usage.", flags: MessageFlags.Ephemeral });
             }
 
             const statsEmbed = new EmbedBuilder()

@@ -1,21 +1,43 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
+
+const directories = ['info', 'core', 'dev', 'minecraft', 'moderation'];
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('reload')
         .setDescription('Reloads a specific file or command')
-        .addStringOption(option => 
-            option.setName('command')
-                .setDescription('The command you want to reload')
+        .addStringOption(option => {
+            const commandChoices = [];
+
+            // Generate command list
+            for (const dir of directories) {
+                const commandPath = path.join(__dirname, '..', dir);
+                if (!fs.existsSync(commandPath)) continue;
+
+                const files = fs.readdirSync(commandPath).filter(file => file.endsWith('.js'));
+
+                for (const file of files) {
+                    const commandName = file.replace('.js', '');
+                    if (!commandChoices.some(c => c.name === commandName)) {
+                        commandChoices.push({ name: commandName, value: commandName });
+                    }
+                }
+            }
+
+            return option
+                .setName('command')
+                .setDescription('Select the command you want to reload')
                 .setRequired(true)
-        ),
+                .addChoices(...commandChoices.slice(0, 25)); 
+        }),
     name: 'reload',
     description: 'Reloads a specific file or command',
-    aliases:['r'],
     category: 'dev',
+
     async execute(client, interaction) {
         const commandName = interaction.options.getString('command').toLowerCase();
-        const directories = ['info', 'music', 'core', 'dev', 'minecraft'];
         let directory;
 
         for (const dir of directories) {
@@ -29,17 +51,14 @@ module.exports = {
         }
 
         if (!directory) {
-            return interaction.reply('The command was not found!');
+            return interaction.reply({ content: 'Command not found!', flags: MessageFlags.Ephemeral });
         }
 
         const pull = require(`../${directory}/${commandName}.js`);
-        interaction.client.commands.set(commandName, pull);
-        await interaction.reply(`Command **${commandName.toUpperCase()}** has been reloaded.`);
+        client.commands.set(commandName, pull);
 
-        setTimeout(() => {
-            interaction.deleteReply();
-        }, 7000);
-        
-        console.log(`Command: ${commandName.toUpperCase()} Reload By: ${interaction.user.tag}`);
-    },
+        await interaction.reply({ content: `✅ Command **${commandName.toUpperCase()}** has been successfully reloaded.`, flags: MessageFlags.Ephemeral });
+
+        console.log(`[RELOAD] Command: ${commandName.toUpperCase()} by ${interaction.user.tag}`);
+    }
 };
