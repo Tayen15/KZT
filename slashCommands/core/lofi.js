@@ -57,10 +57,10 @@ module.exports = {
                     }
                });
 
-               await interaction.reply({ content: `🎧 Playing **lofi** music from YouTube in <#${channel.id}>`, flags: MessageFlags.Ephemeral });
+               await interaction.deferReply({ content: `🎧 Playing **lofi** music from YouTube in <#${channel.id}>`, flags: MessageFlags.Ephemeral });
           } catch (error) {
                console.error('Error playing lofi music:', error);
-               await interaction.reply({ content: '❌ Something went wrong while trying to play the lofi music!', flags: MessageFlags.Ephemeral });
+               await interaction.deferReply({ content: '❌ Something went wrong while trying to play the lofi music!', flags: MessageFlags.Ephemeral });
           }
      }
 };
