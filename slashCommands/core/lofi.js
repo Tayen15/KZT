@@ -17,13 +17,17 @@ module.exports = {
           }
 
           try {
+               // Menunda respons
+               await interaction.deferReply({ content: '⏳ Trying to play lofi music...', flags: MessageFlags.Ephemeral });
+
+               // Ambil stream dari YouTube
                const stream = await play.stream(YT_LOFI_URL);
                const resource = createAudioResource(stream.stream, {
                     inputType: stream.type,
                     inlineVolume: true
                });
 
-               resource.volume.setVolume(0.5); // Adjust volume as desired
+               resource.volume.setVolume(0.5); // Sesuaikan volume
 
                const player = createAudioPlayer({
                     behaviors: {
@@ -33,6 +37,7 @@ module.exports = {
 
                player.play(resource);
 
+               // Bergabung ke channel suara
                const connection = joinVoiceChannel({
                     channelId: channel.id,
                     guildId: interaction.guild.id,
@@ -42,8 +47,8 @@ module.exports = {
 
                connection.subscribe(player);
 
+               // Menangani event ketika player idle
                player.on(AudioPlayerStatus.Idle, async () => {
-                    console.log('[Lofi] Stream ended or idle, restarting...');
                     try {
                          const newStream = await play.stream(YT_LOFI_URL);
                          const newResource = createAudioResource(newStream.stream, {
@@ -57,10 +62,11 @@ module.exports = {
                     }
                });
 
-               await interaction.deferReply({ content: `🎧 Playing **lofi** music from YouTube in <#${channel.id}>`, flags: MessageFlags.Ephemeral });
+               // Setelah stream dimulai, beri respons kepada pengguna
+               await interaction.editReply({ content: `🎧 Playing **lofi** music from YouTube in <#${channel.id}>`, flags: MessageFlags.Ephemeral });
           } catch (error) {
                console.error('Error playing lofi music:', error);
-               await interaction.deferReply({ content: '❌ Something went wrong while trying to play the lofi music!', flags: MessageFlags.Ephemeral });
+               await interaction.editReply({ content: '❌ Something went wrong while trying to play the lofi music!', flags: MessageFlags.Ephemeral });
           }
      }
 };
