@@ -1,8 +1,8 @@
-const { SlashCommandBuilder, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags, EmbedBuilder } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
 const play = require('play-dl');
 
-const YT_LOFI_URL = 'https://www.youtube.com/watch?v=jfKfPfyJRdk'; // Example: Lofi Girl
+const YT_LOFI_URL = 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
 
 module.exports = {
      data: new SlashCommandBuilder()
@@ -62,8 +62,14 @@ module.exports = {
                     }
                });
 
-               // Setelah stream dimulai, beri respons kepada pengguna
-               await interaction.editReply({ content: `🎧 Playing **lofi** music from YouTube in <#${channel.id}>`, flags: MessageFlags.Ephemeral });
+               const embed = new EmbedBuilder()
+                    .setColor('#1DB954') // Soft green color
+                    .setTitle('🎧 Lofi Music')
+                    .setDescription(`Now playing **lofi** music from YouTube in <#${channel.id}>`)
+                    .setFooter({ text: 'Enjoy the vibes!' }) 
+                    .setTimestamp();
+
+               await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
           } catch (error) {
                console.error('Error playing lofi music:', error);
                await interaction.editReply({ content: '❌ Something went wrong while trying to play the lofi music!', flags: MessageFlags.Ephemeral });
