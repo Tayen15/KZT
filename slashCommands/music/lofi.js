@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, MessageFlags, EmbedBuilder } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
 const play = require('play-dl');
-const { saveLofiSession } = require('../utils/lofiStorage');
+const { saveLofiSession } = require('../../utils/lofiStorage');
 
 const YT_LOFI_URL = 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
 

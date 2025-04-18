@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const { getVoiceConnection } = require('@discordjs/voice');
-const { removeLofiSession } = require('../utils/lofiStorage');
+const { removeLofiSession } = require('../../utils/lofiStorage');
 
 module.exports = {
      data: new SlashCommandBuilder()
