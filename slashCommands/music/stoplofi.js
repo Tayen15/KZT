@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags, EmbedBuilder } = require('discord.js');
 const { getVoiceConnection } = require('@discordjs/voice');
 const { removeLofiSession } = require('../../utils/lofiStorage');
 
@@ -22,6 +22,11 @@ module.exports = {
           // Disconnect from the voice channel
           connection.destroy();
 
-          await interaction.reply('⛔ Lofi stopped and the bot has left the voice channel.');
+            const embed = new EmbedBuilder()
+                  .setColor(0xff0000)
+                  .setTitle('Lofi Stopped')
+                  .setDescription('⛔ Lofi stopped and the bot has left the voice channel.');
+
+            await interaction.reply({ embeds: [embed] });
      }
 };

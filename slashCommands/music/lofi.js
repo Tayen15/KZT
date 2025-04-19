@@ -3,12 +3,19 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerSta
 const play = require('play-dl');
 const { saveLofiSession } = require('../../utils/lofiStorage');
 
-const YT_LOFI_URL = 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
+const YT_LOFI_PLAYLIST = [
+     'https://www.youtube.com/watch?v=sF80I-TQiW0', // lofi 1
+     'https://www.youtube.com/watch?v=l_7e2ZamUpI', // lofi 2
+     'https://www.youtube.com/watch?v=e94hCLHEEsk', // lofi 3
+     'https://www.youtube.com/watch?v=OO2kPK5-qno',  // lofi 4
+     'https://www.youtube.com/watch?v=Q89Dzox4jAE',
+     'https://www.youtube.com/watch?v=ZlyR0Ou11Qc'
+];
 
 module.exports = {
      data: new SlashCommandBuilder()
           .setName('lofi')
-          .setDescription('Play lofi music from YouTube 24/7'),
+          .setDescription('Play lofi music from YouTube playlist (non-live)'),
      name: 'lofi',
      category: 'music',
      async execute(client, interaction) {
@@ -17,28 +24,39 @@ module.exports = {
                return interaction.reply({ content: '❌ Please join a voice channel first!', flags: MessageFlags.Ephemeral });
           }
 
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
           try {
-               // Menunda respons
-               await interaction.deferReply({ content: '⏳ Trying to play lofi music...', flags: MessageFlags.Ephemeral });
-
-               // Ambil stream dari YouTube
-               const stream = await play.stream(YT_LOFI_URL);
-               const resource = createAudioResource(stream.stream, {
-                    inputType: stream.type,
-                    inlineVolume: true
-               });
-
-               resource.volume.setVolume(0.5); // Sesuaikan volume
+               let currentIndex = 0;
 
                const player = createAudioPlayer({
                     behaviors: {
-                         noSubscriber: NoSubscriberBehavior.Play,
+                         noSubscriber: NoSubscriberBehavior.Play
                     }
                });
 
-               player.play(resource);
+               async function playTrack(index) {
+                    const url = YT_LOFI_PLAYLIST[index];
+                    const stream = await play.stream(url);
+                    const resource = createAudioResource(stream.stream, {
+                         inputType: stream.type,
+                         inlineVolume: true
+                    });
+                    resource.volume.setVolume(0.5);
+                    player.play(resource);
+               }
 
-               // Bergabung ke channel suara
+               player.on(AudioPlayerStatus.Idle, async () => {
+                    try {
+                         currentIndex = (currentIndex + 1) % YT_LOFI_PLAYLIST.length;
+                         await playTrack(currentIndex);
+                    } catch (err) {
+                         console.error('Error playing next lofi video:', err);
+                    }
+               });
+
+               await playTrack(currentIndex);
+
                const connection = joinVoiceChannel({
                     channelId: channel.id,
                     guildId: interaction.guild.id,
@@ -48,35 +66,20 @@ module.exports = {
 
                connection.subscribe(player);
 
-               // Save lofi session to storage
                saveLofiSession(interaction.guild.id, interaction.member.voice.channel.id);
 
-               // Menangani event ketika player idle
-               player.on(AudioPlayerStatus.Idle, async () => {
-                    try {
-                         const newStream = await play.stream(YT_LOFI_URL);
-                         const newResource = createAudioResource(newStream.stream, {
-                              inputType: newStream.type,
-                              inlineVolume: true
-                         });
-                         newResource.volume.setVolume(0.5);
-                         player.play(newResource);
-                    } catch (error) {
-                         console.error('Error during stream restart:', error);
-                    }
-               });
-
                const embed = new EmbedBuilder()
-                    .setColor('#1DB954') // Soft green color
+                    .setColor('#1DB954')
                     .setTitle('🎧 Lofi Music')
-                    .setDescription(`Now playing **lofi** music from YouTube in <#${channel.id}>`)
-                    .setFooter({ text: 'Enjoy the vibes!' }) 
+                    .setDescription(`Now playing **lofi** playlist from YouTube in <#${channel.id}>`)
+                    .setFooter({ text: 'Enjoy the vibes!' })
                     .setTimestamp();
 
-               await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+               await interaction.editReply({ embeds: [embed] });
+
           } catch (error) {
                console.error('Error playing lofi music:', error);
-               await interaction.editReply({ content: '❌ Something went wrong while trying to play the lofi music!', flags: MessageFlags.Ephemeral });
+               await interaction.editReply({ content: '❌ Something went wrong while trying to play the lofi playlist!', flags: MessageFlags.Ephemeral });
           }
      }
 };
