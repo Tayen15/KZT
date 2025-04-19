@@ -9,7 +9,7 @@ module.exports = (client) => {
         const event = require(path.join(eventPath, file));
 
         if (!event.name || typeof event.execute !== 'function') {
-            console.warn(`⚠️ Event "${file}" tidak memiliki properti "name" atau "execute"!`);
+            console.warn(`⚠️ Event "${file}" does not have a "name" property or an "execute" function!`);
             continue;
         }
 

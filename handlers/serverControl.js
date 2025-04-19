@@ -13,13 +13,13 @@ async function fetchServerStatus() {
           });
 
           const data = await response.json();
-          if (!data.attributes) throw new Error("Gagal mengambil data server.");
+          if (!data.attributes) throw new Error("Failed to fetch server data.");
 
-            const uptimeSeconds = Math.floor(data.attributes.resources.uptime / 1000);
-            const uptimeDays = Math.floor(uptimeSeconds / 86400);
-            const uptimeHours = Math.floor((uptimeSeconds % 86400) / 3600);
-            const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
-            const uptime = `${uptimeDays}d ${uptimeHours}h ${uptimeMinutes}m ${uptimeSeconds % 60}s`;
+          const uptimeSeconds = Math.floor(data.attributes.resources.uptime / 1000);
+          const uptimeDays = Math.floor(uptimeSeconds / 86400);
+          const uptimeHours = Math.floor((uptimeSeconds % 86400) / 3600);
+          const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
+          const uptime = `${uptimeDays}d ${uptimeHours}h ${uptimeMinutes}m ${uptimeSeconds % 60}s`;
 
           return {
                status: data.attributes.current_state,
@@ -31,7 +31,7 @@ async function fetchServerStatus() {
                outbounds: (data.attributes.resources.network_tx_bytes / 1024 / 1024).toFixed(2)
           };
      } catch (error) {
-          console.error("[ServerControl] Gagal mengambil status server:", error);
+          console.error("[ServerControl] Failed to fetch server status:", error);
           return null;
      }
 }
@@ -47,18 +47,18 @@ async function controlServer(action) {
                body: JSON.stringify({ signal: action })
           });
 
-          if (!response.ok) throw new Error(`Gagal mengirim perintah: ${action}`);
-          return { success: true, message: `Server ${action} berhasil dikirim!` };
+          if (!response.ok) throw new Error(`Failed to send command: ${action}`);
+          return { success: true, message: `Server ${action} command sent successfully!` };
      } catch (error) {
-          console.error(`[ServerControl] Gagal mengontrol server (${action}):`, error);
-          return { success: false, message: `Gagal mengirim perintah ${action}.` };
+          console.error(`[ServerControl] Failed to control server (${action}):`, error);
+          return { success: false, message: `Failed to send ${action} command.` };
      }
 }
 
 async function updateMonitoringMessage(client) {
      try {
           const channel = await client.channels.fetch(SERVERCONTROL_CHANNELID);
-          if (!channel) throw new Error("Channel tidak ditemukan!");
+          if (!channel) throw new Error("Channel not found!");
 
           const server = await fetchServerStatus();
           if (!server) return;
@@ -75,7 +75,7 @@ async function updateMonitoringMessage(client) {
                .setColor(Colors.Blue)
                .setDescription(`Update in <t:${Math.floor((Date.now() + UPDATE_INTERVAL) / 1000)}:R>`)
                .addFields(
-                    { name: "Status Server", value: `\`\`\`${statusMap[server.status] || "Unknown"}\`\`\`` },
+                    { name: "Server Status", value: `\`\`\`${statusMap[server.status] || "Unknown"}\`\`\`` },
                     { name: "CPU Usage", value: `\`\`\`${server.cpu}%\`\`\``, inline: true },
                     { name: "Memory Usage", value: `\`\`\`${server.memory} MB\`\`\``, inline: true },
                     { name: "Disk Usage", value: `\`\`\`${server.disk} MB\`\`\``, inline: true },
@@ -116,7 +116,7 @@ async function updateMonitoringMessage(client) {
                     const message = await channel.messages.fetch(lastMessageId);
                     await message.edit({ embeds: [embed], components: [row] });
                } catch (error) {
-                    console.warn("[ServerControl] Pesan sebelumnya tidak ditemukan, mengirim pesan baru.");
+                    console.warn("[ServerControl] Previous message not found, sending a new message.");
                     const newMessage = await channel.send({ embeds: [embed], components: [row] });
                     saveLastMessageId("serverControl", newMessage.id);
                }
@@ -125,12 +125,12 @@ async function updateMonitoringMessage(client) {
                saveLastMessageId("serverControl", newMessage.id);
           }
      } catch (error) {
-          console.error("[ServerControl] Gagal memperbarui pesan monitoring:", error);
+          console.error("[ServerControl] Failed to update monitoring message:", error);
      }
 }
 
 module.exports = async (client) => {
-     console.log("[ServerControl] Memulai monitoring server...");
+     console.log("[ServerControl] Starting server monitoring...");
      await updateMonitoringMessage(client);
      setInterval(() => updateMonitoringMessage(client), UPDATE_INTERVAL);
 

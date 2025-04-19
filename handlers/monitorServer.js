@@ -15,7 +15,7 @@ async function fetchServerStatus() {
           });
 
           const data = await response.json();
-          if (data.stat !== "ok") throw new Error("Gagal mengambil data dari API");
+          if (data.stat !== "ok") throw new Error("Failed to fetch data from API");
 
           return data.monitors.map(monitor => {
                return {
@@ -36,7 +36,7 @@ async function fetchServerStatus() {
           });
 
      } catch (error) {
-          console.error("[Monitor] Gagal mengambil status server:", error);
+          console.error("[Monitor] Failed to fetch server status:", error);
           return [];
      }
 }
@@ -44,10 +44,10 @@ async function fetchServerStatus() {
 
 async function sendMonitoringMessage(client) {
      const channel = await client.channels.fetch(MONITOR_CHANNELID);
-     if (!channel) return console.error("[Monitor] Channel tidak ditemukan!");
+     if (!channel) return console.error("[Monitor] Channel not found!");
 
      const servers = await fetchServerStatus();
-     if (servers.length === 0) return console.warn("[Monitor] Tidak ada server yang dimonitor.");
+     if (servers.length === 0) return console.warn("[Monitor] No servers being monitored.");
 
      const nextUpdateTimestamp = Math.floor((Date.now() + UPDATE_INTERVAL) / 1000);
      let serverDetails = servers.map(server => {
@@ -81,7 +81,7 @@ async function sendMonitoringMessage(client) {
 }
 
 module.exports = async (client) => {
-     console.log("[Monitor] Memulai monitoring server...");
+     console.log("[Monitor] Starting server monitoring...");
      await sendMonitoringMessage(client);
      setInterval(async () => await sendMonitoringMessage(client), UPDATE_INTERVAL);
 };
