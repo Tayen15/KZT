@@ -1,4 +1,4 @@
-const { EmbedBuilder, SlashCommandBuilder } = require('discord.js'); 
+const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,9 +12,17 @@ module.exports = {
     cooldown: 5,
     async execute(client, interaction) {
 
+        const sent = await interaction.deferReply({ fetchReply: true });
+
         const pingEmbed = new EmbedBuilder()
-            .setDescription(`:stopwatch: ${Date.now() - interaction.createdTimestamp}ms\n:satellite: ${Math.round(interaction.client.ws.ping)}ms`)
+            .setColor("Random")
+            .setTitle("🏓 Pong!")
+            .setDescription([
+                `:stopwatch: **Response latency**: \`${sent.createdTimestamp - interaction.createdTimestamp}ms\``,
+                `:satellite: **WebSocket ping**: \`${Math.round(interaction.client.ws.ping)}ms\``
+            ].join('\n'))
             .setTimestamp();
-        await interaction.reply({ embeds: [pingEmbed] });
+
+        await interaction.editReply({ embeds: [pingEmbed] });
     },
 };
