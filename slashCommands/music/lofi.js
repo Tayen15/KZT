@@ -1,14 +1,13 @@
 const { SlashCommandBuilder, MessageFlags, EmbedBuilder } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
-const play = require('play-dl');
 const { saveLofiSession } = require('../../utils/lofiStorage');
 
-const YT_LOFI_URL = 'https://www.youtube.com/watch?v=28KRPhVzCus';
+const STREAM_URL = 'https://stream-157.zeno.fm/0r0xa792kwzuv?zt=...'; // pakai URL milikmu
 
 module.exports = {
      data: new SlashCommandBuilder()
           .setName('lofi')
-          .setDescription('Play lofi music from a single YouTube video'),
+          .setDescription('Play lofi music from a 24/7 stream'),
      name: 'lofi',
      category: 'music',
      async execute(client, interaction) {
@@ -26,9 +25,7 @@ module.exports = {
                     }
                });
 
-               const stream = await play.stream(YT_LOFI_URL);
-               const resource = createAudioResource(stream.stream, {
-                    inputType: stream.type,
+               const resource = createAudioResource(STREAM_URL, {
                     inlineVolume: true
                });
                resource.volume.setVolume(1.0);
@@ -48,7 +45,7 @@ module.exports = {
                const embed = new EmbedBuilder()
                     .setColor('#1DB954')
                     .setTitle('🎧 Lofi Music')
-                    .setDescription(`Now playing **lofi** music from YouTube in <#${channel.id}>`)
+                    .setDescription(`Now playing **lofi** 24/7 radio in <#${channel.id}>`)
                     .setFooter({ text: 'Enjoy the vibes!' })
                     .setTimestamp();
 

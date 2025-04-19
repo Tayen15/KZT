@@ -1,8 +1,7 @@
 const { getLofiSessions } = require('../utils/lofiStorage');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
-const play = require('play-dl');
 
-const YT_URL = 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
+const STREAM_URL = 'https://stream-157.zeno.fm/0r0xa792kwzuv?zt=...'; // pakai URL milikmu
 
 module.exports = async (client) => {
      const sessions = getLofiSessions();
@@ -13,9 +12,7 @@ module.exports = async (client) => {
                const channel = await guild.channels.fetch(channelId);
                if (!channel || channel.type !== 2) continue;
 
-               const stream = await play.stream(YT_URL);
-               const resource = createAudioResource(stream.stream, {
-                    inputType: stream.type,
+               const resource = createAudioResource(STREAM_URL, {
                     inlineVolume: true
                });
                resource.volume.setVolume(0.5);
@@ -36,16 +33,6 @@ module.exports = async (client) => {
                });
 
                connection.subscribe(player);
-
-               player.on(AudioPlayerStatus.Idle, async () => {
-                    const newStream = await play.stream(YT_URL);
-                    const newResource = createAudioResource(newStream.stream, {
-                         inputType: newStream.type,
-                         inlineVolume: true
-                    });
-                    newResource.volume.setVolume(0.5);
-                    player.play(newResource);
-               });
 
                console.log(`[LofiReconnect] Reconnected to ${guild.name} - #${channel.name}`);
           } catch (err) {
