@@ -3,6 +3,8 @@ const path = require('path');
 
 module.exports = (client) => {
      client.commands = new Map();
+     client.commandIds = new Map();
+
      const commandFolders = fs.readdirSync(path.join(__dirname, '../slashCommands'));
 
      for (const folder of commandFolders) {
@@ -18,5 +20,4 @@ module.exports = (client) => {
                }
           }
      }
-
 };

@@ -13,7 +13,6 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-
 ['slashCommandHandler', 'eventHandler'].forEach(handler => {
     require(`./handlers/${handler}`)(client);
 });

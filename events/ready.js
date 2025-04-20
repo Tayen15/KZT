@@ -1,5 +1,4 @@
 const { Events, ActivityType } = require('discord.js');
-const moment = require('moment-timezone');
 const axios = require('axios');
 const config = require('../config.json');
 const monitorServer = require("../handlers/monitorServer");
@@ -15,6 +14,26 @@ module.exports = {
     async execute(client) {
         console.log(`[BOT READY] ${client.user.username} is online!`);
         console.log(`[INFO] Connected to ${client.guilds.cache.size} servers and ${client.users.cache.size} members.`);
+
+        if (!client.commandIds) {
+            client.commandIds = new Map();
+            console.log('[INFO] Initialized client.commandIds as Map in ready.js');
+        }
+
+        client.isReady = false;
+
+        try {
+            const commands = await client.application.commands.fetch();
+            commands.forEach(command => {
+                client.commandIds.set(command.name, command.id);
+                console.log(`[COMMAND ID] ${command.name}: ${command.id}`);
+            });
+            console.log(`[INFO] Successfully fetched ${commands.size} command IDs.`);
+        } catch (error) {
+            console.error(`[ERROR] Failed to fetch command IDs:`, error.message);
+        }
+
+        client.isReady = true;
 
         await monitorServer(client);
         await serverControl(client);
@@ -34,7 +53,6 @@ module.exports = {
                 client.user.setPresence({
                     activities: [{ name: presenceActivity, type: ActivityType.Watching }]
                 });
-
             } catch (error) {
                 console.error(`[ERROR] Failed to fetch server status:`, error.message);
             } finally {

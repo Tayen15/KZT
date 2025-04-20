@@ -4,7 +4,13 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
         .setDescription('Displays a list of available commands'),
+    name: 'help',
+    category: 'info',
     async execute(client, interaction) {
+
+        const commandId = client.commandIds.get('help');
+        this.usage = commandId ? `</help:${commandId}>` : '/help';
+
         const categories = [...new Set(Array.from(client.commands.values()).map(cmd => cmd.category || 'Uncategorized'))];
 
         if (categories.length === 0) {
@@ -26,7 +32,7 @@ module.exports = {
                 name: client.user.username,
                 iconURL: client.user.displayAvatarURL({ dynamic: true })
             })
-            .setTitle(`Welcome to ${client.user.username} Help Guide`)  
+            .setTitle(`Welcome to ${client.user.username} Help Guide`)
             .setDescription(`Here you will find all available commands of <@${client.user.id}>.\n\n**Commands**\nUse the menu below to browse available commands.`)
             .setColor(0x00AE86);
 
@@ -44,7 +50,7 @@ module.exports = {
             const selectedCategory = i.values[0];
             const commandsInCategory = Array.from(client.commands.values()).filter(cmd => (cmd.category || 'Uncategorized') === selectedCategory);
 
-            if (commandsInCategory.size === 0) {
+            if (commandsInCategory.length === 0) {
                 return i.reply({ content: `No commands in category **${selectedCategory}**`, flags: MessageFlags.Ephemeral });
             }
 
@@ -80,6 +86,10 @@ module.exports = {
                     return c.reply({ content: 'Command not found.', flags: MessageFlags.Ephemeral });
                 }
 
+                // Dynamically set usage for the selected command
+                const commandId = client.commandIds.get(selectedCommand.data.name);
+                selectedCommand.usage = commandId ? `</${selectedCommand.data.name}:${commandId}>` : `/${selectedCommand.data.name}`;
+
                 const commandEmbed = new EmbedBuilder()
                     .setTitle(`📌 Command: /${selectedCommand.data.name}`)
                     .setDescription(selectedCommand.data.description)
@@ -93,10 +103,14 @@ module.exports = {
 
                 await c.update({ embeds: [commandEmbed], components: [] });
             });
+
+            commandCollector.on('end', async () => {
+                await c.editReply({ components: [] }).catch(() => { });
+            });
         });
 
         collector.on('end', async () => {
-            await interaction.editReply({ components: [] }).catch(() => {});
+            await interaction.editReply({ components: [] }).catch(() => { });
         });
     }
 };

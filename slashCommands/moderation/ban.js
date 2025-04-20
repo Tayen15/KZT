@@ -6,7 +6,6 @@ module.exports = {
           .setDescription('Ban a user from the server'),
      name: "ban",
      category: "moderation",
-     usage: "",
      async execute(client, interaction) {
           await interaction.reply({ content: 'Coming Soon!', flags: MessageFlags.Ephemeral });
      }

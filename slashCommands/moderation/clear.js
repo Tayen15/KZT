@@ -22,7 +22,6 @@ module.exports = {
 
      name: "clear",
      category: "moderation",
-     usage: "/clear amount:<number> [user:<user>] [channel:<channel>]",
 
      async execute(client, interaction) {
           const amount = interaction.options.getInteger('amount');

@@ -6,8 +6,8 @@ module.exports = {
      data: new SlashCommandBuilder()
           .setName('mcstatus')
           .setDescription('Check the status of the Minecraft server.'),
+     name: 'mcstatus',     
      category: 'minecraft',
-     usage: '</mcstatus:1347476609929580597>',
      async execute(client, interaction) {
           try {
                const getServerStatus = await axios.get(`https://api.mcsrvstat.us/3/${config.SERVER_IP}`);

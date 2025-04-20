@@ -33,7 +33,6 @@ module.exports = {
                 .addChoices(...commandChoices.slice(0, 25)); 
         }),
     name: 'reload',
-    description: 'Reloads a specific file or command',
     category: 'dev',
 
     async execute(client, interaction) {

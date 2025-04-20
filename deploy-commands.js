@@ -34,6 +34,10 @@ const rest = new REST({ version: '10' }).setToken(token);
 		);
 
 		console.log(`✅ Successfully deployed ${data.length} slash commands.`);
+
+		data.forEach(cmd => {
+			console.log(`Command: ${cmd.name}, ID: ${cmd.id}`);
+		});
 	} catch (error) {
 		console.error('❌ Error deploying commands:', error);
 	}

@@ -6,7 +6,7 @@ module.exports = {
      data: new SlashCommandBuilder()
           .setName('stoplofi')
           .setDescription('Stop playing lofi and leave the voice channel'),
-     name: 'lofi',
+     name: 'stoplofi',
      category: 'music',
      async execute(client, interaction) {
           const guildId = interaction.guild.id;

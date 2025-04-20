@@ -12,8 +12,6 @@ module.exports = {
     description: "Displays bot statistics.",
     aliases: [],
     category: "info",
-    usage: "</stats:1341452428066820202>",
-    cooldown: 5,
     async execute(client, interaction) {
         const botUptime = formatUptime(interaction.client.uptime);
         const osUptime = formatUptime(os.uptime() * 1000);
