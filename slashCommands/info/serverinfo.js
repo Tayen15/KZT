@@ -15,20 +15,35 @@ module.exports = {
           const emojisCount = guild.emojis.cache.size;
           const channelsCount = guild.channels.cache.size;
           const memberCount = guild.memberCount;
+          const boostCount = guild.premiumSubscriptionCount || 0;
+          const boostTier = guild.premiumTier ? `Tier ${guild.premiumTier}` : 'None';
+          const iconURL = guild.iconURL({ dynamic: true, size: 1024 });
+
+          // Menghitung jumlah channel berdasarkan tipe
+          const channelTypes = {
+               text: guild.channels.cache.filter(ch => ch.type === 0).size, // Text channels
+               voice: guild.channels.cache.filter(ch => ch.type === 2).size, // Voice channels
+               category: guild.channels.cache.filter(ch => ch.type === 4).size, // Categories
+               stage: guild.channels.cache.filter(ch => ch.type === 13).size, // Stage channels
+               forum: guild.channels.cache.filter(ch => ch.type === 15).size // Forum channels
+          };
 
           const embed = new EmbedBuilder()
                .setTitle(`📊 Server Information`)
-               .setThumbnail(guild.iconURL({ dynamic: true }))
+               .setThumbnail(iconURL)
                .setColor(0x5865F2)
                .addFields(
                     { name: '📛 Server Name', value: guild.name, inline: true },
                     { name: '🆔 Server ID', value: guild.id, inline: true },
                     { name: '👑 Owner', value: `${owner.user.tag}`, inline: true },
                     { name: '👥 Member Count', value: `${memberCount}`, inline: true },
-                    { name: '📁 Channels', value: `${channelsCount}`, inline: true },
                     { name: '📌 Role Count', value: `${rolesCount}`, inline: true },
                     { name: '😄 Emojis', value: `${emojisCount}`, inline: true },
-                    { name: '📅 Created On', value: `${createdAt}`, inline: false }
+                    { name: '🚀 Boosts', value: `${boostCount} (${boostTier})`, inline: true },
+                    { name: '🌐 Icon URL', value: `[View Icon](${iconURL})`, inline: true },
+                    { name: '📅 Created On', value: `${createdAt}`, inline: false },
+                    { name: '📁 Channels', value: `${channelsCount}`, inline: true },
+                    { name: '📂 Channel Types', value: `Text: ${channelTypes.text}\nVoice: ${channelTypes.voice}\nCategory: ${channelTypes.category}\nStage: ${channelTypes.stage}\nForum: ${channelTypes.forum}`, inline: false }
                )
                .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() })
                .setTimestamp();

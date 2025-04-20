@@ -16,7 +16,7 @@ module.exports = {
                return interaction.reply({ content: '❌ Please join a voice channel first!', flags: MessageFlags.Ephemeral });
           }
 
-          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+          await interaction.deferReply();
 
           try {
                const player = createAudioPlayer({
