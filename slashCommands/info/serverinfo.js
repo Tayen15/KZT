@@ -42,8 +42,11 @@ module.exports = {
                     { name: '🚀 Boosts', value: `${boostCount} (${boostTier})`, inline: true },
                     { name: '🌐 Icon URL', value: `[View Icon](${iconURL})`, inline: true },
                     { name: '📅 Created On', value: `${createdAt}`, inline: false },
-                    { name: '📁 Channels', value: `${channelsCount}`, inline: true },
-                    { name: '📂 Channel Types', value: `Text: ${channelTypes.text}\nVoice: ${channelTypes.voice}\nCategory: ${channelTypes.category}\nStage: ${channelTypes.stage}\nForum: ${channelTypes.forum}`, inline: false }
+                    { 
+                         name: '📁 Channels', 
+                         value: `Total: ${channelsCount}\n- Text: ${channelTypes.text}\n- Voice: ${channelTypes.voice}\n- Category: ${channelTypes.category}\n- Stage: ${channelTypes.stage}\n- Forum: ${channelTypes.forum}`, 
+                         inline: false 
+                    }
                )
                .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() })
                .setTimestamp();
