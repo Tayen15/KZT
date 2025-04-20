@@ -22,7 +22,11 @@ module.exports = {
 
      name: "clear",
      category: "moderation",
-
+     options: [
+          { name: 'amount', type: 'INTEGER', required: true, description: 'The number of messages to delete (max 100)' },
+          { name: 'user', type: 'USER', required: false, description: '(Optional) Only delete messages from this user' },
+          { name: 'channel', type: 'CHANNEL', required: false, description: '(Optional) Target channel' }
+     ],
      async execute(client, interaction) {
           const amount = interaction.options.getInteger('amount');
           const user = interaction.options.getUser('user');
