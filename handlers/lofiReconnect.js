@@ -41,7 +41,6 @@ module.exports = async (client) => {
                          const res = await fetch(STREAM_URL, { method: 'HEAD' });
                
                          if (status !== AudioPlayerStatus.Playing || !res.ok) {
-                              console.log(`[LofiReconnect] Stream seems down or bot not playing, reloading stream...`);
                
                               const newResource = createAudioResource(STREAM_URL, {
                                    inlineVolume: true
