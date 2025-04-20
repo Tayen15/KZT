@@ -33,19 +33,19 @@ module.exports = {
                .setThumbnail(iconURL)
                .setColor(0x5865F2)
                .addFields(
-                    { name: '📛 Server Name', value: guild.name, inline: true },
-                    { name: '🆔 Server ID', value: guild.id, inline: true },
-                    { name: '👑 Owner', value: `${owner.user.tag}`, inline: true },
-                    { name: '👥 Member Count', value: `${memberCount}`, inline: true },
-                    { name: '📌 Role Count', value: `${rolesCount}`, inline: true },
-                    { name: '😄 Emojis', value: `${emojisCount}`, inline: true },
-                    { name: '🚀 Boosts', value: `${boostCount} (${boostTier})`, inline: true },
-                    { name: '🌐 Icon URL', value: `[View Icon](${iconURL})`, inline: true },
-                    { name: '📅 Created On', value: `${createdAt}`, inline: false },
-                    { 
-                         name: '📁 Channels', 
-                         value: `Total: ${channelsCount}\n- Text: ${channelTypes.text}\n- Voice: ${channelTypes.voice}\n- Category: ${channelTypes.category}\n- Stage: ${channelTypes.stage}\n- Forum: ${channelTypes.forum}`, 
-                         inline: false 
+                    { name: 'Server Name', value: `- ${guild.name}`, inline: false },
+                    { name: 'Server ID', value: `- ${guild.id}`, inline: false },
+                    { name: 'Owner', value: `- ${owner.user.tag}`, inline: false },
+                    { name: 'Member Count', value: `- ${memberCount}`, inline: false },
+                    { name: 'Role Count', value: `- ${rolesCount}`, inline: false },
+                    { name: 'Emojis', value: `- ${emojisCount}`, inline: false },
+                    { name: 'Boosts', value: `- ${boostCount} (${boostTier})`, inline: false },
+                    { name: 'Icon URL', value: `- [View Icon](${iconURL})`, inline: false },
+                    { name: 'Created On', value: `- ${createdAt}`, inline: false },
+                    {
+                         name: 'Channels',
+                         value: `- Total: ${channelsCount}\n  - Text: ${channelTypes.text}\n  - Voice: ${channelTypes.voice}\n  - Category: ${channelTypes.category}\n  - Stage: ${channelTypes.stage}\n  - Forum: ${channelTypes.forum}`,
+                         inline: false
                     }
                )
                .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() })

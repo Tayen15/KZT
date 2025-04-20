@@ -27,14 +27,7 @@ module.exports = {
                .setThumbnail(user.displayAvatarURL({ dynamic: true }))
                .setColor(0x3498DB)
                .addFields(
-                    { name: '🆔 User ID', value: user.id, inline: true },
-                    { name: '👤 Username', value: `${user.tag}`, inline: true },
-                    { name: '📛 Display Name', value: member.displayName, inline: true },
-                    { name: '📆 Account Created', value: createdAt, inline: false },
-                    { name: '📥 Joined Server', value: joinedAt, inline: false },
-                    { name: '🎭 Roles', value: roles, inline: false },
-                    { name: '🤖 Bot?', value: user.bot ? 'Yes' : 'No', inline: true },
-                    { name: '🔗 Avatar URL', value: `[Click Here](${user.displayAvatarURL({ dynamic: true })})`, inline: false }
+                    { name: 'Details', value: `- User ID: ${user.id}\n- Username: ${user.tag}\n- Display Name: ${member.displayName}\n- Account Created: ${createdAt}\n- Joined Server: ${joinedAt}\n- Roles: ${roles}\n- Bot: ${user.bot ? 'Yes' : 'No'}\n- Avatar URL: [Click Here](${user.displayAvatarURL({ dynamic: true })})`, inline: false }
                )
                .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() })
                .setTimestamp();
