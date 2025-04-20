@@ -1,4 +1,5 @@
-const { Events } = require('discord.js');
+const { Events, MessageFlags } = require('discord.js');
+const config = require('../config.json'); 
 
 module.exports = {
 	name: Events.InteractionCreate,
@@ -10,7 +11,7 @@ module.exports = {
 
 		if (!command) {
 			console.error(`❌ No command matching "${interaction.commandName}" was found.`);
-			await interaction.reply({ content: '⚠️ An error occurred! Command not found.', ephemeral: true });
+			await interaction.reply({ content: '⚠️ An error occurred! Command not found.', flags: MessageFlags.Ephemeral });
 			return;
 		}
 
@@ -22,8 +23,15 @@ module.exports = {
 
 		// Check if bot is ready
 		if (!client.isReady) {
-			await interaction.reply({ content: '⚠️ The bot is still starting up. Please try again in a moment.', ephemeral: true });
+			await interaction.reply({ content: '⚠️ The bot is still starting up. Please try again in a moment.', flags: MessageFlags.Ephemeral });
 			return;
+		}
+
+		if (command.ownerOnly && interaction.user.id !== config.ownerId) {
+			return interaction.reply({ content: 'This command is restricted to the bot owner.', flags: MessageFlags.Ephemeral });
+		}
+		if (command.requiredPermissions?.length && !interaction.member.permissions.has(command.requiredPermissions)) {
+			return interaction.reply({ content: 'You do not have permission to use this command.', flags: MessageFlags.Ephemeral });
 		}
 
 		try {
@@ -33,9 +41,9 @@ module.exports = {
 			console.error(error);
 
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: '⚠️ An error occurred while executing the command!', ephemeral: true });
+				await interaction.followUp({ content: '⚠️ An error occurred while executing the command!', flags: MessageFlags.Ephemeral });
 			} else {
-				await interaction.reply({ content: '⚠️ An error occurred while executing the command!', ephemeral: true });
+				await interaction.reply({ content: '⚠️ An error occurred while executing the command!', flags: MessageFlags.Ephemeral });
 			}
 		}
 	},

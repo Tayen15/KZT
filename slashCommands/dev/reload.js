@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const { ownerOnly } = require('../info/help');
 
 const directories = ['info', 'core', 'minecraft', 'moderation', 'music'];
 
@@ -34,7 +35,10 @@ module.exports = {
         }),
     name: 'reload',
     category: 'dev',
-
+    ownerOnly: true,
+    options: [
+        { name: 'command', type: 'STRING', required: true, description: 'The command to reload' }
+    ],
     async execute(client, interaction) {
         const commandName = interaction.options.getString('command').toLowerCase();
         let directory;

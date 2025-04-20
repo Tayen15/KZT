@@ -8,7 +8,7 @@ module.exports = {
         .setDescription('Displays a list of available commands')
         .addStringOption(option => {
             const commandChoices = [];
-            const commandPath = path.join(__dirname, '..'); 
+            const commandPath = path.join(__dirname, '..');
             const directories = fs.readdirSync(commandPath).filter(file => fs.statSync(path.join(commandPath, file)).isDirectory());
 
             for (const dir of directories) {
@@ -31,7 +31,7 @@ module.exports = {
         })
         .addStringOption(option => {
             const categoryChoices = [];
-            const commandPath = path.join(__dirname, '..'); // Folder slashCommands
+            const commandPath = path.join(__dirname, '..');
             const directories = fs.readdirSync(commandPath).filter(file => fs.statSync(path.join(commandPath, file)).isDirectory());
 
             for (const dir of directories) {
@@ -48,29 +48,46 @@ module.exports = {
         }),
     name: 'help',
     category: 'info',
-    options: [],
+    ownerOnly: false,
+    requiredPermissions: [],
+    options: [
+        { name: 'command', type: 'STRING', required: false, description: '(Optional) Slash command to view details' },
+        { name: 'category', type: 'STRING', required: false, description: '(Optional) Category to view commands' }
+    ],
     async execute(client, interaction) {
+        const config = require('../../config.json'); 
+        const isOwner = interaction.user.id === config.ownerId;
+
+        // Filter commands based on authorization
+        const authorizedCommands = Array.from(client.commands.values()).filter(cmd => {
+            if (cmd.ownerOnly && !isOwner) return false;
+            if (cmd.requiredPermissions?.length && !interaction.member.permissions.has(cmd.requiredPermissions)) {
+                return false;
+            }
+            return true;
+        });
+
+        // Get categories from authorized commands
+        const categories = [...new Set(authorizedCommands.map(cmd => cmd.category || 'Uncategorized'))];
+        const commandOption = interaction.options.getString('command');
+        const categoryOption = interaction.options.getString('category');
+
         // Dynamically set usage for the help command
         const commandId = client.commandIds.get('help');
         this.usage = commandId ? `</help:${commandId}> [command] [category]` : '/help [command] [category]';
 
-        const categories = [...new Set(Array.from(client.commands.values()).map(cmd => cmd.category || 'Uncategorized'))];
-        const commandOption = interaction.options.getString('command');
-        const categoryOption = interaction.options.getString('category');
-
         // Handle command option
         if (commandOption) {
-            const selectedCommand = client.commands.get(commandOption);
+            const selectedCommand = authorizedCommands.find(cmd => cmd.data.name === commandOption);
 
             if (!selectedCommand) {
-                return interaction.reply({ content: `No command named **${commandOption}** found.`, flags: MessageFlags.Ephemeral });
+                return interaction.reply({ content: `No command named **${commandOption}** found or you lack permission.`, flags: MessageFlags.Ephemeral });
             }
 
             // Dynamically set usage for the selected command
             const commandId = client.commandIds.get(selectedCommand.data.name);
             let usage = commandId ? `</${selectedCommand.data.name}:${commandId}>` : `/${selectedCommand.data.name}`;
 
-            // Append options to usage if they exist
             if (selectedCommand.options && selectedCommand.options.length > 0) {
                 const optionsString = selectedCommand.options
                     .map(opt => (opt.required ? `<${opt.name}>` : `[${opt.name}]`))
@@ -86,6 +103,7 @@ module.exports = {
                 .addFields(
                     { name: '📑 **Category**', value: selectedCommand.category || 'Unknown', inline: true },
                     { name: '📖 **Usage**', value: selectedCommand.usage || `/${selectedCommand.data.name}`, inline: false },
+                    { name: '🔗 **Aliases**', value: selectedCommand.aliases?.length ? selectedCommand.aliases.join(', ') : 'None', inline: false }
                 )
                 .setColor(0x00AE86)
                 .setTimestamp();
@@ -96,10 +114,10 @@ module.exports = {
         // Handle category option
         if (categoryOption) {
             if (!categories.includes(categoryOption)) {
-                return interaction.reply({ content: `No category named **${categoryOption}** found.`, flags: MessageFlags.Ephemeral });
+                return interaction.reply({ content: `No category named **${categoryOption}** found or you lack permission.`, flags: MessageFlags.Ephemeral });
             }
 
-            const commandsInCategory = Array.from(client.commands.values()).filter(cmd => (cmd.category || 'Uncategorized') === categoryOption);
+            const commandsInCategory = authorizedCommands.filter(cmd => (cmd.category || 'Uncategorized') === categoryOption);
 
             if (commandsInCategory.length === 0) {
                 return interaction.reply({ content: `No commands in category **${categoryOption}**`, flags: MessageFlags.Ephemeral });
@@ -131,17 +149,16 @@ module.exports = {
             });
 
             commandCollector.on('collect', async c => {
-                const selectedCommand = client.commands.get(c.values[0]);
+                const selectedCommand = authorizedCommands.find(cmd => cmd.data.name === c.values[0]);
 
                 if (!selectedCommand) {
-                    return c.reply({ content: 'Command not found.', flags: MessageFlags.Ephemeral });
+                    return c.reply({ content: 'Command not found or you lack permission.', flags: MessageFlags.Ephemeral });
                 }
 
                 // Dynamically set usage for the selected command
                 const commandId = client.commandIds.get(selectedCommand.data.name);
                 let usage = commandId ? `</${selectedCommand.data.name}:${commandId}>` : `/${selectedCommand.data.name}`;
 
-                // Append options to usage if they exist
                 if (selectedCommand.options && selectedCommand.options.length > 0) {
                     const optionsString = selectedCommand.options
                         .map(opt => (opt.required ? `<${opt.name}>` : `[${opt.name}]`))
@@ -157,6 +174,7 @@ module.exports = {
                     .addFields(
                         { name: '📑 **Category**', value: selectedCommand.category || 'Unknown', inline: true },
                         { name: '📖 **Usage**', value: selectedCommand.usage || `/${selectedCommand.data.name}`, inline: false },
+                        { name: '🔗 **Aliases**', value: selectedCommand.aliases?.length ? selectedCommand.aliases.join(', ') : 'None', inline: false }
                     )
                     .setColor(0x00AE86)
                     .setTimestamp();
@@ -173,7 +191,7 @@ module.exports = {
 
         // If no options are provided, show category selection
         if (categories.length === 0) {
-            return interaction.reply({ content: 'No commands available.', flags: MessageFlags.Ephemeral });
+            return interaction.reply({ content: 'No commands available for you.', flags: MessageFlags.Ephemeral });
         }
 
         const categorySelect = new StringSelectMenuBuilder()
@@ -207,7 +225,7 @@ module.exports = {
             if (i.customId !== 'select_category') return;
 
             const selectedCategory = i.values[0];
-            const commandsInCategory = Array.from(client.commands.values()).filter(cmd => (cmd.category || 'Uncategorized') === selectedCategory);
+            const commandsInCategory = authorizedCommands.filter(cmd => (cmd.category || 'Uncategorized') === selectedCategory);
 
             if (commandsInCategory.length === 0) {
                 return i.reply({ content: `No commands in category **${selectedCategory}**`, flags: MessageFlags.Ephemeral });
@@ -239,17 +257,16 @@ module.exports = {
             });
 
             commandCollector.on('collect', async c => {
-                const selectedCommand = client.commands.get(c.values[0]);
+                const selectedCommand = authorizedCommands.find(cmd => cmd.data.name === c.values[0]);
 
                 if (!selectedCommand) {
-                    return c.reply({ content: 'Command not found.', flags: MessageFlags.Ephemeral });
+                    return c.reply({ content: 'Command not found or you lack permission.', flags: MessageFlags.Ephemeral });
                 }
 
                 // Dynamically set usage for the selected command
                 const commandId = client.commandIds.get(selectedCommand.data.name);
                 let usage = commandId ? `</${selectedCommand.data.name}:${commandId}>` : `/${selectedCommand.data.name}`;
 
-                // Append options to usage if they exist
                 if (selectedCommand.options && selectedCommand.options.length > 0) {
                     const optionsString = selectedCommand.options
                         .map(opt => (opt.required ? `<${opt.name}>` : `[${opt.name}]`))
@@ -265,6 +282,7 @@ module.exports = {
                     .addFields(
                         { name: '📑 **Category**', value: selectedCommand.category || 'Unknown', inline: true },
                         { name: '📖 **Usage**', value: selectedCommand.usage || `/${selectedCommand.data.name}`, inline: false },
+                        { name: '🔗 **Aliases**', value: selectedCommand.aliases?.length ? selectedCommand.aliases.join(', ') : 'None', inline: false }
                     )
                     .setColor(0x00AE86)
                     .setTimestamp();

@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { TextChannel } = require('discord.js');
+const { ownerOnly } = require('./reload');
 
 module.exports = {
      data: new SlashCommandBuilder()
@@ -18,7 +19,11 @@ module.exports = {
      name: 'announce',
      aliases: ['an'],
      category: 'dev',
-     
+     ownerOnly: true,
+     options: [
+          { name: 'channels', type: 'STRING', required: true, description: 'List of channel IDs' },
+          { name: 'message', type: 'STRING', required: true, description: 'The message to send' }
+     ],
      async execute(client, interaction) {
           const channelIds = interaction.options.getString('channels').split(',');
           const message = interaction.options.getString('message');

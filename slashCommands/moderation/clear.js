@@ -22,6 +22,7 @@ module.exports = {
 
      name: "clear",
      category: "moderation",
+     requiredPermissions: [PermissionFlagsBits.ManageMessages],
      options: [
           { name: 'amount', type: 'INTEGER', required: true, description: 'The number of messages to delete (max 100)' },
           { name: 'user', type: 'USER', required: false, description: '(Optional) Only delete messages from this user' },
