@@ -25,6 +25,7 @@
           "dotenv": "^16.0.1",
           "express": "^4.18.2",
           "fs": "^0.0.1-security",
+          "genius-lyrics": "^4.4.7",
           "moment": "^2.29.4",
           "moment-timezone": "^0.5.43",
           "ms": "^2.1.3",
