@@ -35,7 +35,7 @@ module.exports = {
                     channelId: channel.id,
                     guildId: interaction.guild.id,
                     adapterCreator: interaction.guild.voiceAdapterCreator,
-                    selfDeaf: false
+                    selfDeaf: true
                });
 
                connection.subscribe(player);

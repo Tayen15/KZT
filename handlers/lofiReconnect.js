@@ -30,7 +30,7 @@ module.exports = async (client) => {
                     channelId: channel.id,
                     guildId: guild.id,
                     adapterCreator: guild.voiceAdapterCreator,
-                    selfDeaf: false
+                    selfDeaf: true
                });
 
                connection.subscribe(player);
