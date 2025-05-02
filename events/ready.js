@@ -45,10 +45,10 @@ module.exports = {
                 const response = await axios.get(serverStatusURL);
                 const { players } = response.data;
 
-                let presenceActivity = `${config.SERVER_NAME} Server is Offline`;
-                if (players?.online !== undefined) {
-                    presenceActivity = `${players.online}/${players.max} Villagers on ${config.SERVER_NAME}`;
-                }
+                let presenceActivity = `NF Kentang Goreng`;
+                // if (players?.online !== undefined) {
+                //     presenceActivity = `${players.online}/${players.max} Villagers on ${config.SERVER_NAME}`;
+                // }
 
                 client.user.setPresence({
                     activities: [{ name: presenceActivity, type: ActivityType.Watching }]
