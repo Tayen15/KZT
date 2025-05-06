@@ -35,8 +35,8 @@ module.exports = {
 
         client.isReady = true;
 
-        await monitorServer(client);
-        await serverControl(client);
+        // await monitorServer(client);
+        // await serverControl(client);
         await prayerTime(client);
         await lofiReconnect(client);
 
