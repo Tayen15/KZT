@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { TextChannel } = require('discord.js');
-const { ownerOnly } = require('./reload');
+const { TextChannel, NewsChannel } = require('discord.js');
 
 module.exports = {
      data: new SlashCommandBuilder()
@@ -27,14 +26,19 @@ module.exports = {
      async execute(client, interaction) {
           const channelIds = interaction.options.getString('channels').split(',');
           const message = interaction.options.getString('message');
-          channelIds.forEach(async channelId => {
-               const channel = await interaction.client.channels.fetch(channelId);
-               if (channel instanceof TextChannel) {
-                    await channel.send(message);
-               } else {
-                    await channel.send(`Channel with ID ${channelId} is not a text channel.`);
+          
+          for (const channelId of channelIds) {
+               try {
+                    const channel = await interaction.client.channels.fetch(channelId);
+                    if (channel instanceof TextChannel || channel instanceof NewsChannel) {
+                         await channel.send(message);
+                    } else {
+                         await interaction.followUp(`Channel with ID ${channelId} is not a text or announcement channel.`);
+                    }
+               } catch (error) {
+                    await interaction.followUp(`Failed to send message to channel ${channelId}: ${error.message}`);
                }
-          });
+          }
 
           await interaction.reply(`Sent the message to ${channelIds.length} channels.`);
      },
