@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { TextChannel, NewsChannel } = require('discord.js');
+const { TextChannel, NewsChannel, DMChannel } = require('discord.js');
 
 module.exports = {
      data: new SlashCommandBuilder()
@@ -30,16 +30,22 @@ module.exports = {
           for (const channelId of channelIds) {
                try {
                     const channel = await interaction.client.channels.fetch(channelId);
-                    if (channel instanceof TextChannel || channel instanceof NewsChannel) {
+                    if (channel instanceof TextChannel || channel instanceof NewsChannel || channel instanceof DMChannel) {
                          await channel.send(message);
                     } else {
-                         await interaction.followUp(`Channel with ID ${channelId} is not a text or announcement channel.`);
+                         await interaction.followUp(`Channel with ID ${channelId} is not a text, announcement, or DM channel.`);
                     }
                } catch (error) {
-                    await interaction.followUp(`Failed to send message to channel ${channelId}: ${error.message}`);
+                    try {
+                         // If channel fetch fails, try to send DM to user
+                         const user = await interaction.client.users.fetch(channelId);
+                         await user.send(message);
+                    } catch (dmError) {
+                         await interaction.followUp(`Failed to send message to ${channelId}: ${error.message}`);
+                    }
                }
           }
 
-          await interaction.reply(`Sent the message to ${channelIds.length} channels.`);
+          await interaction.reply(`Sent the message to ${channelIds.length} channels/users.`);
      },
 };
