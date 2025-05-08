@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { ownerOnly } = require('../info/help');
 
-const directories = ['info', 'core', 'minecraft', 'moderation', 'music'];
+const directories = ['info', 'core', 'minecraft', 'moderation', 'music', 'dev'];
 
 module.exports = {
     data: new SlashCommandBuilder()
