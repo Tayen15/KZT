@@ -3,6 +3,7 @@ const axios = require('axios');
 const config = require('../config.json');
 const monitorServer = require("../handlers/monitorServer");
 const serverControl = require("../handlers/serverControl");
+const rules = require("../handlers/rules");
 const prayerTime = require("../handlers/prayerTime");
 const lofiReconnect = require("../handlers/lofiReconnect");
 
@@ -39,6 +40,7 @@ module.exports = {
         // await serverControl(client);
         await prayerTime(client);
         await lofiReconnect(client);
+        // await rules.sendRules(client.channels.cache.get(config.RULES_CHANNELID));
 
         async function updatePresence() {
             try {
