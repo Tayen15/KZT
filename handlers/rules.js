@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const DEFAULT_RULES = {
-     messageId: '1369987097905336320',
-     channelId: '889302084095197203',
+     messageId: '1370717231113310302',
+     channelId: '1370697604358213644',
      rules: "### 1. Hormati Semua Anggota\nBersikaplah baik dan sopan kepada semua orang. Tidak ada ujaran kebencian, pelecehan, atau diskriminasi yang diperbolehkan.\n\n### 2. Dilarang Spam atau Promosi Pribadi\nJangan kirim pesan berulang-ulang atau promosi tanpa izin. Termasuk juga promosi via DM tanpa persetujuan.\n\n### 3. Konten Harus Ramah Semua Umur\nDilarang membagikan konten NSFW, kekerasan, atau materi yang mengandung unsur eksplisit.\n\n### 4. Gunakan Channel dengan Benar\nPastikan setiap pesan dikirim di channel yang sesuai. Baca deskripsi channel sebelum memposting sesuatu.\n\n### 6. Jangan Bagikan Informasi Pribadi\nDemi keamanan, jangan sebarkan informasi pribadi kamu atau orang lain, termasuk alamat, nomor telepon, dan akun media sosial.\n\n### 7. Bersikap Positif dan Bangun Komunitas yang Baik\nMari kita ciptakan lingkungan yang nyaman dan mendukung untuk semua orang!\n\n⚡ Bersama-sama kita bangun komunitas yang ramah dan menyenangkan untuk semua! 🚀"
 };
 
