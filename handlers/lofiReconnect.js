@@ -1,11 +1,11 @@
 const { getLofiSessions } = require('../utils/lofiStorage');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
 
-const STREAM_URL = 'https://stream-157.zeno.fm/0r0xa792kwzuv?zt=...';
+const STREAM_URL = 'https://stream-157.zeno.fm/0r0xa792kwzuv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiIwcjB4YTc5Mmt3enV2IiwiaG9zdCI6InN0cmVhbS0xNTcuemVuby5mbSIsInJ0dGwiOjUsImp0aSI6IkVwRE53VEJIVGNDY0RJTmlpUzlRb1EiLCJpYXQiOjE3NDY4NzU2NTYsImV4cCI6MTc0Njg3NTcxNn0.A8kS0ZSXDoVvPX_gOCz2DJa0slpoJ2jt_7TryS5EKoo&zt=';
 const RECONNECT_INTERVAL = 30000; // 30 detik
 
 module.exports = async (client) => {
-     const sessions = getLofiSessions();
+     const sessions = getLofiSessions();     
 
      for (const { guildId, channelId } of sessions) {
           try {
