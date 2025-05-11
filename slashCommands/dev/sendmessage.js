@@ -16,7 +16,7 @@ module.exports = {
 
           const embedMessage = new EmbedBuilder()
                .setColor("Blue")
-               .setDescription(config.sendmessages.message)
+               .setDescription(config.sendmessages.rules)
                .setFooter({ text: "Last Updated" })
                .setTimestamp();
 
