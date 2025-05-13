@@ -11,7 +11,7 @@ module.exports = {
           ),
      name: 'userinfo',
      category: 'info',
-     async execute(client, interaction) {
+     async execute(interaction) {
           const user = interaction.options.getUser('target') || interaction.user;
           const member = await interaction.guild.members.fetch(user.id);
 

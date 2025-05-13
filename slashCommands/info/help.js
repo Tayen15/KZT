@@ -54,12 +54,12 @@ module.exports = {
         { name: 'command', type: 'STRING', required: false, description: '(Optional) Slash command to view details' },
         { name: 'category', type: 'STRING', required: false, description: '(Optional) Category to view commands' }
     ],
-    async execute(client, interaction) {
+    async execute(interaction) {
         const config = require('../../config.json'); 
         const isOwner = interaction.user.id === config.ownerId;
 
         // Filter commands based on authorization
-        const authorizedCommands = Array.from(client.commands.values()).filter(cmd => {
+        const authorizedCommands = Array.from(interaction.client.commands.values()).filter(cmd => {
             if (cmd.ownerOnly && !isOwner) return false;
             if (cmd.requiredPermissions?.length && !interaction.member.permissions.has(cmd.requiredPermissions)) {
                 return false;
@@ -73,7 +73,7 @@ module.exports = {
         const categoryOption = interaction.options.getString('category');
 
         // Dynamically set usage for the help command
-        const commandId = client.commandIds.get('help');
+        const commandId = interaction.client.commandIds.get('help');
         this.usage = commandId ? `</help:${commandId}> [command] [category]` : '/help [command] [category]';
 
         // Handle command option
@@ -85,7 +85,7 @@ module.exports = {
             }
 
             // Dynamically set usage for the selected command
-            const commandId = client.commandIds.get(selectedCommand.data.name);
+            const commandId = interaction.client.commandIds.get(selectedCommand.data.name);
             let usage = commandId ? `</${selectedCommand.data.name}:${commandId}>` : `/${selectedCommand.data.name}`;
 
             if (selectedCommand.options && selectedCommand.options.length > 0) {
@@ -156,7 +156,7 @@ module.exports = {
                 }
 
                 // Dynamically set usage for the selected command
-                const commandId = client.commandIds.get(selectedCommand.data.name);
+                const commandId = interaction.client.commandIds.get(selectedCommand.data.name);
                 let usage = commandId ? `</${selectedCommand.data.name}:${commandId}>` : `/${selectedCommand.data.name}`;
 
                 if (selectedCommand.options && selectedCommand.options.length > 0) {
@@ -206,11 +206,11 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setAuthor({
-                name: client.user.username,
-                iconURL: client.user.displayAvatarURL({ dynamic: true })
+                name: interaction.client.user.username,
+                iconURL: interaction.client.user.displayAvatarURL({ dynamic: true })
             })
-            .setTitle(`Welcome to ${client.user.username} Help Guide`)
-            .setDescription(`Here you will find all available commands of <@${client.user.id}>.\n\n**Commands**\nUse the menu below to browse available commands.`)
+            .setTitle(`Welcome to ${interaction.client.user.username} Help Guide`)
+            .setDescription(`Here you will find all available commands of <@${interaction.client.user.id}>.\n\n**Commands**\nUse the menu below to browse available commands.`)
             .setColor(0x00AE86);
 
         await interaction.reply({ embeds: [embed], components: [categoryRow], flags: MessageFlags.Ephemeral });
@@ -264,7 +264,7 @@ module.exports = {
                 }
 
                 // Dynamically set usage for the selected command
-                const commandId = client.commandIds.get(selectedCommand.data.name);
+                const commandId = interaction.client.commandIds.get(selectedCommand.data.name);
                 let usage = commandId ? `</${selectedCommand.data.name}:${commandId}>` : `/${selectedCommand.data.name}`;
 
                 if (selectedCommand.options && selectedCommand.options.length > 0) {

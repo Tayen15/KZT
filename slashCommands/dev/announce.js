@@ -23,7 +23,7 @@ module.exports = {
           { name: 'channels', type: 'STRING', required: true, description: 'List of channel IDs' },
           { name: 'message', type: 'STRING', required: true, description: 'The message to send' }
      ],
-     async execute(client, interaction) {
+     async execute(interaction) {
           const channelIds = interaction.options.getString('channels').split(',');
           const message = interaction.options.getString('message');
 

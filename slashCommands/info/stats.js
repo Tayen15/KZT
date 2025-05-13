@@ -12,7 +12,7 @@ module.exports = {
     description: "Displays bot statistics.",
     aliases: [],
     category: "info",
-    async execute(client, interaction) {
+    async execute(interaction) {
         const botUptime = formatUptime(interaction.client.uptime);
         const osUptime = formatUptime(os.uptime() * 1000);
         const usedMemory = os.totalmem() - os.freemem();
@@ -39,7 +39,7 @@ module.exports = {
                     { name: 'Bot Uptime', value: `\`\`\`${botUptime}\`\`\``, inline: false },
                     { name: 'Memory Usage', value: `\`\`\`${memoryUsage}\`\`\``, inline: false }
                 )
-                .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
+                .setThumbnail(interaction.client.user.displayAvatarURL({ dynamic: true }))
                 .setFooter({ text: `Latency: ${Math.round(interaction.client.ws.ping)}ms` })
                 .setTimestamp();
 

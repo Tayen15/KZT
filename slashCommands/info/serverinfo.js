@@ -6,7 +6,7 @@ module.exports = {
           .setDescription('Displays information about this server'),
      name: 'serverinfo',
      category: 'info',
-     async execute(client, interaction) {
+     async execute(interaction) {
           const { guild } = interaction;
 
           const owner = await guild.fetchOwner();

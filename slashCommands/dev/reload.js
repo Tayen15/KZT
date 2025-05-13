@@ -39,7 +39,7 @@ module.exports = {
     options: [
         { name: 'command', type: 'STRING', required: true, description: 'The command to reload' }
     ],
-    async execute(client, interaction) {
+    async execute(interaction) {
         const commandName = interaction.options.getString('command').toLowerCase();
         let directory;
 
@@ -58,7 +58,7 @@ module.exports = {
         }
 
         const pull = require(`../${directory}/${commandName}.js`);
-        client.commands.set(commandName, pull);
+        interaction.client.commands.set(commandName, pull);
 
         await interaction.reply({ content: `✅ Command **${commandName.toUpperCase()}** has been successfully reloaded.`, flags: MessageFlags.Ephemeral });
 
