@@ -8,7 +8,7 @@ module.exports = {
           .setDescription('Check the status of the Minecraft server.'),
      name: 'mcstatus',     
      category: 'minecraft',
-     async execute(client, interaction) {
+     async execute(interaction) {
           try {
                const getServerStatus = await axios.get(`https://api.mcsrvstat.us/3/${config.SERVER_IP}`);
                const { online, motd, version, players, ip, port, icon, debug, ping } = getServerStatus.data;
@@ -17,7 +17,7 @@ module.exports = {
                     ? `\n\`\`\`\n${players.list.map(p => `${p.name} (${p.uuid})`).join('\n')}\n\`\`\``
                     : '```No players online.```';
 
-               const serverIcon = icon ? `https://api.mcsrvstat.us/icon/${config.SERVER_IP}` : client.user.displayAvatarURL();
+               const serverIcon = icon ? `https://api.mcsrvstat.us/icon/${config.SERVER_IP}` : interaction.client.user.displayAvatarURL();
 
                const cleanMotd = motd.clean.join('\n');
 
@@ -34,7 +34,7 @@ module.exports = {
                          { name: '🎮 Bedrock Edition', value: `\`\`\`${ip}:19132\`\`\``, inline: true },
                          { name: '🎭 List Playing', value: playerList }
                     )
-                    .setFooter({ text: `Server Info | ${client.user.username}` })
+                    .setFooter({ text: `Server Info | ${interaction.client.user.username}` })
                     .setTimestamp();
 
                await interaction.reply({ embeds: [embed] });
@@ -42,8 +42,8 @@ module.exports = {
                console.error('[ERROR] Failed to fetch server status:', error.message);
 
                const errorEmbed = new EmbedBuilder()
-                    .setAuthor({ name: config.SERVER_NAME, iconURL: client.user.displayAvatarURL({ dynamic: true }) })
-                    .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
+                    .setAuthor({ name: config.SERVER_NAME, iconURL: interaction.client.user.displayAvatarURL({ dynamic: true }) })
+                    .setThumbnail(interaction.client.user.displayAvatarURL({ dynamic: true }))
                     .setColor(0xff0000)
                     .setTitle('🔴 Server Offline')
                     .addFields(
@@ -52,7 +52,7 @@ module.exports = {
                          { name: '🎮 Bedrock Edition', value: `\`\`\`${config.SERVER_IP}:${config.SERVER_PORT}\`\`\``, inline: true },
                          { name: '👥 Players', value: '```None```', inline: false }
                     )
-                    .setFooter({ text: `Server Info | ${client.user.username}` })
+                    .setFooter({ text: `Server Info | ${interaction.client.user.username}` })
                     .setTimestamp();
 
                await interaction.reply({ embeds: [errorEmbed] });

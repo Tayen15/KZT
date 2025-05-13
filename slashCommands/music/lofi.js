@@ -10,7 +10,7 @@ module.exports = {
           .setDescription('Play lofi music from a 24/7 stream'),
      name: 'lofi',
      category: 'music',
-     async execute(client, interaction) {
+     async execute(interaction) {
           const channel = interaction.member.voice.channel;
           if (!channel) {
                return interaction.reply({ content: '❌ Please join a voice channel first!', flags: MessageFlags.Ephemeral });

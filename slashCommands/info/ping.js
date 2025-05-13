@@ -7,7 +7,7 @@ module.exports = {
     name: "ping",
     description: "Display the bot latency.",
     category: "info",
-    async execute(client, interaction) {
+    async execute(interaction) {
         const sent = await interaction.deferReply({ fetchReply: true });
 
         const pingEmbed = new EmbedBuilder()

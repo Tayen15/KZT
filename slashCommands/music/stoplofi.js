@@ -8,7 +8,7 @@ module.exports = {
           .setDescription('Stop playing lofi and leave the voice channel'),
      name: 'stoplofi',
      category: 'music',
-     async execute(client, interaction) {
+     async execute(interaction) {
           const guildId = interaction.guild.id;
           const connection = getVoiceConnection(guildId);
 

@@ -19,7 +19,7 @@ module.exports = {
           { name: 'target', type: 'USER', required: true, description: 'The member to kick' },
           { name: 'reason', type: 'STRING', required: false, description: 'The reason for kicking' }
      ],
-     async execute(client, interaction) {
+     async execute(interaction) {
           const target = interaction.options.getMember('target');
           const reason = interaction.options.getString('reason') ?? 'No reason provided';
 

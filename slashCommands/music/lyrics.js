@@ -19,7 +19,7 @@ module.exports = {
      options: [
           { name: 'song', type: 'STRING', required: true, description: 'The title of the song to search for lyrics' }
      ],
-     async execute(client, interaction) {
+     async execute(interaction) {
 
           const songTitle = interaction.options.getString('song');
           await interaction.deferReply({});

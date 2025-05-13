@@ -8,7 +8,7 @@ module.exports = {
      name: "sendmessage",
      category: "dev",
      ownerOnly: true,
-     async execute(client, interaction) {
+     async execute(interaction) {
           if (!config.sendmessages.channelId) throw new Error("Channel ID not set in config.json");
           if (!config.sendmessages.webhookUrl) throw new Error("Webhook URL not set in config.json");
 

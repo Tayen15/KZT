@@ -23,7 +23,7 @@ module.exports = {
           { name: 'user_id', type: 'STRING', required: true, description: 'The ID of the user to DM' },
           { name: 'message', type: 'STRING', required: true, description: 'The message to send' }
      ],
-     async execute(client, interaction) {
+     async execute(interaction) {
           const userIds = interaction.options.getString('user_id').split(',').map(id => id.trim());
           const message = interaction.options.getString('message');
           let successCount = 0;
@@ -31,7 +31,7 @@ module.exports = {
 
           for (const userId of userIds) {
                try {
-                    const user = await client.users.fetch(userId);
+                    const user = await interaction.client.users.fetch(userId);
                     await user.send(message);
                     successCount++;
                } catch (error) {
