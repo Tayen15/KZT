@@ -15,7 +15,7 @@ module.exports = {
           if (!channel) {
                return interaction.reply({ content: '❌ Please join a voice channel first!', flags: MessageFlags.Ephemeral });
           }
-
+          
           await interaction.deferReply();
 
           try {
