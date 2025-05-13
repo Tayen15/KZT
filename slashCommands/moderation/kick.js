@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, EmbedBuilder } = require('discord.js');
 
 module.exports = {
      data: new SlashCommandBuilder()
@@ -33,10 +33,17 @@ module.exports = {
 
           try {
                await target.kick(reason);
-               await interaction.reply({
-                    content: `Successfully kicked ${target.user.tag} for reason: ${reason}`,
-                    flags: MessageFlags.Ephemeral
-               });
+               const embed = new EmbedBuilder()
+                    .setColor('#FF0000')
+                    .setTitle('User Kicked')
+                    .setDescription(`Successfully kicked ${target.user.tag}`)
+                    .addFields(
+                         { name: 'Reason', value: reason, inline: true },
+                         { name: 'Kicked by', value: interaction.user.tag, inline: true }
+                    )
+                    .setTimestamp();
+               
+               await interaction.reply({ embeds: [embed]});
           } catch (error) {
                await interaction.reply({
                     content: 'There was an error while kicking the member!',
