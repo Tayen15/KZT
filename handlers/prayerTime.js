@@ -95,13 +95,35 @@ async function updatePrayerMessage(client) {
                const message = await channel.messages.fetch(lastMessageId);
                await message.edit({ embeds: [embed] });
           } else {
-               const newMessage = await channel.send({ embeds: [embed] });
-               saveLastMessageId("prayerTimes", newMessage.id);
+               // Jika belum ada messageId, coba kirim pesan baru
+               let newMessage;
+               let success = false;
+               while (!success) {
+                    try {
+                         newMessage = await channel.send({ embeds: [embed] });
+                         saveLastMessageId("prayerTimes", newMessage.id);
+                         success = true;
+                    } catch (sendError) {
+                         console.error("[Prayer] Gagal mengirim pesan baru, mencoba lagi...", sendError);
+                         await new Promise(res => setTimeout(res, 5000)); // Tunggu 5 detik sebelum mencoba lagi
+                    }
+               }
           }
      } catch (error) {
           console.error("[Prayer] Gagal memperbarui pesan:", error);
-          const newMessage = await channel.send({ embeds: [embed] });
-          saveLastMessageId("prayerTimes", newMessage.id);
+          // Jika gagal edit, coba fetch ulang messageId, jika tetap gagal, baru kirim pesan baru
+          let newMessage;
+          let success = false;
+          while (!success) {
+               try {
+                    newMessage = await channel.send({ embeds: [embed] });
+                    saveLastMessageId("prayerTimes", newMessage.id);
+                    success = true;
+               } catch (sendError) {
+                    console.error("[Prayer] Gagal mengirim pesan baru, mencoba lagi...", sendError);
+                    await new Promise(res => setTimeout(res, 5000)); // Tunggu 5 detik sebelum mencoba lagi
+               }
+          }
      }
 }
 
