@@ -10,9 +10,9 @@ module.exports = {
      ownerOnly: true,
      async execute(interaction) {
           if (!config.sendmessages.channelId) throw new Error("Channel ID not set in config.json");
-          if (!config.sendmessages.webhookUrl) throw new Error("Webhook URL not set in config.json");
+          if (!process.env.webhookUrl) throw new Error("Webhook URL not set in config.json");
 
-          const webhook = new WebhookClient({ url: config.sendmessages.webhookUrl });
+          const webhook = new WebhookClient({ url: process.env.webhookUrl });
 
           const embedMessage = new EmbedBuilder()
                .setColor("Blue")
