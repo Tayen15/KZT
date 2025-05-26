@@ -82,47 +82,22 @@ function formatPrayerTimesEmbed(client) {
           .setFooter({ text: `${client.user.username} X aladhan`, iconURL: client.user.displayAvatarURL({ dynamic: true }) });
 }
 
-// Mengirim atau memperbarui pesan jadwal salat di channel Discord
 async function updatePrayerMessage(client) {
      const channel = await client.channels.fetch(PRAYER_CHANNELID).catch(() => null);
      if (!channel) return console.error("[Prayer] Channel tidak ditemukan!");
 
      const embed = formatPrayerTimesEmbed(client);
      let lastMessageId = getLastMessageId("prayerTimes");
+     let success = false;
 
-     try {
-          if (lastMessageId) {
+     while (!success) {
+          try {
                const message = await channel.messages.fetch(lastMessageId);
                await message.edit({ embeds: [embed] });
-          } else {
-               // Jika belum ada messageId, coba kirim pesan baru
-               let newMessage;
-               let success = false;
-               while (!success) {
-                    try {
-                         newMessage = await channel.send({ embeds: [embed] });
-                         saveLastMessageId("prayerTimes", newMessage.id);
-                         success = true;
-                    } catch (sendError) {
-                         console.error("[Prayer] Gagal mengirim pesan baru, mencoba lagi...", sendError);
-                         await new Promise(res => setTimeout(res, 5000)); // Tunggu 5 detik sebelum mencoba lagi
-                    }
-               }
-          }
-     } catch (error) {
-          console.error("[Prayer] Gagal memperbarui pesan:", error);
-          // Jika gagal edit, coba fetch ulang messageId, jika tetap gagal, baru kirim pesan baru
-          let newMessage;
-          let success = false;
-          while (!success) {
-               try {
-                    newMessage = await channel.send({ embeds: [embed] });
-                    saveLastMessageId("prayerTimes", newMessage.id);
-                    success = true;
-               } catch (sendError) {
-                    console.error("[Prayer] Gagal mengirim pesan baru, mencoba lagi...", sendError);
-                    await new Promise(res => setTimeout(res, 5000)); // Tunggu 5 detik sebelum mencoba lagi
-               }
+               success = true;
+          } catch (error) {
+               console.error("[Prayer] Gagal memperbarui pesan, mencoba lagi dalam 5 detik...", error);
+               await new Promise(res => setTimeout(res, 5000));
           }
      }
 }
