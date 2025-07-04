@@ -47,13 +47,12 @@ module.exports = {
                 const response = await axios.get(serverStatusURL);
                 const { players } = response.data;
 
-                let presenceActivity = `NF Kentang Goreng`;
                 // if (players?.online !== undefined) {
                 //     presenceActivity = `${players.online}/${players.max} Villagers on ${config.SERVER_NAME}`;
                 // }
 
                 client.user.setPresence({
-                    activities: [{ name: presenceActivity, type: ActivityType.Watching }]
+                    activities: [{ name: config.presence.name, type: ActivityType.Watching }]
                 });
             } catch (error) {
                 console.error(`[ERROR] Failed to fetch server status:`, error.message);
