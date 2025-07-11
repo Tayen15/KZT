@@ -14,7 +14,6 @@ module.exports = (client) => {
                const command = require(path.join(__dirname, `../slashCommands/${folder}/${file}`));
                if (command.data && command.execute) {
                     client.commands.set(command.data.name, command);
-                    console.log(`✅ Loaded command: ${command.data.name}`);
                } else {
                     console.log(`⚠️ Skipped: ${folder}/${file} (Missing "data" or "execute")`);
                }

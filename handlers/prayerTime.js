@@ -12,7 +12,7 @@ async function fetchPrayerTimes() {
           const response = await fetch(`${PRAYER_API_URL}?city=${CITY}&country=${COUNTRY}&method=20`);
           const data = await response.json();
 
-          if (!data?.data?.timings) throw new Error("Gagal mengambil data jadwal salat");
+          if (!data?.data?.timings) throw new Error("Failed to retrieve prayer schedule data");
 
           prayerTimes = {
                Fajr: convertTo24HourFormat(data.data.timings.Fajr),
@@ -22,7 +22,7 @@ async function fetchPrayerTimes() {
                Isha: convertTo24HourFormat(data.data.timings.Isha)
           };
      } catch (error) {
-          console.error("[Prayer] Gagal mengambil jadwal salat:", error);
+          console.error("[Prayer] Failed to take the prayer schedule:", error);
           prayerTimes = {};
      }
 }
@@ -84,7 +84,7 @@ function formatPrayerTimesEmbed(client) {
 
 async function updatePrayerMessage(client) {
      const channel = await client.channels.fetch(PRAYER_CHANNELID).catch(() => null);
-     if (!channel) return console.error("[Prayer] Channel tidak ditemukan!");
+     if (!channel) return console.error("[Prayer] Channel not found!");
 
      const embed = formatPrayerTimesEmbed(client);
      let lastMessageId = getLastMessageId("prayerTimes");
@@ -96,7 +96,7 @@ async function updatePrayerMessage(client) {
                await message.edit({ embeds: [embed] });
                success = true;
           } catch (error) {
-               console.error("[Prayer] Gagal memperbarui pesan, mencoba lagi dalam 5 detik...", error);
+               console.error("[Prayer] Failed to update the message, trying again in 5 seconds...", error);
                await new Promise(res => setTimeout(res, 5000));
           }
      }
@@ -104,7 +104,7 @@ async function updatePrayerMessage(client) {
 
 // Inisialisasi jadwal salat dan pembaruan berkala
 module.exports = async (client) => {
-     console.log("[Prayer] Memulai monitoring jadwal salat...");
+     console.log("[Prayer] Starting to monitor prayer schedule...");
      await fetchPrayerTimes();
      await updatePrayerMessage(client);
      setInterval(async () => {

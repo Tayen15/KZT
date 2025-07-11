@@ -27,7 +27,7 @@ module.exports = {
             const commands = await client.application.commands.fetch();
             commands.forEach(command => {
                 client.commandIds.set(command.name, command.id);
-                console.log(`[COMMAND ID] ${command.name}: ${command.id}`);
+                // console.log(`[COMMAND ID] ${command.name}: ${command.id}`);
             });
             console.log(`[INFO] Successfully fetched ${commands.size} command IDs.`);
         } catch (error) {

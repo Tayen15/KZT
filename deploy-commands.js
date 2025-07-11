@@ -15,7 +15,6 @@ for (const folder of commandFolders) {
 		const command = require(`./slashCommands/${folder}/${file}`);
 		if (command.data) {
 			commands.push(command.data.toJSON());
-			console.log(`✅ Loaded slash command: ${command.data.name}`);
 		} else {
 			console.log(`⚠️ Skipped: ${folder}/${file} (Missing "data")`);
 		}
@@ -34,10 +33,7 @@ const rest = new REST({ version: '10' }).setToken(token);
 		);
 
 		console.log(`✅ Successfully deployed ${data.length} slash commands.`);
-
-		data.forEach(cmd => {
-			console.log(`Command: ${cmd.name}, ID: ${cmd.id}`);
-		});
+		
 	} catch (error) {
 		console.error('❌ Error deploying commands:', error);
 	}
