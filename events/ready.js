@@ -50,7 +50,7 @@ module.exports = {
                 
 
                 client.user.setPresence({
-                    activities: [{ name: config.presence.name, type: ActivityType.Watching }]
+                    activities: [{ name: config.presence.name, type: ActivityType[config.presence.type] }]
                 });
             } catch (error) {
                 console.error(`[ERROR] Failed to fetch server status:`, error.message);
