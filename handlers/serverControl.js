@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, MessageFlags } = require("discord.js");
-const fetch = require("node-fetch");
+const { fetch } = require("undici");
 const { PTERODACTYL_API_KEY, PTERODACTYL_URL, SERVER_ID, SERVERCONTROL_CHANNELID } = require("../config.json");
 const { getLastMessageId, saveLastMessageId } = require("../utils/jsonStorage");
 
