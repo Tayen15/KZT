@@ -4,7 +4,8 @@
      "description": "A powerful Discord bot featuring music, moderation, information commands, and fun utilities.",
      "main": "index.js",
      "scripts": {
-          "test": "node ."
+          "test": "node .",
+          "start": "node index.js"
      },
      "keywords": [
           "Discord",
