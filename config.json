@@ -1,8 +1,8 @@
 {
-    "prefix": "rpl ",
+    "prefix": "bt ",
     "presence": {
-        "type": "Listening",
-        "name": "Garam & Micin"
+        "type": "Watching",
+        "name": "Deadline Deadline!!"
     },
     "clientID": "1006542146628751400",
     "guildID": "990148600422084638",

@@ -1,5 +1,5 @@
 const { EmbedBuilder, Colors } = require("discord.js");
-const fetch = require("node-fetch");
+const { fetch } = require("undici");
 
 const { UPTIME_API_KEY, MONITOR_CHANNELID } = require("../config.json");
 const { getLastMessageId, saveLastMessageId } = require("../utils/jsonStorage");

@@ -1,5 +1,5 @@
 const { EmbedBuilder, Colors } = require("discord.js");
-const fetch = require("node-fetch");
+const { fetch } = require("undici");
 const { PRAYER_API_URL, PRAYER_CHANNELID, CITY, COUNTRY } = require("../config.json");
 const { getLastMessageId, saveLastMessageId } = require("../utils/jsonStorage");
 
