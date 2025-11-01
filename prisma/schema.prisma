@@ -1,0 +1,213 @@
+// Prisma Schema for KZT Discord Bot
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model - stores Discord users who logged in to dashboard
+model User {
+  id            String   @id @default(uuid())
+  discordId     String   @unique
+  username      String
+  discriminator String
+  avatar        String?
+  email         String?
+  accessToken   String?
+  refreshToken  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  guilds        GuildMember[]
+}
+
+// Guild Model - stores Discord servers
+model Guild {
+  id                String   @id @default(uuid())
+  guildId           String   @unique
+  name              String
+  icon              String?
+  ownerId           String
+  memberCount       Int?
+  addedAt           DateTime @default(now())
+  
+  members           GuildMember[]
+  settings          GuildSettings?
+  prayerTimes       PrayerTime[]
+  rules             Rule[]
+  lofiSessions      LofiSession[]
+  serverMonitoring  ServerMonitoring[]
+}
+
+// Guild Member - relationship between users and guilds
+model GuildMember {
+  id        String   @id @default(uuid())
+  userId    String
+  guildId   String
+  isAdmin   Boolean  @default(false)
+  joinedAt  DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, guildId])
+}
+
+// Guild Settings - dynamic configuration per guild
+model GuildSettings {
+  id                    String   @id @default(uuid())
+  guildId               String   @unique
+  
+  prefix                String   @default("bt ")
+  language              String   @default("id")
+  timezone              String   @default("Asia/Jakarta")
+  
+  // Welcome/Leave Settings
+  welcomeEnabled        Boolean  @default(false)
+  welcomeChannelId      String?
+  welcomeMessage        String?
+  leaveEnabled          Boolean  @default(false)
+  leaveChannelId        String?
+  leaveMessage          String?
+  
+  // Auto Role
+  autoRoleEnabled       Boolean  @default(false)
+  autoRoleId            String?
+  
+  // Moderation
+  moderationEnabled     Boolean  @default(false)
+  modLogChannelId       String?
+  
+  // Music Settings
+  musicEnabled          Boolean  @default(true)
+  maxQueueSize          Int      @default(50)
+  defaultVolume         Int      @default(50)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  guild                 Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+// Prayer Times Configuration
+model PrayerTime {
+  id                String   @id @default(uuid())
+  guildId           String
+  
+  enabled           Boolean  @default(false)
+  channelId         String?
+  city              String   @default("Jakarta")
+  country           String   @default("Indonesia")
+  method            Int      @default(20)
+  
+  notifyFajr        Boolean  @default(true)
+  notifyDhuhr       Boolean  @default(true)
+  notifyAsr         Boolean  @default(true)
+  notifyMaghrib     Boolean  @default(true)
+  notifyIsha        Boolean  @default(true)
+  
+  lastMessageId     String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  guild             Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+// Server Monitoring (Uptime Robot / Pterodactyl)
+model ServerMonitoring {
+  id                String   @id @default(uuid())
+  guildId           String
+  
+  enabled           Boolean  @default(false)
+  type              String   // "uptime" or "pterodactyl"
+  channelId         String?
+  
+  // Uptime Robot Config
+  uptimeApiKey      String?
+  
+  // Pterodactyl Config
+  pterodactylUrl    String?
+  pterodactylApiKey String?
+  serverId          String?
+  
+  lastMessageId     String?
+  updateInterval    Int      @default(60000)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  guild             Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+// Rules System
+model Rule {
+  id          String   @id @default(uuid())
+  guildId     String
+  
+  channelId   String?
+  messageId   String?
+  webhookUrl  String?
+  
+  rules       Json     // Array of {name: string, value: string}
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+// Lofi Sessions
+model LofiSession {
+  id          String   @id @default(uuid())
+  guildId     String
+  channelId   String
+  
+  startedAt   DateTime @default(now())
+  isActive    Boolean  @default(true)
+  
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
+
+// Last Messages (for editing instead of sending new)
+model LastMessage {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  messageId   String
+  channelId   String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Bot Settings (Global bot configuration)
+model BotSettings {
+  id                String   @id @default(uuid())
+  
+  // Bot presence/activity
+  activityType      String   @default("Watching") // Playing, Watching, Listening, Competing
+  activityText      String   @default("over servers")
+  status            String   @default("online") // online, idle, dnd, invisible
+  
+  // Maintenance mode
+  maintenanceMode   Boolean  @default(false)
+  maintenanceMessage String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Command Toggle (Enable/Disable commands globally)
+model CommandToggle {
+  id          String   @id @default(uuid())
+  commandName String   @unique
+  enabled     Boolean  @default(true)
+  category    String   // dev, info, music, moderation, minecraft
+  reason      String?  // Reason why command is disabled
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-dark-primary text-text-primary;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-6 py-3 rounded font-semibold transition-all duration-300 cursor-pointer;
+  }
+  
+  .btn-primary {
+    @apply bg-discord hover:bg-discord-hover text-white;
+  }
+  
+  .btn-secondary {
+    @apply bg-dark-card hover:bg-dark-hover border border-border-dark text-text-primary;
+  }
+  
+  .btn-danger {
+    @apply bg-red-500 hover:bg-red-600 text-white;
+  }
+  
+  .btn-success {
+    @apply bg-green-500 hover:bg-green-600 text-white;
+  }
+  
+  .btn-small {
+    @apply px-4 py-2 text-sm;
+  }
+  
+  .btn-large {
+    @apply px-8 py-4 text-lg;
+  }
+  
+  .card {
+    @apply bg-dark-card border border-border-dark rounded-lg p-6 mb-6;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    @apply w-full px-4 py-3 bg-dark-primary border border-border-dark rounded text-text-primary focus:outline-none focus:border-discord;
+  }
+  
+  .form-label {
+    @apply block mb-2 font-semibold text-text-primary;
+  }
+  
+  .sidebar-item {
+    @apply block px-6 py-3 text-text-secondary hover:bg-dark-hover hover:text-text-primary transition-all border-l-3 border-transparent hover:border-discord;
+  }
+  
+  .sidebar-item.active {
+    @apply bg-dark-hover text-text-primary border-discord;
+  }
+}

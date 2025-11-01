@@ -5,7 +5,12 @@ const STREAM_URL = 'https://stream-157.zeno.fm/0r0xa792kwzuv?zt=eyJhbGciOiJIUzI1
 const RECONNECT_INTERVAL = 30000; // 30 detik
 
 module.exports = async (client) => {
-     const sessions = getLofiSessions();     
+     const sessions = await getLofiSessions();     
+
+     if (!sessions || sessions.length === 0) {
+          console.log('[LofiReconnect] No active lofi sessions to reconnect');
+          return;
+     }
 
      for (const { guildId, channelId } of sessions) {
           try {

@@ -1,20 +1,21 @@
 const { EmbedBuilder, Colors } = require("discord.js");
 const { fetch } = require("undici");
-const { PRAYER_API_URL, PRAYER_CHANNELID, CITY, COUNTRY } = require("../config.json");
+const prisma = require("../utils/database");
 const { getLastMessageId, saveLastMessageId } = require("../utils/jsonStorage");
 
 const UPDATE_INTERVAL = 60 * 1000;
-let prayerTimes = {};
+const activePrayerSchedules = new Map();
 
 // Mengambil data jadwal salat dari API
-async function fetchPrayerTimes() {
+async function fetchPrayerTimes(city, country) {
      try {
-          const response = await fetch(`${PRAYER_API_URL}?city=${CITY}&country=${COUNTRY}&method=20`);
+          const PRAYER_API_URL = "https://api.aladhan.com/v1/timingsByCity";
+          const response = await fetch(`${PRAYER_API_URL}?city=${city}&country=${country}&method=20`);
           const data = await response.json();
 
           if (!data?.data?.timings) throw new Error("Failed to retrieve prayer schedule data");
 
-          prayerTimes = {
+          return {
                Fajr: convertTo24HourFormat(data.data.timings.Fajr),
                Dhuhr: convertTo24HourFormat(data.data.timings.Dhuhr),
                Asr: convertTo24HourFormat(data.data.timings.Asr),
@@ -22,8 +23,8 @@ async function fetchPrayerTimes() {
                Isha: convertTo24HourFormat(data.data.timings.Isha)
           };
      } catch (error) {
-          console.error("[Prayer] Failed to take the prayer schedule:", error);
-          prayerTimes = {};
+          console.error("[Prayer] Failed to fetch prayer schedule:", error);
+          return {};
      }
 }
 
@@ -43,7 +44,7 @@ function isWithinPrayerTime(prayerHour, prayerMinute) {
 }
 
 // Dapatkan waktu salat berikutnya dan tampilkan dalam format timestamp Discord
-function getNextPrayerTime() {
+function getNextPrayerTime(prayerTimes) {
      const now = new Date();  
      const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -61,7 +62,7 @@ function getNextPrayerTime() {
 }
 
 // Membentuk Embed untuk jadwal salat
-function formatPrayerTimesEmbed(client) {
+function formatPrayerTimesEmbed(client, prayerTimes, city, customMessage) {
      const now = new Date();
      const currentTime = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
 
@@ -70,45 +71,110 @@ function formatPrayerTimesEmbed(client) {
           return { name: prayer, value: `\`\`\`${time.hours}:${time.minutes} WIB ${highlight}\`\`\``, inline: true };
      });
 
+     let description = `⏰ Sekarang: **${currentTime} WIB**\n📅 ${now.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}\n${getNextPrayerTime(prayerTimes)}\n\nUpdate in <t:${Math.floor((Date.now() + UPDATE_INTERVAL) / 1000)}:R>`;
+     
+     if (customMessage) {
+          description = `${customMessage}\n\n${description}`;
+     }
+
      return new EmbedBuilder()
-          .setTitle(`🕌 Jadwal Salat (${CITY})`)
+          .setTitle(`🕌 Jadwal Salat (${city})`)
           .setColor(Colors.Green)
           .setThumbnail('https://cdn.discordapp.com/attachments/1008688176421933148/1350028133859987477/tob_tobitob.png?ex=67d53f2d&is=67d3edad&hm=18446e1e3299ec54f88f11583cb57a1799451f495e10afbedcc139005283d919&')
-          .setDescription(
-               `⏰ Sekarang: **${currentTime} WIB**\n📅 ${now.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}\n${getNextPrayerTime()}\n\nUpdate in <t:${Math.floor((Date.now() + UPDATE_INTERVAL) / 1000)}:R>`
-          )
+          .setDescription(description)
           .addFields(fields)
           .setTimestamp()
           .setFooter({ text: `${client.user.username} X aladhan`, iconURL: client.user.displayAvatarURL({ dynamic: true }) });
 }
 
-async function updatePrayerMessage(client) {
-     const channel = await client.channels.fetch(PRAYER_CHANNELID).catch(() => null);
-     if (!channel) return console.error("[Prayer] Channel not found!");
+async function updatePrayerMessage(client, guildId) {
+     try {
+          // Get prayer config from database
+          const prayerConfig = await prisma.prayerTime.findFirst({
+               where: {
+                    guild: { guildId },
+                    enabled: true
+               },
+               include: { guild: true }
+          });
 
-     const embed = formatPrayerTimesEmbed(client);
-     let lastMessageId = getLastMessageId("prayerTimes");
-     let success = false;
+          if (!prayerConfig) return;
 
-     while (!success) {
-          try {
-               const message = await channel.messages.fetch(lastMessageId);
-               await message.edit({ embeds: [embed] });
-               success = true;
-          } catch (error) {
-               console.error("[Prayer] Failed to update the message, trying again in 5 seconds...", error);
-               await new Promise(res => setTimeout(res, 5000));
+          const channel = await client.channels.fetch(prayerConfig.channelId).catch(() => null);
+          if (!channel) return console.error(`[Prayer] Channel not found for guild ${guildId}!`);
+
+          // Fetch prayer times from API
+          const prayerTimes = await fetchPrayerTimes(prayerConfig.city, prayerConfig.country);
+          if (Object.keys(prayerTimes).length === 0) return;
+
+          const embed = formatPrayerTimesEmbed(client, prayerTimes, prayerConfig.city, prayerConfig.customMessage);
+          let lastMessageId = getLastMessageId(`prayerTimes_${guildId}`);
+          let success = false;
+
+          while (!success) {
+               try {
+                    const message = await channel.messages.fetch(lastMessageId);
+                    await message.edit({ embeds: [embed] });
+                    success = true;
+               } catch (error) {
+                    console.error(`[Prayer] Failed to update message for guild ${guildId}, trying again...`, error);
+                    await new Promise(res => setTimeout(res, 5000));
+               }
           }
+     } catch (error) {
+          console.error(`[Prayer] Error updating prayer message for guild ${guildId}:`, error);
+     }
+}
+
+// Start monitoring for a specific guild
+async function startPrayerMonitoring(client, guildId) {
+     if (activePrayerSchedules.has(guildId)) return; // Already monitoring
+
+     console.log(`[Prayer] Starting prayer monitoring for guild ${guildId}`);
+     
+     // Initial update
+     await updatePrayerMessage(client, guildId);
+     
+     // Set interval
+     const interval = setInterval(async () => {
+          await updatePrayerMessage(client, guildId);
+     }, UPDATE_INTERVAL);
+     
+     activePrayerSchedules.set(guildId, interval);
+}
+
+// Stop monitoring for a specific guild
+function stopPrayerMonitoring(guildId) {
+     const interval = activePrayerSchedules.get(guildId);
+     if (interval) {
+          clearInterval(interval);
+          activePrayerSchedules.delete(guildId);
+          console.log(`[Prayer] Stopped prayer monitoring for guild ${guildId}`);
      }
 }
 
 // Inisialisasi jadwal salat dan pembaruan berkala
 module.exports = async (client) => {
-     console.log("[Prayer] Starting to monitor prayer schedule...");
-     await fetchPrayerTimes();
-     await updatePrayerMessage(client);
-     setInterval(async () => {
-          await fetchPrayerTimes();
-          await updatePrayerMessage(client);
-     }, UPDATE_INTERVAL);
+     console.log("[Prayer] Initializing prayer time monitoring...");
+     
+     try {
+          // Get all enabled prayer configurations
+          const prayerConfigs = await prisma.prayerTime.findMany({
+               where: { enabled: true },
+               include: { guild: true }
+          });
+
+          console.log(`[Prayer] Found ${prayerConfigs.length} active prayer configurations`);
+
+          // Start monitoring for each guild
+          for (const config of prayerConfigs) {
+               await startPrayerMonitoring(client, config.guild.guildId);
+          }
+     } catch (error) {
+          console.error("[Prayer] Failed to initialize prayer monitoring:", error);
+     }
 };
+
+// Export functions for use in API routes
+module.exports.startPrayerMonitoring = startPrayerMonitoring;
+module.exports.stopPrayerMonitoring = stopPrayerMonitoring;
