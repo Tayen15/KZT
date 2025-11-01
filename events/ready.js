@@ -6,6 +6,8 @@ const serverControl = require("../handlers/serverControl");
 const rules = require("../handlers/rules");
 const prayerTime = require("../handlers/prayerTime");
 const lofiReconnect = require("../handlers/lofiReconnect");
+const { initializeCommandToggles } = require('../middleware/commandToggle');
+const prisma = require('../utils/database');
 
 const serverStatusURL = `https://api.mcsrvstat.us/3/${config.SERVER_IP}`;
 
@@ -36,6 +38,9 @@ module.exports = {
 
         client.isReady = true;
 
+        // Initialize command toggles
+        await initializeCommandToggles(client.commands);
+
         // await monitorServer(client);
         // await serverControl(client);
         await prayerTime(client);
@@ -44,18 +49,39 @@ module.exports = {
 
         async function updatePresence() {
             try {
-                const response = await axios.get(serverStatusURL);
-                const { players } = response.data;
+                // Get bot settings from database
+                let botSettings = await prisma.botSettings.findFirst();
 
-                
+                // Create default settings if not exists
+                if (!botSettings) {
+                    botSettings = await prisma.botSettings.create({
+                        data: {
+                            activityType: config.presence.type || 'Watching',
+                            activityText: config.presence.name || 'over servers',
+                            status: 'online'
+                        }
+                    });
+                }
 
+                // Set presence based on database settings
+                const activityType = ActivityType[botSettings.activityType] || ActivityType.Watching;
+
+                client.user.setPresence({
+                    activities: [{
+                        name: botSettings.activityText,
+                        type: activityType
+                    }],
+                    status: botSettings.status
+                });
+            } catch (error) {
+                console.error(`[ERROR] Failed to update presence:`, error.message);
+                // Fallback to config
                 client.user.setPresence({
                     activities: [{ name: config.presence.name, type: ActivityType[config.presence.type] }]
                 });
-            } catch (error) {
-                console.error(`[ERROR] Failed to fetch server status:`, error.message);
             } finally {
-                setTimeout(updatePresence, 5000);
+                // Update presence every 5 minutes instead of 5 seconds
+                setTimeout(updatePresence, 300000);
             }
         }
 

@@ -17,4 +17,7 @@ client.commands = new Collection();
     require(`./handlers/${handler}`)(client);
 });
 
-client.login(process.env.token).catch(() => console.log('❌ Invalid TOKEN!'));
+client.login(process.env.DISCORD_TOKEN || process.env.token).catch(() => console.log('❌ Invalid TOKEN!'));
+
+// Export client for use in web server
+module.exports = client;

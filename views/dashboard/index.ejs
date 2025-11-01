@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ByteBot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-primary': '#1a1d23',
+                        'dark-secondary': '#23272f',
+                        'dark-card': '#2b2f38',
+                        'dark-hover': '#32363f',
+                        'discord': '#5865F2',
+                        'discord-hover': '#4752c4',
+                        'text-primary': '#ffffff',
+                        'text-secondary': '#b9bbbe',
+                        'border-dark': '#3a3f4b'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-primary text-text-primary min-h-screen">
+    <%- include('../partials/navbar') %>
+
+    <main class="container mx-auto px-4 py-12">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">Dashboard</h1>
+            <p class="text-text-secondary">Pilih server untuk mengatur konfigurasi ByteBot</p>
+        </div>
+
+        <!-- User Info Card -->
+        <div class="bg-dark-card border border-border-dark rounded-lg p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <img src="https://cdn.discordapp.com/avatars/<%= user.discordId %>/<%= user.avatar %>.png" 
+                         alt="Avatar" 
+                         class="w-16 h-16 rounded-full">
+                    <div>
+                        <h2 class="text-xl font-bold"><%= user.username %></h2>
+                        <p class="text-text-secondary">Discord ID: <%= user.discordId %></p>
+                    </div>
+                </div>
+                <% if (user.discordId === '746598982049988619') { %>
+                    <a href="/dashboard/owner" 
+                       class="bg-gradient-to-r from-discord to-purple-600 hover:from-discord-hover hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 flex items-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span>🛡️ Owner Dashboard</span>
+                    </a>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Guilds Grid -->
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold mb-4">Your Servers</h2>
+            <p class="text-text-secondary mb-6">Klik server untuk mengatur konfigurasi</p>
+        </div>
+
+        <% if (guilds && guilds.length > 0) { %>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <% guilds.forEach(guild => { %>
+                    <a href="/dashboard/guild/<%= guild.guildId %>" 
+                       class="bg-dark-card border border-border-dark rounded-lg p-6 hover:bg-dark-hover hover:border-discord transition-all duration-200 transform hover:scale-105">
+                        <div class="flex items-start space-x-4">
+                            <% if (guild.icon) { %>
+                                <img src="https://cdn.discordapp.com/icons/<%= guild.guildId %>/<%= guild.icon %>.png" 
+                                     alt="<%= guild.name %>" 
+                                     class="w-16 h-16 rounded-lg">
+                            <% } else { %>
+                                <div class="w-16 h-16 bg-discord rounded-lg flex items-center justify-center text-2xl font-bold">
+                                    <%= guild.name.charAt(0).toUpperCase() %>
+                                </div>
+                            <% } %>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold mb-1"><%= guild.name %></h3>
+                                <p class="text-text-secondary text-sm">
+                                    <%= guild.memberCount || 'N/A' %> members
+                                </p>
+                                <% if (guild.isOwner) { %>
+                                    <span class="inline-block mt-2 bg-discord/20 text-discord text-xs px-2 py-1 rounded">
+                                        Owner
+                                    </span>
+                                <% } else if (guild.isAdmin) { %>
+                                    <span class="inline-block mt-2 bg-green-500/20 text-green-500 text-xs px-2 py-1 rounded">
+                                        Admin
+                                    </span>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-border-dark">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-text-secondary">Manage Settings</span>
+                                <svg class="w-5 h-5 text-discord" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <!-- No Guilds -->
+            <div class="bg-dark-card border border-border-dark rounded-lg p-12 text-center">
+                <svg class="w-16 h-16 mx-auto mb-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+                <h3 class="text-xl font-bold mb-2">No Servers Found</h3>
+                <p class="text-text-secondary mb-4">
+                    Kamu belum memiliki akses ke server manapun, atau bot belum ditambahkan ke server kamu.
+                </p>
+                <a href="https://discord.com/api/oauth2/authorize?client_id=<%= process.env.DISCORD_CLIENT_ID %>&permissions=8&scope=bot%20applications.commands" 
+                   target="_blank"
+                   class="inline-block bg-discord hover:bg-discord-hover text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-200">
+                    Invite Bot to Server
+                </a>
+            </div>
+        <% } %>
+
+        <!-- Help Section -->
+        <div class="mt-12 bg-dark-card border border-border-dark rounded-lg p-6">
+            <h3 class="text-xl font-bold mb-3">Need Help?</h3>
+            <p class="text-text-secondary mb-4">
+                Jika kamu tidak melihat server kamu di list, pastikan:
+            </p>
+            <ul class="list-disc list-inside text-text-secondary space-y-2">
+                <li>Bot sudah ditambahkan ke server kamu</li>
+                <li>Kamu memiliki permission Administrator atau Manage Server</li>
+                <li>Kamu sudah login dengan akun Discord yang benar</li>
+            </ul>
+            <div class="mt-4">
+                <a href="/auth/logout" 
+                   class="text-discord hover:text-discord-hover transition-colors duration-200">
+                    Try logging in again →
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

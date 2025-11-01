@@ -1,5 +1,6 @@
 const { Events, MessageFlags } = require('discord.js');
 const config = require('../config.json'); 
+const { checkCommandEnabled } = require('../middleware/commandToggle'); 
 
 module.exports = {
 	name: Events.InteractionCreate,
@@ -25,6 +26,12 @@ module.exports = {
 		if (!client.isReady) {
 			await interaction.reply({ content: '⚠️ The bot is still starting up. Please try again in a moment.', flags: MessageFlags.Ephemeral });
 			return;
+		}
+
+		// Check if command is globally enabled (skip for owner)
+		if (interaction.user.id !== config.ownerId) {
+			const isEnabled = await checkCommandEnabled(interaction);
+			if (!isEnabled) return;
 		}
 
 		if (command.ownerOnly && interaction.user.id !== config.ownerId) {
