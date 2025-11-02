@@ -45,13 +45,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Session configuration
 app.use(session({
     store: sessionStore, // Will be undefined (memory store) if MySQL fails
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        secure: process.env.NODE_ENV === 'production'
-    }
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'lax', // Penting untuk OAuth
+        domain: process.env.NODE_ENV === 'production' ? '.oktaa.my.id' : undefined
+    },
+    proxy: true
 }));
 
 // Passport initialization
@@ -60,6 +64,7 @@ app.use(passport.session());
 
 // View engine setup
 app.set('view engine', 'ejs');
+app.set('trust proxy', true);
 app.set('views', path.join(__dirname, 'views'));
 
 // Make user available in all views
