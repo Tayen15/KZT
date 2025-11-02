@@ -341,23 +341,91 @@ router.post('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, asy
         const guild = req.currentGuild;
         const updates = req.body;
 
+        // Get existing config to check if message needs to be deleted
+        const existingConfig = await prisma.prayerTime.findFirst({
+            where: { guildId: guild.id }
+        });
+
+        // Convert string booleans to actual booleans
+        const data = {
+            enabled: updates.enabled === 'true' || updates.enabled === true,
+            city: updates.city,
+            country: updates.country,
+            channelId: updates.channelId || null,
+            method: parseInt(updates.method) || 20,
+            notifyFajr: updates.notifyFajr === 'true' || updates.notifyFajr === true,
+            notifyDhuhr: updates.notifyDhuhr === 'true' || updates.notifyDhuhr === true,
+            notifyAsr: updates.notifyAsr === 'true' || updates.notifyAsr === true,
+            notifyMaghrib: updates.notifyMaghrib === 'true' || updates.notifyMaghrib === true,
+            notifyIsha: updates.notifyIsha === 'true' || updates.notifyIsha === true,
+            customMessage: updates.customMessage || null
+        };
+
+        // If disabling prayer times, delete the existing message
+        if (!data.enabled && existingConfig?.lastMessageId && existingConfig?.channelId) {
+            const client = req.app.get('discordClient');
+            if (client) {
+                try {
+                    const channel = await client.channels.fetch(existingConfig.channelId).catch(() => null);
+                    if (channel) {
+                        const message = await channel.messages.fetch(existingConfig.lastMessageId).catch(() => null);
+                        if (message) {
+                            await message.delete();
+                            console.log(`[Prayer] Deleted message ${existingConfig.lastMessageId} for guild ${guild.guildId}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('[Prayer] Error deleting message:', error);
+                }
+            }
+            
+            // Clear lastMessageId from database
+            data.lastMessageId = null;
+            
+            // Stop monitoring
+            const { stopPrayerMonitoring } = require('../handlers/prayerTime');
+            stopPrayerMonitoring(guild.guildId);
+        }
+
         const prayerConfig = await prisma.prayerTime.updateMany({
             where: { guildId: guild.id },
-            data: updates
+            data
         });
 
         if (prayerConfig.count === 0) {
             await prisma.prayerTime.create({
                 data: {
                     guildId: guild.id,
-                    ...updates
+                    ...data
                 }
             });
         }
 
+        // Trigger prayer monitoring update if enabled
+        if (data.enabled && data.channelId) {
+            const { startPrayerMonitoring } = require('../handlers/prayerTime');
+            const client = req.app.get('discordClient');
+            if (client) {
+                await startPrayerMonitoring(client, guild.guildId);
+            }
+        }
+
+        // Check if request is from form (redirect) or API (JSON)
+        if (req.headers.accept && req.headers.accept.includes('text/html')) {
+            // Form submission - redirect to dashboard
+            return res.redirect(`/dashboard/guild/${guild.guildId}/prayer`);
+        }
+        
+        // API request - return JSON
         res.json({ success: true, message: 'Prayer times updated successfully' });
     } catch (error) {
         console.error('[API] Error updating prayer config:', error);
+        
+        // Check if request is from form
+        if (req.headers.accept && req.headers.accept.includes('text/html')) {
+            return res.redirect(`/dashboard/guild/${req.params.guildId}/prayer?error=update_failed`);
+        }
+        
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -379,22 +447,107 @@ router.get('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin, 
     }
 });
 
-// Create monitoring config
+// Create or Update monitoring config
 router.post('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
-        const data = req.body;
+        const body = req.body;
 
-        const monitor = await prisma.serverMonitoring.create({
-            data: {
-                guildId: guild.id,
-                ...data
-            }
+        // Check if monitoring config exists
+        const existing = await prisma.serverMonitoring.findFirst({
+            where: { guildId: guild.id }
         });
+
+        // Convert string booleans to actual booleans and integers
+        const data = {
+            enabled: body.enabled === 'true' || body.enabled === true,
+            type: body.type || 'minecraft',
+            channelId: body.channelId || null,
+            
+            // Minecraft fields
+            serverHost: body.serverHost || null,
+            serverPort: parseInt(body.serverPort) || 25565,
+            serverName: body.serverName || null,
+            checkInterval: parseInt(body.checkInterval) || 5,
+            
+            // Notification settings
+            notifyOnline: body.notifyOnline === 'true' || body.notifyOnline === true,
+            notifyOffline: body.notifyOffline === 'true' || body.notifyOffline === true,
+            notifyPlayerCount: body.notifyPlayerCount === 'true' || body.notifyPlayerCount === true,
+            
+            // Uptime/Pterodactyl fields
+            uptimeApiKey: body.uptimeApiKey || null,
+            pterodactylUrl: body.pterodactylUrl || null,
+            pterodactylApiKey: body.pterodactylApiKey || null,
+            serverId: body.serverId || null,
+            updateInterval: parseInt(body.updateInterval) || 60000
+        };
+
+        // If disabling monitoring, delete the existing message
+        if (!data.enabled && existing?.lastMessageId && existing?.channelId) {
+            const client = req.app.get('discordClient');
+            if (client) {
+                try {
+                    const channel = await client.channels.fetch(existing.channelId).catch(() => null);
+                    if (channel) {
+                        const message = await channel.messages.fetch(existing.lastMessageId).catch(() => null);
+                        if (message) {
+                            await message.delete();
+                            console.log(`[Monitoring] Deleted message ${existing.lastMessageId} for guild ${guild.guildId}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('[Monitoring] Error deleting message:', error);
+                }
+            }
+            
+            // Clear lastMessageId from database
+            data.lastMessageId = null;
+            
+            // Stop monitoring
+            const { stopServerMonitoring } = require('../handlers/monitorServer');
+            stopServerMonitoring(guild.guildId);
+        }
+
+        let monitor;
+        if (existing) {
+            // Update existing
+            monitor = await prisma.serverMonitoring.update({
+                where: { id: existing.id },
+                data
+            });
+        } else {
+            // Create new
+            monitor = await prisma.serverMonitoring.create({
+                data: {
+                    guildId: guild.id,
+                    ...data
+                }
+            });
+        }
+
+        // Trigger monitoring update if enabled
+        if (data.enabled && data.channelId) {
+            const { startServerMonitoring } = require('../handlers/monitorServer');
+            const client = req.app.get('discordClient');
+            if (client) {
+                await startServerMonitoring(client, guild.guildId);
+            }
+        }
+
+        // Check if request is from form (redirect) or API (JSON)
+        if (req.headers.accept && req.headers.accept.includes('text/html')) {
+            return res.redirect(`/dashboard/guild/${guild.guildId}/monitoring`);
+        }
 
         res.json({ success: true, monitor });
     } catch (error) {
-        console.error('[API] Error creating monitor:', error);
+        console.error('[API] Error saving monitor:', error);
+        
+        if (req.headers.accept && req.headers.accept.includes('text/html')) {
+            return res.redirect(`/dashboard/guild/${req.params.guildId}/monitoring?error=save_failed`);
+        }
+        
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -403,11 +556,36 @@ router.post('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin,
 router.put('/guild/:guildId/monitoring/:id', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const updates = req.body;
+        const body = req.body;
+
+        // Convert string booleans to actual booleans and integers
+        const data = {
+            enabled: body.enabled === 'true' || body.enabled === true,
+            type: body.type,
+            channelId: body.channelId || null,
+            
+            // Minecraft fields
+            serverHost: body.serverHost || null,
+            serverPort: body.serverPort ? parseInt(body.serverPort) : undefined,
+            serverName: body.serverName || null,
+            checkInterval: body.checkInterval ? parseInt(body.checkInterval) : undefined,
+            
+            // Notification settings
+            notifyOnline: body.notifyOnline === 'true' || body.notifyOnline === true,
+            notifyOffline: body.notifyOffline === 'true' || body.notifyOffline === true,
+            notifyPlayerCount: body.notifyPlayerCount === 'true' || body.notifyPlayerCount === true,
+            
+            // Uptime/Pterodactyl fields
+            uptimeApiKey: body.uptimeApiKey || undefined,
+            pterodactylUrl: body.pterodactylUrl || undefined,
+            pterodactylApiKey: body.pterodactylApiKey || undefined,
+            serverId: body.serverId || undefined,
+            updateInterval: body.updateInterval ? parseInt(body.updateInterval) : undefined
+        };
 
         const monitor = await prisma.serverMonitoring.update({
             where: { id },
-            data: updates
+            data
         });
 
         res.json({ success: true, monitor });
@@ -450,11 +628,174 @@ router.get('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async
     }
 });
 
-// Update rules
+// ===== Rules API =====
+
+// Get rules config
+router.get('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    try {
+        const guild = req.currentGuild;
+        const rulesConfig = await prisma.rule.findFirst({
+            where: { guildId: guild.id }
+        });
+
+        res.json({ 
+            success: true, 
+            rulesConfig,
+            rules: rulesConfig?.rules || []
+        });
+    } catch (error) {
+        console.error('[API] Error getting rules:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get individual rule
+router.get('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    try {
+        const guild = req.currentGuild;
+        const { ruleId } = req.params;
+
+        const rulesConfig = await prisma.rule.findFirst({
+            where: { guildId: guild.id }
+        });
+
+        if (!rulesConfig) {
+            return res.status(404).json({ success: false, error: 'Rules not found' });
+        }
+
+        const rules = Array.isArray(rulesConfig.rules) ? rulesConfig.rules : [];
+        const rule = rules.find(r => r.id === ruleId);
+
+        if (!rule) {
+            return res.status(404).json({ success: false, error: 'Rule not found' });
+        }
+
+        res.json({ success: true, ...rule });
+    } catch (error) {
+        console.error('[API] Error getting rule:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Create/Add new rule
 router.post('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
-        const { rules, channelId, webhookUrl } = req.body;
+        const { title, description } = req.body;
+
+        if (!title || !description) {
+            return res.status(400).json({ success: false, error: 'Title and description are required' });
+        }
+
+        const existing = await prisma.rule.findFirst({
+            where: { guildId: guild.id }
+        });
+
+        const newRule = {
+            id: Date.now().toString(), // Simple ID generation
+            title,
+            description
+        };
+
+        let rulesConfig;
+        if (existing) {
+            const currentRules = Array.isArray(existing.rules) ? existing.rules : [];
+            currentRules.push(newRule);
+
+            rulesConfig = await prisma.rule.update({
+                where: { id: existing.id },
+                data: { rules: currentRules }
+            });
+        } else {
+            rulesConfig = await prisma.rule.create({
+                data: {
+                    guildId: guild.id,
+                    rules: [newRule]
+                }
+            });
+        }
+
+        res.json({ success: true, rule: newRule, rulesConfig });
+    } catch (error) {
+        console.error('[API] Error creating rule:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Update existing rule
+router.put('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    try {
+        const guild = req.currentGuild;
+        const { ruleId } = req.params;
+        const { title, description } = req.body;
+
+        const rulesConfig = await prisma.rule.findFirst({
+            where: { guildId: guild.id }
+        });
+
+        if (!rulesConfig) {
+            return res.status(404).json({ success: false, error: 'Rules not found' });
+        }
+
+        const rules = Array.isArray(rulesConfig.rules) ? rulesConfig.rules : [];
+        const ruleIndex = rules.findIndex(r => r.id === ruleId);
+
+        if (ruleIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Rule not found' });
+        }
+
+        rules[ruleIndex] = {
+            id: ruleId,
+            title,
+            description
+        };
+
+        const updated = await prisma.rule.update({
+            where: { id: rulesConfig.id },
+            data: { rules }
+        });
+
+        res.json({ success: true, rule: rules[ruleIndex], rulesConfig: updated });
+    } catch (error) {
+        console.error('[API] Error updating rule:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Delete rule
+router.delete('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    try {
+        const guild = req.currentGuild;
+        const { ruleId } = req.params;
+
+        const rulesConfig = await prisma.rule.findFirst({
+            where: { guildId: guild.id }
+        });
+
+        if (!rulesConfig) {
+            return res.status(404).json({ success: false, error: 'Rules not found' });
+        }
+
+        const rules = Array.isArray(rulesConfig.rules) ? rulesConfig.rules : [];
+        const filtered = rules.filter(r => r.id !== ruleId);
+
+        const updated = await prisma.rule.update({
+            where: { id: rulesConfig.id },
+            data: { rules: filtered }
+        });
+
+        res.json({ success: true, rulesConfig: updated });
+    } catch (error) {
+        console.error('[API] Error deleting rule:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Update rules config (channel, webhook, etc)
+router.put('/guild/:guildId/rules/config', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    try {
+        const guild = req.currentGuild;
+        const { channelId, webhookUrl } = req.body;
 
         const existing = await prisma.rule.findFirst({
             where: { guildId: guild.id }
@@ -464,26 +805,22 @@ router.post('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, asyn
         if (existing) {
             rulesConfig = await prisma.rule.update({
                 where: { id: existing.id },
-                data: {
-                    rules,
-                    channelId,
-                    webhookUrl
-                }
+                data: { channelId, webhookUrl }
             });
         } else {
             rulesConfig = await prisma.rule.create({
                 data: {
                     guildId: guild.id,
-                    rules,
                     channelId,
-                    webhookUrl
+                    webhookUrl,
+                    rules: []
                 }
             });
         }
 
         res.json({ success: true, rulesConfig });
     } catch (error) {
-        console.error('[API] Error updating rules:', error);
+        console.error('[API] Error updating rules config:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

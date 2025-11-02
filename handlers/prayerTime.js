@@ -101,25 +101,42 @@ async function updatePrayerMessage(client, guildId) {
           if (!prayerConfig) return;
 
           const channel = await client.channels.fetch(prayerConfig.channelId).catch(() => null);
-          if (!channel) return console.error(`[Prayer] Channel not found for guild ${guildId}!`);
+          if (!channel) {
+               console.error(`[Prayer] Channel ${prayerConfig.channelId} not found for guild ${guildId}!`);
+               return;
+          }
 
           // Fetch prayer times from API
           const prayerTimes = await fetchPrayerTimes(prayerConfig.city, prayerConfig.country);
           if (Object.keys(prayerTimes).length === 0) return;
 
           const embed = formatPrayerTimesEmbed(client, prayerTimes, prayerConfig.city, prayerConfig.customMessage);
-          let lastMessageId = getLastMessageId(`prayerTimes_${guildId}`);
-          let success = false;
-
-          while (!success) {
+          
+          // Try to update existing message or create new one
+          let message = null;
+          
+          if (prayerConfig.lastMessageId) {
                try {
-                    const message = await channel.messages.fetch(lastMessageId);
+                    message = await channel.messages.fetch(prayerConfig.lastMessageId);
                     await message.edit({ embeds: [embed] });
-                    success = true;
+                    console.log(`[Prayer] Updated message for guild ${guildId}`);
                } catch (error) {
-                    console.error(`[Prayer] Failed to update message for guild ${guildId}, trying again...`, error);
-                    await new Promise(res => setTimeout(res, 5000));
+                    console.log(`[Prayer] Could not update message, creating new one...`);
+                    message = null;
                }
+          }
+          
+          // Create new message if update failed or no message exists
+          if (!message) {
+               message = await channel.send({ embeds: [embed] });
+               
+               // Save message ID to database
+               await prisma.prayerTime.update({
+                    where: { id: prayerConfig.id },
+                    data: { lastMessageId: message.id }
+               });
+               
+               console.log(`[Prayer] Created new message ${message.id} for guild ${guildId}`);
           }
      } catch (error) {
           console.error(`[Prayer] Error updating prayer message for guild ${guildId}:`, error);

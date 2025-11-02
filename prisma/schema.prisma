@@ -109,6 +109,7 @@ model PrayerTime {
   notifyMaghrib     Boolean  @default(true)
   notifyIsha        Boolean  @default(true)
   
+  customMessage     String?
   lastMessageId     String?
   
   createdAt         DateTime @default(now())
@@ -117,14 +118,32 @@ model PrayerTime {
   guild             Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
 }
 
-// Server Monitoring (Uptime Robot / Pterodactyl)
+// Server Monitoring (Minecraft / Uptime Robot / Pterodactyl)
 model ServerMonitoring {
   id                String   @id @default(uuid())
   guildId           String
   
   enabled           Boolean  @default(false)
-  type              String   // "uptime" or "pterodactyl"
+  type              String   @default("minecraft") // "minecraft", "uptime", or "pterodactyl"
   channelId         String?
+  
+  // Minecraft Server Config
+  serverHost        String?
+  serverPort        Int?     @default(25565)
+  serverName        String?
+  checkInterval     Int?     @default(5) // minutes
+  
+  // Notification Settings
+  notifyOnline      Boolean  @default(true)
+  notifyOffline     Boolean  @default(true)
+  notifyPlayerCount Boolean  @default(false)
+  
+  // Status Cache (runtime data)
+  isOnline          Boolean? @default(false)
+  currentPlayers    Int?
+  maxPlayers        Int?
+  version           String?
+  lastChecked       DateTime?
   
   // Uptime Robot Config
   uptimeApiKey      String?

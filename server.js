@@ -74,6 +74,7 @@ let discordClient = null;
 
 app.setDiscordClient = (client) => {
     discordClient = client;
+    app.set('discordClient', client); // Store in app settings
     console.log('✅ Discord client connected to web server');
 };
 
