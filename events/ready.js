@@ -63,8 +63,16 @@ module.exports = {
                     });
                 }
 
-                // Set presence based on database settings
-                const activityType = ActivityType[botSettings.activityType] || ActivityType.Watching;
+                // Map activity type string to Discord.js ActivityType enum
+                const activityTypeMap = {
+                    'Playing': ActivityType.Playing,     // 0
+                    'Streaming': ActivityType.Streaming, // 1
+                    'Listening': ActivityType.Listening, // 2
+                    'Watching': ActivityType.Watching,   // 3
+                    'Competing': ActivityType.Competing  // 5
+                };
+
+                const activityType = activityTypeMap[botSettings.activityType] ?? ActivityType.Watching;
 
                 client.user.setPresence({
                     activities: [{
@@ -73,11 +81,14 @@ module.exports = {
                     }],
                     status: botSettings.status
                 });
+
+                console.log(`[Presence] Updated: ${botSettings.activityType} ${botSettings.activityText} (${botSettings.status})`);
             } catch (error) {
                 console.error(`[ERROR] Failed to update presence:`, error.message);
                 // Fallback to config
+                const fallbackType = ActivityType[config.presence.type] ?? ActivityType.Watching;
                 client.user.setPresence({
-                    activities: [{ name: config.presence.name, type: ActivityType[config.presence.type] }]
+                    activities: [{ name: config.presence.name, type: fallbackType }]
                 });
             } finally {
                 // Update presence every 5 minutes instead of 5 seconds

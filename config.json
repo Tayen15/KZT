@@ -1,8 +1,8 @@
 {
     "prefix": "bt ",
     "presence": {
-        "type": "Watching",
-        "name": "Deadline Deadline!!"
+        "type": "Playing",
+        "name": "Hi, im Bytebot!"
     },
     "clientID": "1006542146628751400",
     "guildID": "990148600422084638",

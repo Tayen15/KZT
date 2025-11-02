@@ -232,7 +232,14 @@ router.post('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, 
         }
 
         // Update bot presence immediately
-        const activityTypeEnum = ActivityType[activityType] || ActivityType.Watching;
+        const activityTypeMap = {
+            'Playing': ActivityType.Playing,
+            'Streaming': ActivityType.Streaming,
+            'Listening': ActivityType.Listening,
+            'Watching': ActivityType.Watching,
+            'Competing': ActivityType.Competing
+        };
+        const activityTypeEnum = activityTypeMap[activityType] || ActivityType.Watching;
         client.user.setPresence({
             activities: [{
                 name: activityText,
