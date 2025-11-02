@@ -4,6 +4,49 @@ const { ensureAuthenticated, ensureGuildAdmin, ensureBotOwner } = require('../mi
 const prisma = require('../utils/database');
 const config = require('../config.json');
 
+// TEST ROUTE - FOR DEVELOPMENT DEBUGGING ONLY
+if (process.env.NODE_ENV === 'development') {
+    router.get('/test/prayer/:guildId', async (req, res) => {
+        try {
+            const guildId = req.params.guildId;
+            
+            const guild = await prisma.guild.findUnique({
+                where: { id: guildId }
+            });
+            
+            if (!guild) {
+                return res.status(404).json({ error: 'Guild not found' });
+            }
+
+            let prayerConfig = await prisma.prayerTime.findFirst({
+                where: { guildId: guild.id }
+            });
+
+            if (!prayerConfig) {
+                prayerConfig = await prisma.prayerTime.create({
+                    data: { guildId: guild.id }
+                });
+            }
+
+            res.json({
+                success: true,
+                guild: {
+                    id: guild.id,
+                    guildId: guild.guildId,
+                    name: guild.name
+                },
+                prayerConfig
+            });
+        } catch (error) {
+            console.error('[Test Route] Error:', error);
+            res.status(500).json({ 
+                error: error.message,
+                stack: error.stack
+            });
+        }
+    });
+}
+
 // Owner Dashboard - only accessible by bot owner
 router.get('/owner', ensureAuthenticated, ensureBotOwner, async (req, res) => {
     try {
@@ -176,12 +219,12 @@ router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, asyn
     try {
         const guild = req.currentGuild;
 
-        let prayerConfig = await prisma.prayerTime.findFirst({
+        let prayerTimes = await prisma.prayerTime.findFirst({
             where: { guildId: guild.id }
         });
 
-        if (!prayerConfig) {
-            prayerConfig = await prisma.prayerTime.create({
+        if (!prayerTimes) {
+            prayerTimes = await prisma.prayerTime.create({
                 data: { guildId: guild.id }
             });
         }
@@ -190,7 +233,7 @@ router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, asyn
             title: `${guild.name} - Prayer Times`,
             user: req.user,
             guild,
-            prayerConfig
+            prayerTimes
         });
     } catch (error) {
         console.error('[Dashboard] Error loading prayer settings:', error);
@@ -206,15 +249,24 @@ router.get('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin, 
     try {
         const guild = req.currentGuild;
 
-        const monitors = await prisma.serverMonitoring.findMany({
+        let monitoring = await prisma.serverMonitoring.findFirst({
             where: { guildId: guild.id }
         });
+
+        if (!monitoring) {
+            monitoring = await prisma.serverMonitoring.create({
+                data: { 
+                    guildId: guild.id,
+                    type: 'uptime' // default type
+                }
+            });
+        }
 
         res.render('dashboard/monitoring', {
             title: `${guild.name} - Server Monitoring`,
             user: req.user,
             guild,
-            monitors
+            monitoring
         });
     } catch (error) {
         console.error('[Dashboard] Error loading monitoring settings:', error);
@@ -234,11 +286,17 @@ router.get('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async
             where: { guildId: guild.id }
         });
 
+        // Parse rules from JSON or provide empty array
+        const rules = rulesConfig && rulesConfig.rules ? 
+            (Array.isArray(rulesConfig.rules) ? rulesConfig.rules : []) : 
+            [];
+
         res.render('dashboard/rules', {
             title: `${guild.name} - Rules`,
             user: req.user,
             guild,
-            rulesConfig
+            rulesConfig,
+            rules
         });
     } catch (error) {
         console.error('[Dashboard] Error loading rules:', error);
