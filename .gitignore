@@ -8,3 +8,12 @@ OWNER_DASHBOARD.md
 COMMAND_TOGGLE_SYSTEM.md
 QUICK_FIX.md
 SETUP.md
+QUICK_START_PM2.md
+
+# PM2 Logs
+logs/
+*.log
+
+# PM2 Runtime
+.pm2/
+pids/

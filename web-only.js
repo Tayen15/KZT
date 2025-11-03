@@ -87,7 +87,7 @@ try {
     
     // Wait a bit for bot to initialize
     setTimeout(() => {
-        if (client && client.isReady && client.isReady()) {
+        if (client && client.isReady) {
             discordClient = client;
             app.set('discordClient', client);
             console.log('✅ Connected to Discord bot client');
@@ -97,7 +97,7 @@ try {
             
             // Keep checking until bot is ready
             const checkInterval = setInterval(() => {
-                if (client && client.isReady && client.isReady()) {
+                if (client && client.isReady) {
                     discordClient = client;
                     app.set('discordClient', client);
                     console.log('✅ Connected to Discord bot client');
@@ -118,7 +118,7 @@ try {
 // Middleware to inject Discord client into requests
 app.use((req, res, next) => {
     req.discordClient = discordClient || app.get('discordClient');
-    req.botAvailable = !!(req.discordClient && req.discordClient.isReady && req.discordClient.isReady());
+    req.botAvailable = !!(req.discordClient && req.discordClient.isReady);
     next();
 });
 
@@ -142,7 +142,7 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({
         status: 'ok',
-        botConnected: !!(discordClient && discordClient.isReady && discordClient.isReady()),
+        botConnected: !!(discordClient && discordClient.isReady),
         timestamp: new Date().toISOString()
     });
 });
