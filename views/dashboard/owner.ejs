@@ -422,11 +422,18 @@
                 <div>
                     <label class="block text-sm font-semibold mb-2">Target Servers</label>
                     <select id="targetServers" class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord">
-                        <option value="all">All Servers</option>
+                        <option value="all">All Servers (Auto-select channel)</option>
                         <% allGuilds.forEach(guild => { %>
                             <option value="<%= guild.id %>"><%= guild.name %></option>
                         <% }); %>
                     </select>
+                </div>
+                <div id="channelSelectionDiv" class="hidden">
+                    <label class="block text-sm font-semibold mb-2">Target Channel</label>
+                    <select id="targetChannel" class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord">
+                        <option value="">Loading channels...</option>
+                    </select>
+                    <p class="text-xs text-text-secondary mt-1">Select a channel where the bot has permission to send messages</p>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold mb-2">Message</label>
@@ -683,30 +690,84 @@
         function closeAnnouncementModal() {
             document.getElementById('announcementModal').classList.add('hidden');
             document.getElementById('announcementModal').classList.remove('flex');
+            // Reset form
+            document.getElementById('targetServers').value = 'all';
+            document.getElementById('channelSelectionDiv').classList.add('hidden');
+            document.getElementById('announcementMessage').value = '';
         }
+
+        // When server selection changes, show/hide channel dropdown
+        document.getElementById('targetServers').addEventListener('change', async function(e) {
+            const guildId = e.target.value;
+            const channelDiv = document.getElementById('channelSelectionDiv');
+            const channelSelect = document.getElementById('targetChannel');
+            
+            if (guildId === 'all') {
+                // Hide channel selection for "all servers"
+                channelDiv.classList.add('hidden');
+            } else {
+                // Show channel selection and load channels
+                channelDiv.classList.remove('hidden');
+                channelSelect.innerHTML = '<option value="">Loading channels...</option>';
+                
+                try {
+                    const response = await fetch(`/api/owner/guild/${guildId}/channels`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.channels.length > 0) {
+                        channelSelect.innerHTML = '<option value="">Auto-select channel</option>';
+                        data.channels.forEach(channel => {
+                            const option = document.createElement('option');
+                            option.value = channel.id;
+                            option.textContent = `# ${channel.name}`;
+                            channelSelect.appendChild(option);
+                        });
+                    } else {
+                        channelSelect.innerHTML = '<option value="">No available channels</option>';
+                    }
+                } catch (error) {
+                    console.error('Error loading channels:', error);
+                    channelSelect.innerHTML = '<option value="">Error loading channels</option>';
+                }
+            }
+        });
 
         document.getElementById('announcementForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const target = document.getElementById('targetServers').value;
             const message = document.getElementById('announcementMessage').value;
+            const channelId = document.getElementById('targetChannel').value || null;
+            
+            if (!message.trim()) {
+                alert('Please enter a message');
+                return;
+            }
             
             try {
                 const response = await fetch('/api/owner/announce', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ target, message })
+                    body: JSON.stringify({ target, message, channelId })
                 });
                 
-                if (response.ok) {
-                    alert('Announcement sent successfully!');
+                const data = await response.json();
+                
+                if (data.success) {
+                    let msg = `✅ Announcement sent to ${data.sentCount} server(s)`;
+                    if (data.failedCount > 0) {
+                        msg += `\n\n⚠️ Failed to send to ${data.failedCount} server(s):`;
+                        data.failedGuilds.forEach(failed => {
+                            msg += `\n- ${failed.name}: ${failed.reason}`;
+                        });
+                    }
+                    alert(msg);
                     closeAnnouncementModal();
-                    document.getElementById('announcementMessage').value = '';
                 } else {
-                    alert('Failed to send announcement');
+                    alert('❌ Failed to send announcement: ' + data.error);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error sending announcement');
+                alert('❌ Error sending announcement');
             }
         });
 

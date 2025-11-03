@@ -10,7 +10,7 @@ const { ActivityType } = require('discord.js');
 // Send announcement to all guilds or specific guild
 router.post('/owner/announce', ensureAuthenticated, ensureBotOwner, async (req, res) => {
     try {
-        const { target, message } = req.body;
+        const { target, message, channelId } = req.body;
         const client = req.discordClient;
 
         if (!client) {
@@ -18,6 +18,7 @@ router.post('/owner/announce', ensureAuthenticated, ensureBotOwner, async (req, 
         }
 
         let sentCount = 0;
+        let failedGuilds = [];
         const guilds = target === 'all' 
             ? Array.from(client.guilds.cache.values())
             : [client.guilds.cache.get(target)];
@@ -25,30 +26,70 @@ router.post('/owner/announce', ensureAuthenticated, ensureBotOwner, async (req, 
         for (const guild of guilds) {
             if (!guild) continue;
             
-            // Try to find a suitable channel to send announcement
-            const channel = guild.channels.cache.find(
-                c => c.type === 0 && c.permissionsFor(guild.members.me).has('SendMessages')
-            );
+            let channel = null;
+            
+            // If specific channelId provided, try to use it
+            if (channelId && target !== 'all') {
+                channel = guild.channels.cache.get(channelId);
+                
+                // Validate channel exists and bot has permission
+                if (channel && channel.type === 0) {
+                    const permissions = channel.permissionsFor(guild.members.me);
+                    if (!permissions || !permissions.has('SendMessages')) {
+                        failedGuilds.push({
+                            name: guild.name,
+                            reason: 'No permission to send messages in selected channel'
+                        });
+                        continue;
+                    }
+                } else {
+                    failedGuilds.push({
+                        name: guild.name,
+                        reason: 'Channel not found or not a text channel'
+                    });
+                    continue;
+                }
+            } else {
+                // Auto-find a suitable channel (original behavior)
+                channel = guild.channels.cache.find(
+                    c => c.type === 0 && c.permissionsFor(guild.members.me).has('SendMessages')
+                );
+            }
 
             if (channel) {
-                await channel.send({
-                    embeds: [{
-                        title: '📢 Announcement from ByteBot Owner',
-                        description: message,
-                        color: 0x5865F2,
-                        timestamp: new Date(),
-                        footer: {
-                            text: 'ByteBot Announcement System'
-                        }
-                    }]
+                try {
+                    await channel.send({
+                        embeds: [{
+                            title: '📢 Announcement from ByteBot Owner',
+                            description: message,
+                            color: 0x5865F2,
+                            timestamp: new Date(),
+                            footer: {
+                                text: 'ByteBot Announcement System'
+                            }
+                        }]
+                    });
+                    sentCount++;
+                } catch (error) {
+                    failedGuilds.push({
+                        name: guild.name,
+                        reason: error.message
+                    });
+                }
+            } else {
+                failedGuilds.push({
+                    name: guild.name,
+                    reason: 'No suitable channel found'
                 });
-                sentCount++;
             }
         }
 
         res.json({ 
             success: true, 
-            message: `Announcement sent to ${sentCount} server(s)` 
+            message: `Announcement sent to ${sentCount} server(s)`,
+            sentCount,
+            failedCount: failedGuilds.length,
+            failedGuilds: failedGuilds.length > 0 ? failedGuilds : undefined
         });
     } catch (error) {
         console.error('[API] Error sending announcement:', error);
@@ -833,10 +874,12 @@ router.put('/guild/:guildId/rules/config', ensureAuthenticated, ensureGuildAdmin
 });
 
 // ===== Guild Channels API (for dropdowns) =====
+
+// Get channels for a specific guild (for admin dashboard)
 router.get('/guild/:guildId/channels', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
     try {
         const { guildId } = req.params;
-        const { client } = req.app.locals;
+        const client = req.discordClient;
 
         if (!client) {
             return res.status(503).json({ success: false, error: 'Bot is not ready' });
@@ -853,7 +896,44 @@ router.get('/guild/:guildId/channels', ensureAuthenticated, ensureGuildAdmin, as
                 id: c.id,
                 name: c.name,
                 type: c.type === 0 ? 'text' : 'voice'
-            }));
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        res.json({ success: true, channels });
+    } catch (error) {
+        console.error('[API] Error getting channels:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get channels for owner dashboard (for specific guild)
+router.get('/owner/guild/:guildId/channels', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const { guildId } = req.params;
+        const client = req.discordClient;
+
+        if (!client) {
+            return res.status(503).json({ success: false, error: 'Bot is not ready' });
+        }
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) {
+            return res.status(404).json({ success: false, error: 'Guild not found' });
+        }
+
+        // Get text channels where bot has permission to send messages
+        const channels = guild.channels.cache
+            .filter(c => {
+                if (c.type !== 0) return false; // Only text channels
+                const permissions = c.permissionsFor(guild.members.me);
+                return permissions && permissions.has('SendMessages');
+            })
+            .map(c => ({
+                id: c.id,
+                name: c.name,
+                type: 'text'
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
 
         res.json({ success: true, channels });
     } catch (error) {
