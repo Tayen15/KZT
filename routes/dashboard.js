@@ -144,6 +144,41 @@ router.get('/owner', ensureAuthenticated, ensureBotOwner, async (req, res) => {
     }
 });
 
+// Owner Servers List - View all servers with ByteBot
+router.get('/owner/servers', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        res.render('dashboard/servers', {
+            title: 'All Servers - ByteBot',
+            user: req.user
+        });
+    } catch (error) {
+        console.error('[Dashboard] Error loading servers page:', error);
+        res.status(500).render('error', {
+            title: 'Error',
+            message: 'Failed to load servers page'
+        });
+    }
+});
+
+// Owner Server Detail - View specific server info and members
+router.get('/owner/servers/:guildId', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const { guildId } = req.params;
+        
+        res.render('dashboard/server-detail', {
+            title: 'Server Details - ByteBot',
+            user: req.user,
+            guildId
+        });
+    } catch (error) {
+        console.error('[Dashboard] Error loading server detail page:', error);
+        res.status(500).render('error', {
+            title: 'Error',
+            message: 'Failed to load server detail page'
+        });
+    }
+});
+
 // Helper function to format uptime
 function formatUptime(ms) {
     const seconds = Math.floor(ms / 1000);

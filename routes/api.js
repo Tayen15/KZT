@@ -957,4 +957,167 @@ router.get('/owner/guild/:guildId/channels', ensureAuthenticated, ensureBotOwner
     }
 });
 
+// Get detailed server information for owner
+router.get('/owner/servers/:guildId', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const { guildId } = req.params;
+        const client = req.discordClient;
+
+        if (!client) {
+            return res.status(503).json({ success: false, error: 'Bot is not ready' });
+        }
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) {
+            return res.status(404).json({ success: false, error: 'Guild not found' });
+        }
+
+        // Fetch all members if not cached
+        await guild.members.fetch();
+
+        // Get server info
+        const serverInfo = {
+            id: guild.id,
+            name: guild.name,
+            icon: guild.iconURL({ dynamic: true, size: 256 }),
+            owner: {
+                id: guild.ownerId,
+                username: guild.members.cache.get(guild.ownerId)?.user?.username || 'Unknown',
+                tag: guild.members.cache.get(guild.ownerId)?.user?.tag || 'Unknown'
+            },
+            memberCount: guild.memberCount,
+            createdAt: guild.createdAt,
+            joinedAt: guild.joinedAt,
+            description: guild.description,
+            verificationLevel: guild.verificationLevel,
+            boostTier: guild.premiumTier,
+            boostCount: guild.premiumSubscriptionCount,
+            channels: {
+                total: guild.channels.cache.size,
+                text: guild.channels.cache.filter(c => c.type === 0).size,
+                voice: guild.channels.cache.filter(c => c.type === 2).size,
+                category: guild.channels.cache.filter(c => c.type === 4).size
+            },
+            roles: guild.roles.cache.size,
+            emojis: guild.emojis.cache.size,
+            features: guild.features
+        };
+
+        res.json({ success: true, server: serverInfo });
+    } catch (error) {
+        console.error('[API] Error getting server info:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get members list for a specific server
+router.get('/owner/servers/:guildId/members', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const { guildId } = req.params;
+        const { page = 1, limit = 50, search = '' } = req.query;
+        const client = req.discordClient;
+
+        if (!client) {
+            return res.status(503).json({ success: false, error: 'Bot is not ready' });
+        }
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) {
+            return res.status(404).json({ success: false, error: 'Guild not found' });
+        }
+
+        // Fetch all members if not cached
+        await guild.members.fetch();
+
+        // Get all members
+        let members = Array.from(guild.members.cache.values());
+
+        // Filter by search if provided
+        if (search) {
+            const searchLower = search.toLowerCase();
+            members = members.filter(m => 
+                m.user.username.toLowerCase().includes(searchLower) ||
+                m.user.tag.toLowerCase().includes(searchLower) ||
+                m.displayName.toLowerCase().includes(searchLower)
+            );
+        }
+
+        // Sort by join date (newest first)
+        members.sort((a, b) => b.joinedTimestamp - a.joinedTimestamp);
+
+        // Pagination
+        const total = members.length;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + parseInt(limit);
+        const paginatedMembers = members.slice(startIndex, endIndex);
+
+        // Format member data
+        const memberList = paginatedMembers.map(member => ({
+            id: member.id,
+            username: member.user.username,
+            tag: member.user.tag,
+            discriminator: member.user.discriminator,
+            displayName: member.displayName,
+            avatar: member.user.displayAvatarURL({ dynamic: true, size: 128 }),
+            isBot: member.user.bot,
+            isOwner: member.id === guild.ownerId,
+            joinedAt: member.joinedAt,
+            roles: member.roles.cache
+                .filter(r => r.id !== guild.id) // Exclude @everyone
+                .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
+                .sort((a, b) => b.position - a.position),
+            permissions: {
+                isAdmin: member.permissions.has('Administrator'),
+                canManageGuild: member.permissions.has('ManageGuild'),
+                canManageChannels: member.permissions.has('ManageChannels'),
+                canKick: member.permissions.has('KickMembers'),
+                canBan: member.permissions.has('BanMembers')
+            }
+        }));
+
+        res.json({ 
+            success: true, 
+            members: memberList,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        console.error('[API] Error getting members:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get all servers list for owner dashboard
+router.get('/owner/servers', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const client = req.discordClient;
+
+        if (!client) {
+            return res.status(503).json({ success: false, error: 'Bot is not ready' });
+        }
+
+        const servers = Array.from(client.guilds.cache.values()).map(guild => ({
+            id: guild.id,
+            name: guild.name,
+            icon: guild.iconURL({ dynamic: true, size: 128 }),
+            memberCount: guild.memberCount,
+            owner: {
+                id: guild.ownerId,
+                username: guild.members.cache.get(guild.ownerId)?.user?.username || 'Unknown'
+            },
+            joinedAt: guild.joinedAt,
+            boostTier: guild.premiumTier
+        })).sort((a, b) => b.memberCount - a.memberCount); // Sort by member count
+
+        res.json({ success: true, servers, total: servers.length });
+    } catch (error) {
+        console.error('[API] Error getting servers:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 module.exports = router;
