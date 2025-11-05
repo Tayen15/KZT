@@ -197,10 +197,15 @@ module.exports = {
         const categorySelect = new StringSelectMenuBuilder()
             .setCustomId('select_category')
             .setPlaceholder('Select a command category')
-            .addOptions(categories.map(category => ({
-                label: category,
-                value: category
-            })));
+            .addOptions(categories.map(category => {
+                const commandCount = authorizedCommands.filter(cmd => (cmd.category || 'Uncategorized') === category).length;
+                return {
+                    label: category,
+                    description: `${commandCount} command${commandCount !== 1 ? 's' : ''} available`,
+                    value: category,
+                    emoji: getCategoryEmoji(category)
+                };
+            }));
 
         const categoryRow = new ActionRowBuilder().addComponents(categorySelect);
 
@@ -209,9 +214,18 @@ module.exports = {
                 name: interaction.client.user.username,
                 iconURL: interaction.client.user.displayAvatarURL({ dynamic: true })
             })
-            .setTitle(`Welcome to ${interaction.client.user.username} Help Guide`)
-            .setDescription(`Here you will find all available commands of <@${interaction.client.user.id}>.\n\n**Commands**\nUse the menu below to browse available commands.`)
-            .setColor(0x00AE86);
+            .setTitle(`Welcome to ${interaction.client.user.username} Help!`)
+            .setDescription(
+                `Hello **<@${interaction.user.id}>**! You will find here all the available commands.\n\n` +
+                `**Commands**\n` +
+                `You can find all the basic commands on the [website](https://bytebot-dashboard.vercel.app/commands).\n` +
+                `Or use the select menu below to browse commands by category.\n\n` +
+                `**Useful Links**\n` +
+                `[Dashboard](https://bytebot.oktaa.my.id/dashboard) | ` +
+                // `[Support Server](https://discord.gg/yourdiscord) | ` +
+                `[Invite Bot](https://discord.com/oauth2/authorize?client_id=${interaction.client.user.id}&permissions=8&scope=bot%20applications.commands)\n\n`
+            )
+            .setColor(0x5865F2)
 
         await interaction.reply({ embeds: [embed], components: [categoryRow], flags: MessageFlags.Ephemeral });
 
@@ -300,3 +314,18 @@ module.exports = {
         });
     }
 };
+
+// Helper function to get emoji for category
+function getCategoryEmoji(category) {
+    const emojiMap = {
+        'info': 'ℹ️',
+        'moderation': '🛡️',
+        'music': '🎵',
+        'dev': '🔧',
+        'minecraft': '🎮',
+        'fun': '🎉',
+        'utility': '🔨',
+        'admin': '⚙️'
+    };
+    return emojiMap[category.toLowerCase()] || '📁';
+}
