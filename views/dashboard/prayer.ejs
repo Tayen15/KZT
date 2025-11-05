@@ -1,240 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= guild.name %> - Prayer Times</title>
+    <title>
+        <%= guild.name %> - Prayer Times
+    </title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'dark-primary': '#1a1d23',
-                        'dark-secondary': '#23272f',
-                        'dark-card': '#2b2f38',
-                        'dark-hover': '#32363f',
-                        'discord': '#5865F2',
-                        'discord-hover': '#4752c4',
-                        'text-primary': '#ffffff',
-                        'text-secondary': '#b9bbbe',
-                        'border-dark': '#3a3f4b'
-                    }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-dark-primary text-text-primary min-h-screen">
+
+<body class="bg-[#1a1d23] text-white min-h-screen">
     <%- include('../partials/navbar') %>
 
-    <main class="container mx-auto px-4 py-12">
-        <!-- Header -->
-        <div class="mb-8">
-            <div class="flex items-center space-x-3 mb-4">
-                <a href="/dashboard" class="text-text-secondary hover:text-discord transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </a>
-                <% if (guild.icon) { %>
-                    <img src="https://cdn.discordapp.com/icons/<%= guild.guildId %>/<%= guild.icon %>.png" 
-                         alt="<%= guild.name %>" 
-                         class="w-12 h-12 rounded-lg">
-                <% } else { %>
-                    <div class="w-12 h-12 bg-discord rounded-lg flex items-center justify-center text-xl font-bold">
-                        <%= guild.name.charAt(0).toUpperCase() %>
+        <main class="container mx-auto px-4 py-8 max-w-7xl">
+            <!-- Header -->
+            <div class="mb-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <a href="/dashboard"
+                        class="text-[#b9bbbe] hover:text-[#5865F2] transition-colors p-2 hover:bg-[#2b2f38] rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                    <div class="flex items-center gap-3">
+                        <% if (guild.icon) { %>
+                            <img src="https://cdn.discordapp.com/icons/<%= guild.guildId %>/<%= guild.icon %>.png"
+                                alt="<%= guild.name %>" class="w-12 h-12 rounded-full">
+                            <% } else { %>
+                                <div
+                                    class="w-12 h-12 bg-[#5865F2] rounded-full flex items-center justify-center text-xl font-bold">
+                                    <%= guild.name.charAt(0).toUpperCase() %>
+                                </div>
+                                <% } %>
+                                    <div>
+                                        <h1 class="text-2xl font-bold text-white">
+                                            <%= guild.name %>
+                                        </h1>
+                                        <p class="text-[#b9bbbe] text-sm">Prayer Times Configuration</p>
+                                    </div>
                     </div>
-                <% } %>
-                <div>
-                    <h1 class="text-3xl font-bold"><%= guild.name %></h1>
-                    <p class="text-text-secondary">Prayer Times Configuration</p>
                 </div>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Sidebar Navigation -->
-            <div class="lg:col-span-1">
-                <nav class="bg-dark-card border border-border-dark rounded-lg p-4 sticky top-4">
-                    <ul class="space-y-2">
-                        <li>
-                            <a href="/dashboard/guild/<%= guild.guildId %>" 
-                               class="block px-4 py-2 rounded hover:bg-dark-hover transition-colors">
-                                General Settings
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/dashboard/guild/<%= guild.guildId %>/prayer" 
-                               class="block px-4 py-2 rounded bg-discord text-white font-semibold">
-                                Prayer Times
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/dashboard/guild/<%= guild.guildId %>/monitoring" 
-                               class="block px-4 py-2 rounded hover:bg-dark-hover transition-colors">
-                                Server Monitoring
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/dashboard/guild/<%= guild.guildId %>/rules" 
-                               class="block px-4 py-2 rounded hover:bg-dark-hover transition-colors">
-                                Rules Management
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Sidebar Navigation -->
+                <div class="lg:col-span-3">
+                    <% const currentPage='prayer' ; %>
+                        <%- include('../partials/guild-sidebar', { guild, currentPage }) %>
+                </div>
 
-            <!-- Main Content -->
-            <div class="lg:col-span-3">
-                <form action="/api/guild/<%= guild.guildId %>/prayer" method="POST" class="space-y-6">
-                    <!-- Enable/Disable -->
-                    <div class="bg-dark-card border border-border-dark rounded-lg p-6">
-                        <div class="flex items-center justify-between">
+                <!-- Main Content -->
+                <div class="lg:col-span-9">
+                    <form action="/api/guild/<%= guild.guildId %>/prayer" method="POST" class="space-y-6">
+                        <!-- Enable/Disable -->
+                        <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-xl font-bold mb-1">Prayer Times Notifications</h2>
+                                    <p class="text-[#b9bbbe] text-sm">
+                                        Aktifkan notifikasi waktu sholat otomatis
+                                    </p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="enabled" value="true" <%=prayerTimes.enabled
+                                        ? 'checked' : '' %>
+                                    class="sr-only peer">
+                                    <div
+                                        class="w-14 h-7 bg-[#23272f] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#5865F2]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#5865F2]">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Location Settings -->
+                        <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                            <h2 class="text-xl font-bold mb-4">Location Settings</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="city" class="block text-sm font-medium mb-2">City</label>
+                                    <input type="text" id="city" name="city" value="<%= prayerTimes.city || '' %>"
+                                        required
+                                        class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2 focus:outline-none focus:border-[#5865F2] transition-colors"
+                                        placeholder="Jakarta">
+                                </div>
+                                <div>
+                                    <label for="country" class="block text-sm font-medium mb-2">Country</label>
+                                    <input type="text" id="country" name="country"
+                                        value="<%= prayerTimes.country || '' %>" required
+                                        class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2 focus:outline-none focus:border-[#5865F2] transition-colors"
+                                        placeholder="Indonesia">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Channel Settings -->
+                        <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                            <h2 class="text-xl font-bold mb-4">Notification Channel</h2>
                             <div>
-                                <h2 class="text-xl font-bold mb-1">Prayer Times Notifications</h2>
-                                <p class="text-text-secondary text-sm">
-                                    Aktifkan notifikasi waktu sholat otomatis
+                                <label for="channelId" class="block text-sm font-medium mb-2">Channel ID</label>
+                                <input type="text" id="channelId" name="channelId"
+                                    value="<%= prayerTimes.channelId || '' %>" required
+                                    class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2 focus:outline-none focus:border-[#5865F2] transition-colors"
+                                    placeholder="123456789012345678">
+                                <p class="text-[#b9bbbe] text-sm mt-2">
+                                    Channel dimana bot akan mengirim notifikasi waktu sholat
                                 </p>
                             </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" 
-                                       name="enabled" 
-                                       value="true"
-                                       <%= prayerTimes.enabled ? 'checked' : '' %>
-                                       class="sr-only peer">
-                                <div class="w-14 h-7 bg-dark-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-discord/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-discord"></div>
-                            </label>
                         </div>
-                    </div>
 
-                    <!-- Location Settings -->
-                    <div class="bg-dark-card border border-border-dark rounded-lg p-6">
-                        <h2 class="text-xl font-bold mb-4">Location Settings</h2>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="city" class="block text-sm font-medium mb-2">City</label>
-                                <input type="text" 
-                                       id="city" 
-                                       name="city" 
-                                       value="<%= prayerTimes.city || '' %>" 
-                                       required
-                                       class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord transition-colors"
-                                       placeholder="Jakarta">
+                        <!-- Prayer Times Selection -->
+                        <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                            <h2 class="text-xl font-bold mb-4">Prayer Times to Notify</h2>
+                            <p class="text-[#b9bbbe] text-sm mb-4">Pilih waktu sholat yang ingin dinotifikasi</p>
+
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="notifyFajr" value="true" <%=prayerTimes.notifyFajr
+                                        ? 'checked' : '' %>
+                                    class="w-5 h-5 bg-[#23272f] border-[#3a3f4b] rounded focus:ring-[#5865F2]">
+                                    <span>Fajr (Subuh)</span>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="notifyDhuhr" value="true" <%=prayerTimes.notifyDhuhr
+                                        ? 'checked' : '' %>
+                                    class="w-5 h-5 bg-[#23272f] border-[#3a3f4b] rounded focus:ring-[#5865F2]">
+                                    <span>Dhuhr (Dzuhur)</span>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="notifyAsr" value="true" <%=prayerTimes.notifyAsr
+                                        ? 'checked' : '' %>
+                                    class="w-5 h-5 bg-[#23272f] border-[#3a3f4b] rounded focus:ring-[#5865F2]">
+                                    <span>Asr (Ashar)</span>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="notifyMaghrib" value="true"
+                                        <%=prayerTimes.notifyMaghrib ? 'checked' : '' %>
+                                    class="w-5 h-5 bg-[#23272f] border-[#3a3f4b] rounded focus:ring-[#5865F2]">
+                                    <span>Maghrib</span>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="notifyIsha" value="true" <%=prayerTimes.notifyIsha
+                                        ? 'checked' : '' %>
+                                    class="w-5 h-5 bg-[#23272f] border-[#3a3f4b] rounded focus:ring-[#5865F2]">
+                                    <span>Isha (Isya)</span>
+                                </label>
                             </div>
+                        </div>
+
+                        <!-- Custom Message -->
+                        <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                            <h2 class="text-xl font-bold mb-4">Custom Message</h2>
                             <div>
-                                <label for="country" class="block text-sm font-medium mb-2">Country</label>
-                                <input type="text" 
-                                       id="country" 
-                                       name="country" 
-                                       value="<%= prayerTimes.country || '' %>" 
-                                       required
-                                       class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord transition-colors"
-                                       placeholder="Indonesia">
+                                <label for="customMessage" class="block text-sm font-medium mb-2">Notification Message
+                                    (Optional)</label>
+                                <textarea id="customMessage" name="customMessage" rows="3"
+                                    class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2 focus:outline-none focus:border-[#5865F2] transition-colors"
+                                    placeholder="🕌 Waktunya sholat {prayer}!"><%= prayerTimes.customMessage || '' %></textarea>
+                                <p class="text-[#b9bbbe] text-sm mt-2">
+                                    Use {prayer} untuk nama waktu sholat
+                                </p>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Channel Settings -->
-                    <div class="bg-dark-card border border-border-dark rounded-lg p-6">
-                        <h2 class="text-xl font-bold mb-4">Notification Channel</h2>
-                        <div>
-                            <label for="channelId" class="block text-sm font-medium mb-2">Channel ID</label>
-                            <input type="text" 
-                                   id="channelId" 
-                                   name="channelId" 
-                                   value="<%= prayerTimes.channelId || '' %>" 
-                                   required
-                                   class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord transition-colors"
-                                   placeholder="123456789012345678">
-                            <p class="text-text-secondary text-sm mt-2">
-                                Channel dimana bot akan mengirim notifikasi waktu sholat
-                            </p>
+                        <!-- Submit Button -->
+                        <div class="flex justify-end space-x-4">
+                            <a href="/dashboard/guild/<%= guild.guildId %>"
+                                class="px-6 py-3 bg-[#2b2f38] border border-[#3a3f4b] hover:bg-[#32363f] rounded-lg transition-colors">
+                                Cancel
+                            </a>
+                            <button type="submit"
+                                class="px-6 py-3 bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold rounded-lg transition-colors">
+                                Save Prayer Settings
+                            </button>
                         </div>
-                    </div>
-
-                    <!-- Prayer Times Selection -->
-                    <div class="bg-dark-card border border-border-dark rounded-lg p-6">
-                        <h2 class="text-xl font-bold mb-4">Prayer Times to Notify</h2>
-                        <p class="text-text-secondary text-sm mb-4">Pilih waktu sholat yang ingin dinotifikasi</p>
-                        
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <label class="flex items-center space-x-3 cursor-pointer">
-                                <input type="checkbox" 
-                                       name="notifyFajr" 
-                                       value="true"
-                                       <%= prayerTimes.notifyFajr ? 'checked' : '' %>
-                                       class="w-5 h-5 bg-dark-secondary border-border-dark rounded focus:ring-discord">
-                                <span>Fajr (Subuh)</span>
-                            </label>
-                            <label class="flex items-center space-x-3 cursor-pointer">
-                                <input type="checkbox" 
-                                       name="notifyDhuhr" 
-                                       value="true"
-                                       <%= prayerTimes.notifyDhuhr ? 'checked' : '' %>
-                                       class="w-5 h-5 bg-dark-secondary border-border-dark rounded focus:ring-discord">
-                                <span>Dhuhr (Dzuhur)</span>
-                            </label>
-                            <label class="flex items-center space-x-3 cursor-pointer">
-                                <input type="checkbox" 
-                                       name="notifyAsr" 
-                                       value="true"
-                                       <%= prayerTimes.notifyAsr ? 'checked' : '' %>
-                                       class="w-5 h-5 bg-dark-secondary border-border-dark rounded focus:ring-discord">
-                                <span>Asr (Ashar)</span>
-                            </label>
-                            <label class="flex items-center space-x-3 cursor-pointer">
-                                <input type="checkbox" 
-                                       name="notifyMaghrib" 
-                                       value="true"
-                                       <%= prayerTimes.notifyMaghrib ? 'checked' : '' %>
-                                       class="w-5 h-5 bg-dark-secondary border-border-dark rounded focus:ring-discord">
-                                <span>Maghrib</span>
-                            </label>
-                            <label class="flex items-center space-x-3 cursor-pointer">
-                                <input type="checkbox" 
-                                       name="notifyIsha" 
-                                       value="true"
-                                       <%= prayerTimes.notifyIsha ? 'checked' : '' %>
-                                       class="w-5 h-5 bg-dark-secondary border-border-dark rounded focus:ring-discord">
-                                <span>Isha (Isya)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Custom Message -->
-                    <div class="bg-dark-card border border-border-dark rounded-lg p-6">
-                        <h2 class="text-xl font-bold mb-4">Custom Message</h2>
-                        <div>
-                            <label for="customMessage" class="block text-sm font-medium mb-2">Notification Message (Optional)</label>
-                            <textarea id="customMessage" 
-                                      name="customMessage" 
-                                      rows="3"
-                                      class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord transition-colors"
-                                      placeholder="🕌 Waktunya sholat {prayer}!"><%= prayerTimes.customMessage || '' %></textarea>
-                            <p class="text-text-secondary text-sm mt-2">
-                                Use {prayer} untuk nama waktu sholat
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="flex justify-end space-x-4">
-                        <a href="/dashboard/guild/<%= guild.guildId %>" 
-                           class="px-6 py-3 bg-dark-card border border-border-dark hover:bg-dark-hover rounded-lg transition-colors">
-                            Cancel
-                        </a>
-                        <button type="submit" 
-                                class="px-6 py-3 bg-discord hover:bg-discord-hover text-white font-semibold rounded-lg transition-colors">
-                            Save Prayer Settings
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <%- include('../partials/footer') %>
+        <%- include('../partials/footer') %>
 </body>
+
 </html>

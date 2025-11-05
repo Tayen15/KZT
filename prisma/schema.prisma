@@ -48,6 +48,7 @@ model GuildMember {
   userId    String
   guildId   String
   isAdmin   Boolean  @default(false)
+  isOwner   Boolean  @default(false)
   joinedAt  DateTime @default(now())
   
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

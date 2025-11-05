@@ -218,7 +218,7 @@ module.exports = {
             .setDescription(
                 `Hello **<@${interaction.user.id}>**! You will find here all the available commands.\n\n` +
                 `**Commands**\n` +
-                `You can find all the basic commands on the [website](https://bytebot-dashboard.vercel.app/commands).\n` +
+                `You can find all the basic commands on the [website](https://bytebot.oktaa.my.id/commands).\n` +
                 `Or use the select menu below to browse commands by category.\n\n` +
                 `**Useful Links**\n` +
                 `[Dashboard](https://bytebot.oktaa.my.id/dashboard) | ` +

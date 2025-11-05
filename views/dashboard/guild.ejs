@@ -5,193 +5,201 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= guild.name %> - Settings</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'dark-primary': '#1a1d23',
-                        'dark-secondary': '#23272f',
-                        'dark-card': '#2b2f38',
-                        'dark-hover': '#32363f',
-                        'discord': '#5865F2',
-                        'discord-hover': '#4752c4',
-                        'text-primary': '#ffffff',
-                        'text-secondary': '#b9bbbe',
-                        'border-dark': '#3a3f4b'
-                    }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-dark-primary text-text-primary min-h-screen">
+<body class="bg-[#1a1d23] text-white min-h-screen">
     <%- include('../partials/navbar') %>
 
-    <main class="container mx-auto px-4 py-12">
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
         <!-- Header -->
-        <div class="mb-8">
-            <div class="flex items-center space-x-3 mb-4">
-                <a href="/dashboard" class="text-text-secondary hover:text-discord transition-colors">
+        <div class="mb-6">
+            <div class="flex items-center gap-4 mb-4">
+                <a href="/dashboard" class="text-[#b9bbbe] hover:text-[#5865F2] transition-colors p-2 hover:bg-[#2b2f38] rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </a>
-                <% if (guild.icon) { %>
-                    <img src="https://cdn.discordapp.com/icons/<%= guild.guildId %>/<%= guild.icon %>.png" 
-                         alt="<%= guild.name %>" 
-                         class="w-12 h-12 rounded-lg">
-                <% } else { %>
-                    <div class="w-12 h-12 bg-discord rounded-lg flex items-center justify-center text-xl font-bold">
-                        <%= guild.name.charAt(0).toUpperCase() %>
+                <div class="flex items-center gap-3">
+                    <% if (guild.icon) { %>
+                        <img src="https://cdn.discordapp.com/icons/<%= guild.guildId %>/<%= guild.icon %>.png" 
+                             alt="<%= guild.name %>" 
+                             class="w-12 h-12 rounded-full">
+                    <% } else { %>
+                        <div class="w-12 h-12 bg-[#5865F2] rounded-full flex items-center justify-center text-xl font-bold">
+                            <%= guild.name.charAt(0).toUpperCase() %>
+                        </div>
+                    <% } %>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white"><%= guild.name %></h1>
+                        <p class="text-[#b9bbbe] text-sm">Server Configuration</p>
                     </div>
-                <% } %>
-                <div>
-                    <h1 class="text-3xl font-bold"><%= guild.name %></h1>
-                    <p class="text-text-secondary">Server Settings</p>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Sidebar Navigation -->
-            <div class="lg:col-span-1">
-                <nav class="bg-dark-card border border-border-dark rounded-lg p-4 sticky top-4">
-                    <ul class="space-y-2">
-                        <li>
-                            <a href="/dashboard/guild/<%= guild.guildId %>" 
-                               class="block px-4 py-2 rounded bg-discord text-white font-semibold">
-                                General Settings
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/dashboard/guild/<%= guild.guildId %>/prayer" 
-                               class="block px-4 py-2 rounded hover:bg-dark-hover transition-colors">
-                                Prayer Times
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/dashboard/guild/<%= guild.guildId %>/monitoring" 
-                               class="block px-4 py-2 rounded hover:bg-dark-hover transition-colors">
-                                Server Monitoring
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/dashboard/guild/<%= guild.guildId %>/rules" 
-                               class="block px-4 py-2 rounded hover:bg-dark-hover transition-colors">
-                                Rules Management
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Sidebar Navigation (Discord-like) -->
+            <div class="lg:col-span-3">
+                <% const currentPage = 'overview'; %>
+                <%- include('../partials/guild-sidebar', { guild, currentPage }) %>
             </div>
 
             <!-- Main Content -->
-            <div class="lg:col-span-3">
-                <!-- Success/Error Messages -->
-                <% if (typeof success !== 'undefined' && success) { %>
-                    <div class="bg-green-500/20 border border-green-500 text-green-500 rounded-lg p-4 mb-6">
-                        <%= success %>
-                    </div>
-                <% } %>
-                <% if (typeof error !== 'undefined' && error) { %>
-                    <div class="bg-red-500/20 border border-red-500 text-red-500 rounded-lg p-4 mb-6">
-                        <%= error %>
-                    </div>
-                <% } %>
+            <div class="lg:col-span-9">
+                <!-- Notifications -->
+                <div id="notification" class="hidden mb-6 rounded-lg p-4"></div>
 
-                <!-- General Settings Form -->
-                <form action="/api/guild/<%= guild.guildId %>/settings" method="POST" class="space-y-6">
-                    <!-- Prefix Setting -->
-                    <div class="bg-dark-card border border-border-dark rounded-lg p-6">
-                        <h2 class="text-xl font-bold mb-4">Bot Prefix</h2>
-                        <div>
-                            <label for="prefix" class="block text-sm font-medium mb-2">Command Prefix</label>
-                            <input type="text" 
-                                   id="prefix" 
-                                   name="prefix" 
-                                   value="<%= settings.prefix || '!' %>" 
-                                   maxlength="5"
-                                   class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord transition-colors"
-                                   placeholder="!">
-                            <p class="text-text-secondary text-sm mt-2">
-                                Prefix yang digunakan untuk command bot (contoh: ! atau ?)
-                            </p>
-                        </div>
+                <!-- Overview Card -->
+                <div class="bg-[#23272f] rounded-lg border border-[#3a3f4b] overflow-hidden mb-6">
+                    <div class="p-6 border-b border-[#3a3f4b]">
+                        <h2 class="text-xl font-bold text-white">Server Overview</h2>
+                        <p class="text-[#b9bbbe] text-sm mt-1">General information about your server</p>
                     </div>
-
-                    <!-- Welcome Message -->
-                    <div class="bg-dark-card border border-border-dark rounded-lg p-6">
-                        <h2 class="text-xl font-bold mb-4">Welcome Message</h2>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="welcomeChannelId" class="block text-sm font-medium mb-2">Welcome Channel</label>
-                                <input type="text" 
-                                       id="welcomeChannelId" 
-                                       name="welcomeChannelId" 
-                                       value="<%= settings.welcomeChannelId || '' %>" 
-                                       class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord transition-colors"
-                                       placeholder="Channel ID">
-                                <p class="text-text-secondary text-sm mt-2">
-                                    ID channel untuk mengirim welcome message
-                                </p>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-[#2b2f38] rounded-lg p-4 border border-[#3a3f4b]">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 bg-[#5865F2]/20 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-[#5865F2]" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-white" id="memberCount">Loading...</p>
+                                        <p class="text-xs text-[#b9bbbe]">Total Members</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label for="welcomeMessage" class="block text-sm font-medium mb-2">Welcome Message</label>
-                                <textarea id="welcomeMessage" 
-                                          name="welcomeMessage" 
-                                          rows="4"
-                                          class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord transition-colors"
-                                          placeholder="Welcome {user} to {server}!"><%= settings.welcomeMessage || '' %></textarea>
-                                <p class="text-text-secondary text-sm mt-2">
-                                    Use {user} untuk mention user dan {server} untuk nama server
-                                </p>
+
+                            <div class="bg-[#2b2f38] rounded-lg p-4 border border-[#3a3f4b]">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 bg-[#43b581]/20 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-[#43b581]" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-white">Active</p>
+                                        <p class="text-xs text-[#b9bbbe]">Bot Status</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#2b2f38] rounded-lg p-4 border border-[#3a3f4b]">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-2xl font-bold text-white" id="featureCount">2</p>
+                                        <p class="text-xs text-[#b9bbbe]">Active Features</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Moderation Settings -->
-                    <div class="bg-dark-card border border-border-dark rounded-lg p-6">
-                        <h2 class="text-xl font-bold mb-4">Moderation</h2>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="modLogChannelId" class="block text-sm font-medium mb-2">Mod Log Channel</label>
-                                <input type="text" 
-                                       id="modLogChannelId" 
-                                       name="modLogChannelId" 
-                                       value="<%= settings.modLogChannelId || '' %>" 
-                                       class="w-full bg-dark-secondary border border-border-dark rounded-lg px-4 py-2 focus:outline-none focus:border-discord transition-colors"
-                                       placeholder="Channel ID">
-                                <p class="text-text-secondary text-sm mt-2">
-                                    Channel untuk log moderation actions
-                                </p>
+                <!-- Features Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Prayer Times Feature -->
+                    <div class="bg-[#23272f] rounded-lg border border-[#3a3f4b] overflow-hidden hover:border-[#5865F2] transition-all group cursor-pointer"
+                         onclick="window.location.href='/dashboard/guild/<%= guild.guildId %>/prayer'">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="w-12 h-12 bg-[#5865F2]/20 rounded-lg flex items-center justify-center group-hover:bg-[#5865F2]/30 transition-all">
+                                    <svg class="w-6 h-6 text-[#5865F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <span class="px-2 py-1 bg-[#43b581]/20 text-[#43b581] text-xs font-semibold rounded">Active</span>
                             </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" 
-                                       id="autoModEnabled" 
-                                       name="autoModEnabled" 
-                                       value="true"
-                                       <%= settings.autoModEnabled ? 'checked' : '' %>
-                                       class="w-5 h-5 bg-dark-secondary border-border-dark rounded focus:ring-discord">
-                                <label for="autoModEnabled" class="ml-3 text-sm">
-                                    Enable Auto-Moderation
-                                </label>
+                            <h3 class="text-lg font-bold text-white mb-2 group-hover:text-[#5865F2] transition-colors">Prayer Times</h3>
+                            <p class="text-[#b9bbbe] text-sm mb-4">Automatic Islamic prayer time notifications for your community</p>
+                            <div class="flex items-center text-[#5865F2] text-sm font-medium">
+                                <span>Configure</span>
+                                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Submit Button -->
-                    <div class="flex justify-end space-x-4">
-                        <a href="/dashboard" 
-                           class="px-6 py-3 bg-dark-card border border-border-dark hover:bg-dark-hover rounded-lg transition-colors">
-                            Cancel
-                        </a>
-                        <button type="submit" 
-                                class="px-6 py-3 bg-discord hover:bg-discord-hover text-white font-semibold rounded-lg transition-colors">
-                            Save Changes
-                        </button>
+                    <!-- Server Monitoring Feature -->
+                    <div class="bg-[#23272f] rounded-lg border border-[#3a3f4b] overflow-hidden hover:border-[#5865F2] transition-all group cursor-pointer"
+                         onclick="window.location.href='/dashboard/guild/<%= guild.guildId %>/monitoring'">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30 transition-all">
+                                    <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                    </svg>
+                                </div>
+                                <span class="px-2 py-1 bg-[#2b2f38] text-[#b9bbbe] text-xs font-semibold rounded">Optional</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2 group-hover:text-[#5865F2] transition-colors">Server Monitoring</h3>
+                            <p class="text-[#b9bbbe] text-sm mb-4">Monitor your Minecraft or game server status in real-time</p>
+                            <div class="flex items-center text-[#5865F2] text-sm font-medium">
+                                <span>Configure</span>
+                                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
-                </form>
+                </div>
+
+                <!-- Coming Soon Section -->
+                <div class="mt-6 bg-[#23272f] rounded-lg border border-[#3a3f4b] overflow-hidden">
+                    <div class="p-6 border-b border-[#3a3f4b]">
+                        <h2 class="text-xl font-bold text-white">Coming Soon</h2>
+                        <p class="text-[#b9bbbe] text-sm mt-1">Features currently in development</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-start gap-3 p-4 bg-[#2b2f38] rounded-lg border border-[#3a3f4b] opacity-60">
+                                <svg class="w-6 h-6 text-[#b9bbbe] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                </svg>
+                                <div>
+                                    <h4 class="font-semibold text-white mb-1">Welcome Message</h4>
+                                    <p class="text-sm text-[#b9bbbe]">Greet new members automatically</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3 p-4 bg-[#2b2f38] rounded-lg border border-[#3a3f4b] opacity-60">
+                                <svg class="w-6 h-6 text-[#b9bbbe] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+                                </svg>
+                                <div>
+                                    <h4 class="font-semibold text-white mb-1">Auto Roles</h4>
+                                    <p class="text-sm text-[#b9bbbe]">Assign roles automatically</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3 p-4 bg-[#2b2f38] rounded-lg border border-[#3a3f4b] opacity-60">
+                                <svg class="w-6 h-6 text-[#b9bbbe] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                                <div>
+                                    <h4 class="font-semibold text-white mb-1">Advanced Moderation</h4>
+                                    <p class="text-sm text-[#b9bbbe]">Auto-mod and logging system</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3 p-4 bg-[#2b2f38] rounded-lg border border-[#3a3f4b] opacity-60">
+                                <svg class="w-6 h-6 text-[#b9bbbe] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                                <div>
+                                    <h4 class="font-semibold text-white mb-1">Custom Commands</h4>
+                                    <p class="text-sm text-[#b9bbbe]">Create your own commands</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -199,44 +207,49 @@
     <%- include('../partials/footer') %>
 
     <script>
-        // Form submission with AJAX
-        document.querySelector('form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const formData = new FormData(form);
-            
-            // Convert FormData to JSON
-            const data = {};
-            formData.forEach((value, key) => {
-                if (key === 'autoModEnabled') {
-                    data[key] = true;
-                } else {
-                    data[key] = value;
-                }
-            });
-            
+        // Fetch member count
+        async function loadMemberCount() {
             try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Show success message
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + result.message);
+                const response = await fetch('/api/guild/<%= guild.guildId %>/info');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.memberCount) {
+                        document.getElementById('memberCount').textContent = data.memberCount.toLocaleString();
+                    }
                 }
             } catch (error) {
-                alert('Failed to save settings');
-                console.error(error);
+                console.error('Failed to load member count:', error);
+                document.getElementById('memberCount').textContent = 'N/A';
             }
-        });
+        }
+
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.className = `mb-6 rounded-lg p-4 ${
+                type === 'success' ? 'bg-[#43b581]/20 border border-[#43b581] text-[#43b581]' :
+                type === 'error' ? 'bg-[#f04747]/20 border border-[#f04747] text-[#f04747]' :
+                'bg-[#5865F2]/20 border border-[#5865F2] text-[#5865F2]'
+            }`;
+            notification.textContent = message;
+            notification.classList.remove('hidden');
+            
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Check for URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success')) {
+            showNotification(decodeURIComponent(urlParams.get('success')), 'success');
+        }
+        if (urlParams.get('error')) {
+            showNotification(decodeURIComponent(urlParams.get('error')), 'error');
+        }
+
+        // Load data on page load
+        loadMemberCount();
     </script>
 </body>
 </html>

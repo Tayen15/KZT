@@ -196,9 +196,23 @@ function formatUptime(ms) {
 router.get('/', ensureAuthenticated, async (req, res) => {
     try {
         const user = req.user;
+        const client = req.discordClient;
         
         // Get user's guilds where they have admin access
-        const adminGuilds = user.guilds.filter(g => g.isAdmin).map(g => g.guild);
+        const adminGuilds = user.guilds.filter(g => g.isAdmin).map(g => {
+            const guild = g.guild;
+            
+            // Fetch real member count from Discord client if available
+            if (client && client.guilds) {
+                const discordGuild = client.guilds.cache.get(guild.guildId);
+                if (discordGuild) {
+                    guild.memberCount = discordGuild.memberCount;
+                    guild.icon = discordGuild.icon;
+                }
+            }
+            
+            return guild;
+        });
 
         res.render('dashboard/index', {
             title: 'Dashboard',

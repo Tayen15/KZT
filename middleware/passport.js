@@ -51,8 +51,14 @@ passport.use(
                 // Store guilds information
                 if (profile.guilds) {
                     for (const guild of profile.guilds) {
-                        // Check if user has admin permissions
-                        const isAdmin = (guild.permissions & 0x8) === 0x8 || (guild.permissions & 0x20) === 0x20;
+                        // Check if user is owner (Discord provides this flag)
+                        const isOwner = guild.owner === true;
+                        
+                        // Check if user has admin permissions (Administrator or Manage Server)
+                        // 0x8 = ADMINISTRATOR, 0x20 = MANAGE_GUILD
+                        const isAdmin = (guild.permissions & 0x8) === 0x8 || 
+                                       (guild.permissions & 0x20) === 0x20 || 
+                                       isOwner; // Owner is always admin
 
                         // Find or create guild
                         let dbGuild = await prisma.guild.findUnique({
@@ -65,7 +71,17 @@ passport.use(
                                     guildId: guild.id,
                                     name: guild.name,
                                     icon: guild.icon,
-                                    ownerId: guild.owner ? profile.id : ''
+                                    ownerId: isOwner ? profile.id : ''
+                                }
+                            });
+                        } else {
+                            // Update guild info (name, icon might change)
+                            dbGuild = await prisma.guild.update({
+                                where: { guildId: guild.id },
+                                data: {
+                                    name: guild.name,
+                                    icon: guild.icon,
+                                    ownerId: isOwner ? profile.id : dbGuild.ownerId
                                 }
                             });
                         }
@@ -85,10 +101,11 @@ passport.use(
                                 data: {
                                     userId: user.id,
                                     guildId: dbGuild.id,
-                                    isAdmin
+                                    isAdmin,
+                                    isOwner
                                 }
                             });
-                        } else if (existingMember.isAdmin !== isAdmin) {
+                        } else if (existingMember.isAdmin !== isAdmin || existingMember.isOwner !== isOwner) {
                             await prisma.guildMember.update({
                                 where: {
                                     userId_guildId: {
@@ -96,7 +113,10 @@ passport.use(
                                         guildId: dbGuild.id
                                     }
                                 },
-                                data: { isAdmin }
+                                data: { 
+                                    isAdmin,
+                                    isOwner
+                                }
                             });
                         }
                     }
