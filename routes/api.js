@@ -246,6 +246,13 @@ router.post('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, 
             return res.status(503).json({ success: false, error: 'Bot is not connected' });
         }
 
+        // Validate and sanitize inputs
+        const validActivityType = activityType && typeof activityType === 'string' ? activityType : 'Playing';
+        const validActivityText = activityText && typeof activityText === 'string' && activityText.trim() !== ''
+            ? activityText.trim()
+            : 'over servers';
+        const validStatus = status && typeof status === 'string' ? status : 'online';
+
         // Update or create settings
         let settings = await prisma.botSettings.findFirst();
         
@@ -253,9 +260,9 @@ router.post('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, 
             settings = await prisma.botSettings.update({
                 where: { id: settings.id },
                 data: {
-                    activityType,
-                    activityText,
-                    status,
+                    activityType: validActivityType,
+                    activityText: validActivityText,
+                    status: validStatus,
                     maintenanceMode,
                     maintenanceMessage
                 }
@@ -263,9 +270,9 @@ router.post('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, 
         } else {
             settings = await prisma.botSettings.create({
                 data: {
-                    activityType,
-                    activityText,
-                    status,
+                    activityType: validActivityType,
+                    activityText: validActivityText,
+                    status: validStatus,
                     maintenanceMode,
                     maintenanceMessage
                 }
@@ -278,15 +285,23 @@ router.post('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, 
             'Streaming': ActivityType.Streaming,
             'Listening': ActivityType.Listening,
             'Watching': ActivityType.Watching,
+            'Custom': ActivityType.Custom,
             'Competing': ActivityType.Competing
         };
-        const activityTypeEnum = activityTypeMap[activityType] || ActivityType.Watching;
+        const activityTypeEnum = activityTypeMap[validActivityType] || ActivityType.Playing;
+        
+        // Build activity object
+        // NOTE: Discord.js ALWAYS requires 'name' property, even for Custom status
+        // For Custom status, Discord.js will automatically convert 'name' to 'state'
+        // See: discord.js/src/structures/ClientPresence.js lines 58-61
+        const activity = {
+            type: activityTypeEnum,
+            name: validActivityText  // Always use 'name', Discord.js handles Custom conversion
+        };
+        
         client.user.setPresence({
-            activities: [{
-                name: activityText,
-                type: activityTypeEnum
-            }],
-            status: status
+            activities: [activity],
+            status: validStatus
         });
 
         res.json({ success: true, settings, message: 'Bot settings updated' });

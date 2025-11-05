@@ -56,7 +56,7 @@ module.exports = {
                 if (!botSettings) {
                     botSettings = await prisma.botSettings.create({
                         data: {
-                            activityType: config.presence.type || 'Watching',
+                            activityType: config.presence.type || 'Playing',
                             activityText: config.presence.name || 'over servers',
                             status: 'online'
                         }
@@ -69,32 +69,59 @@ module.exports = {
                     'Streaming': ActivityType.Streaming, // 1
                     'Listening': ActivityType.Listening, // 2
                     'Watching': ActivityType.Watching,   // 3
-                    'Custom': ActivityType.Custom,     // 4
+                    'Custom': ActivityType.Custom,       // 4
                     'Competing': ActivityType.Competing  // 5
                 };
 
-                const activityType = activityTypeMap[botSettings.activityType] ?? ActivityType.Watching;
+                const activityType = activityTypeMap[botSettings.activityType] || ActivityType.Playing;
+                
+                // Ensure activityText is a valid string
+                const activityText = botSettings.activityText && typeof botSettings.activityText === 'string' 
+                    ? botSettings.activityText 
+                    : 'over servers';
 
+                // Build activity object
+                // NOTE: Always use 'name' property - Discord.js requires it even for Custom status
+                // Discord.js will automatically convert 'name' to 'state' for Custom type
+                const activity = {
+                    type: activityType,
+                    name: activityText
+                };
+
+                // Set presence
                 client.user.setPresence({
-                    activities: [{
-                        type: activityType,
-                        ...(activityType === ActivityType.Custom
-                            ? { state: botSettings.activityText }
-                            : { name: botSettings.activityText })
-                    }],
-                    status: botSettings.status
+                    activities: [activity],
+                    status: botSettings.status || 'online'
                 });
 
-                console.log(`[Presence] Updated: ${botSettings.activityType} ${botSettings.activityText} (${botSettings.status})`);
+                console.log(`[Presence] Updated: ${botSettings.activityType} "${activityText}" (${botSettings.status})`);
             } catch (error) {
                 console.error(`[ERROR] Failed to update presence:`, error.message);
+                
                 // Fallback to config
-                const fallbackType = ActivityType[config.presence.type] ?? ActivityType.Watching;
+                const activityTypeMap = {
+                    'Playing': ActivityType.Playing,
+                    'Streaming': ActivityType.Streaming,
+                    'Listening': ActivityType.Listening,
+                    'Watching': ActivityType.Watching,
+                    'Custom': ActivityType.Custom,
+                    'Competing': ActivityType.Competing
+                };
+                
+                const fallbackType = activityTypeMap[config.presence.type] || ActivityType.Playing;
+                const fallbackText = config.presence.name && typeof config.presence.name === 'string'
+                    ? config.presence.name
+                    : 'over servers';
+                
                 client.user.setPresence({
-                    activities: [{ name: config.presence.name, type: fallbackType }]
+                    activities: [{
+                        type: fallbackType,
+                        name: fallbackText
+                    }],
+                    status: 'online'
                 });
             } finally {
-                // Update presence every 5 minutes instead of 5 seconds
+                // Update presence every 5 minutes
                 setTimeout(updatePresence, 300000);
             }
         }
