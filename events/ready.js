@@ -69,6 +69,7 @@ module.exports = {
                     'Streaming': ActivityType.Streaming, // 1
                     'Listening': ActivityType.Listening, // 2
                     'Watching': ActivityType.Watching,   // 3
+                    'Custom': ActivityType.Custom,     // 4
                     'Competing': ActivityType.Competing  // 5
                 };
 
@@ -76,8 +77,10 @@ module.exports = {
 
                 client.user.setPresence({
                     activities: [{
-                        name: botSettings.activityText,
-                        type: activityType
+                        type: activityType,
+                        ...(activityType === ActivityType.Custom
+                            ? { state: botSettings.activityText }
+                            : { name: botSettings.activityText })
                     }],
                     status: botSettings.status
                 });
