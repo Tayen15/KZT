@@ -107,6 +107,13 @@ app.get('/', (req, res) => {
     });
 });
 
+// Commands page
+app.get('/commands', (req, res) => {
+    res.render('commands', {
+        title: 'Commands'
+    });
+});
+
 // Error handling
 app.use((req, res) => {
     res.status(404).render('error', {

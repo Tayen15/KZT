@@ -138,6 +138,13 @@ app.get('/', (req, res) => {
     });
 });
 
+// Commands page
+app.get('/commands', (req, res) => {
+    res.render('commands', {
+        title: 'Commands'
+    });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({

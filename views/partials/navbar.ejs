@@ -1,40 +1,40 @@
-<nav class="bg-[#23272f] border-b border-[#3a3f4b] sticky top-0 z-50">
+<nav class="bg-dark-secondary border-b border-border-dark sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-16">
             <!-- Logo -->
-            <a href="/" class="text-2xl font-bold text-[#5865F2] hover:text-[#4752c4] transition-colors">
-                🤖 ByteBot
+            <a href="/" class="text-2xl font-bold text-discord hover:text-discord-hover transition-colors">
+                ByteBot
             </a>
             
             <!-- Desktop Navigation -->
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="/" class="text-[#b9bbbe] hover:text-white transition-colors">Home</a>
-                <a href="/#features" class="text-[#b9bbbe] hover:text-white transition-colors">Features</a>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="/" class="text-text-secondary hover:text-white transition-colors">Home</a>
+                <a href="/commands" class="text-text-secondary hover:text-white transition-colors">Commands</a>
                 
                 <% if (isAuthenticated) { %>
-                    <a href="/dashboard" class="text-[#b9bbbe] hover:text-white transition-colors">Dashboard</a>
+                    <a href="/dashboard" class="text-text-secondary hover:text-white transition-colors">Dashboard</a>
                     
                     <!-- User Dropdown -->
                     <div class="flex items-center space-x-3">
                         <% if (user.avatar) { %>
                             <img src="https://cdn.discordapp.com/avatars/<%= user.discordId %>/<%= user.avatar %>.png" 
                                  alt="<%= user.username %>"
-                                 class="w-8 h-8 rounded-full">
+                                 class="w-8 h-8 rounded-full border-2 border-discord">
                         <% } else { %>
-                            <div class="w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white font-bold">
+                            <div class="w-8 h-8 rounded-full bg-discord flex items-center justify-center text-white font-bold">
                                 <%= user.username.charAt(0).toUpperCase() %>
                             </div>
                         <% } %>
-                        <span class="text-white"><%= user.username %></span>
+                        <span class="text-white font-medium"><%= user.username %></span>
                         <a href="/auth/logout" 
-                           class="px-4 py-2 bg-[#2b2f38] hover:bg-[#32363f] border border-[#3a3f4b] rounded text-white transition-colors">
+                           class="px-4 py-2 bg-dark-card hover:bg-dark-hover border border-border-dark rounded text-white transition-colors">
                             Logout
                         </a>
                     </div>
                 <% } else { %>
                     <a href="/auth/login" 
-                       class="px-6 py-2 bg-[#5865F2] hover:bg-[#4752c4] rounded font-semibold text-white transition-colors">
-                        Login with Discord
+                       class="px-6 py-2 bg-discord hover:bg-discord-hover rounded font-semibold text-white transition-all duration-200">
+                        Login
                     </a>
                 <% } %>
             </div>
@@ -48,15 +48,15 @@
         </div>
         
         <!-- Mobile Menu -->
-        <div id="mobileMenu" class="hidden md:hidden pb-4">
-            <a href="/" class="block py-2 text-[#b9bbbe] hover:text-white">Home</a>
-            <a href="/#features" class="block py-2 text-[#b9bbbe] hover:text-white">Features</a>
+        <div id="mobileMenu" class="hidden md:hidden pb-4 space-y-2">
+            <a href="/" class="block py-2 text-text-secondary hover:text-white transition-colors">Home</a>
+            <a href="/commands" class="block py-2 text-text-secondary hover:text-white transition-colors">Commands</a>
             
             <% if (isAuthenticated) { %>
-                <a href="/dashboard" class="block py-2 text-[#b9bbbe] hover:text-white">Dashboard</a>
-                <a href="/auth/logout" class="block py-2 text-[#b9bbbe] hover:text-white">Logout</a>
+                <a href="/dashboard" class="block py-2 text-text-secondary hover:text-white transition-colors">Dashboard</a>
+                <a href="/auth/logout" class="block py-2 text-text-secondary hover:text-white transition-colors">Logout</a>
             <% } else { %>
-                <a href="/auth/login" class="block py-2 text-[#5865F2] font-semibold">Login with Discord</a>
+                <a href="/auth/login" class="block py-2 text-discord font-semibold">Login</a>
             <% } %>
         </div>
     </div>
