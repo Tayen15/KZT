@@ -85,9 +85,12 @@ npm run build:css        # Build production CSS
 
 ## Deploy to Heroku
 1. Set `MONGO_URI` and Discord config vars
-2. Push to Heroku Git or connect GitHub repo
-3. Automatic build runs `npx prisma db push && npx prisma generate`
-4. Scale dyno: `heroku ps:scale web=1`
+2. **Add buildpacks in order:**
+   - `heroku/nodejs` (first)
+   - `https://github.com/heroku/heroku-buildpack-activestorage-preview` (for FFmpeg, voice support)
+3. Push to Heroku Git or connect GitHub repo
+4. Automatic build runs `npx prisma db push && npx prisma generate`
+5. Scale dyno: `heroku ps:scale web=1`
 
 ## Code Style & Development Guidelines
 

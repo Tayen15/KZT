@@ -13,6 +13,9 @@
 ## Solution Steps
 
 ### 1. Add FFmpeg Buildpack
+
+**Important:** Use the **official Heroku buildpack** maintained by Heroku. The old `jonathanong/heroku-buildpack-ffmpeg-latest` is **no longer maintained** (archived 2023) and redirects to the official one.
+
 ```powershell
 # Clear existing buildpacks (if needed)
 heroku buildpacks:clear -a bytebot-app
@@ -20,11 +23,8 @@ heroku buildpacks:clear -a bytebot-app
 # Add Node.js buildpack FIRST
 heroku buildpacks:add heroku/nodejs -a bytebot-app
 
-# Add FFmpeg buildpack SECOND
-heroku buildpacks:add https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest -a bytebot-app
-
-# (Optional) Add libsodium for encryption performance
-heroku buildpacks:add https://github.com/michaelwenger/heroku-buildpack-libsodium -a bytebot-app
+# Add OFFICIAL FFmpeg buildpack SECOND (actively maintained)
+heroku buildpacks:add https://github.com/heroku/heroku-buildpack-activestorage-preview -a bytebot-app
 
 # Verify order
 heroku buildpacks -a bytebot-app
@@ -34,8 +34,12 @@ Expected output:
 ```
 === bytebot-app Buildpack URLs
 1. heroku/nodejs
-2. https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest
+2. https://github.com/heroku/heroku-buildpack-activestorage-preview
 ```
+
+**FFmpeg Versions by Stack:**
+- heroku-22: FFmpeg 5.1.7
+- heroku-24: FFmpeg 7.1.2
 
 ### 2. Verify Dependencies Installed
 Ensure `@discordjs/opus` is in `package.json`:
@@ -141,6 +145,7 @@ heroku config -a bytebot-app
 ```
 
 ## References
-- FFmpeg buildpack: https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest
+- **Official FFmpeg Buildpack (Recommended):** https://github.com/heroku/heroku-buildpack-activestorage-preview
+- Old buildpack (archived, no longer maintained): https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest
 - Discord.js Voice Guide: https://discordjs.guide/voice/
 - Prisma Heroku Deploy: https://www.prisma.io/docs/guides/deployment/deployment-guides/deploying-to-heroku
