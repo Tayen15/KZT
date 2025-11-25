@@ -48,6 +48,16 @@ module.exports = {
                     inlineVolume: true
                });
                resource.volume.setVolume(1.0);
+               
+               // Log dependency info (FFmpeg, opus, sodium availability)
+               const { generateDependencyReport } = require('@discordjs/voice');
+               console.log('📦 [Lofi] Voice dependencies:\n' + generateDependencyReport());
+               
+               // Resource error handling
+               resource.playStream.on('error', (err) => {
+                    console.error('❌ [LofiResource] Stream error:', err.message);
+               });
+               
                player.play(resource);
 
                const connection = joinVoiceChannel({
