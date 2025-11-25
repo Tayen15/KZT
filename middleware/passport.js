@@ -50,12 +50,9 @@ passport.use(
                     const { syncUserGuilds } = require('../utils/discordSync');
                     setImmediate(() => {
                         syncUserGuilds(prisma, profile, user.id)
-                            .then(() => console.log(`[Auth] Guild sync completed for ${profile.username}`))
-                            .catch(err => console.error('[Auth] Guild sync error:', err.message));
+                            .catch(() => {});
                     });
-                } catch (bgErr) {
-                    console.warn('[Auth] Background guild sync not scheduled:', bgErr.message);
-                }
+                } catch (_) { /* no-op */ }
 
                 return done(null, user);
             } catch (error) {

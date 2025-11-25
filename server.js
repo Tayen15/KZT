@@ -87,18 +87,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// OAuth environment debug (remove after resolution)
-app.get('/auth/debug-env', (req, res) => {
-    res.json({
-        host: req.headers.host,
-        forwardedProto: req.headers['x-forwarded-proto'] || null,
-        nodeEnv: process.env.NODE_ENV,
-        callbackEnv: process.env.DISCORD_CALLBACK_URL,
-        clientId: process.env.DISCORD_CLIENT_ID,
-        cookieSecure: process.env.NODE_ENV === 'production',
-        timestamp: new Date().toISOString()
-    });
-});
+// (removed) debug endpoint used during OAuth troubleshooting
 
 // Routes
 const authRoutes = require('./routes/auth');
