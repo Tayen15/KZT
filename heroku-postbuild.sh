@@ -3,9 +3,9 @@
 
 echo "🔧 Running post-build tasks..."
 
-# Run Prisma migrations
-echo "🗄️ Running Prisma migrations..."
-npx prisma migrate deploy
+# Run Prisma DB push for MongoDB
+echo "🗄️ Running Prisma DB push..."
+npx prisma db push
 
 # Generate Prisma Client (just in case)
 echo "📦 Regenerating Prisma Client..."

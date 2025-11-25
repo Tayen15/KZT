@@ -1,2 +1,2 @@
 web: node bot.js
-release: npx prisma migrate deploy && npx prisma generate
+release: npx prisma db push && npx prisma generate

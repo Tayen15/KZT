@@ -10,7 +10,7 @@
     "moderation",
     "dashboard",
     "prisma",
-    "postgresql"
+    "mongodb"
   ],
   "buildpacks": [
     {
@@ -37,8 +37,8 @@
       "description": "Discord Application Client Secret",
       "required": true
     },
-    "DATABASE_URL": {
-      "description": "PostgreSQL Database URL from Supabase (format: postgresql://user:password@host:5432/database)",
+    "MONGO_URI": {
+      "description": "MongoDB Atlas connection string (format: mongodb+srv://user:password@cluster/database?retryWrites=true&w=majority)",
       "required": true
     },
     "SESSION_SECRET": {
@@ -69,6 +69,6 @@
     }
   },
   "scripts": {
-    "postdeploy": "npx prisma migrate deploy && npx prisma generate"
+    "postdeploy": "npx prisma db push && npx prisma generate"
   }
 }
