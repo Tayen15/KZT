@@ -29,6 +29,13 @@ module.exports = async (client) => {
                     }
                });
 
+               player.on('error', (err) => {
+                    console.error(`[LofiReconnect] Player error (${guildId}):`, err.message);
+               });
+               player.on('stateChange', (o, n) => {
+                    console.log(`[LofiReconnect] Player state ${guildId}: ${o.status} -> ${n.status}`);
+               });
+
                player.play(resource);
 
                const connection = joinVoiceChannel({
