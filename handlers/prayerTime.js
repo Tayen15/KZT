@@ -1,6 +1,8 @@
 const { EmbedBuilder, Colors } = require("discord.js");
 const { fetch } = require("undici");
 const prisma = require("../utils/database");
+const moment = require("moment-timezone");
+moment.locale("id");
 const { getLastMessageId, saveLastMessageId } = require("../utils/jsonStorage");
 
 const UPDATE_INTERVAL = 60 * 1000;
@@ -35,26 +37,22 @@ function convertTo24HourFormat(time) {
 }
 
 // Cek apakah saat ini berada dalam waktu salat
-function isWithinPrayerTime(prayerHour, prayerMinute) {
-     const now = new Date();
-     const currentTime = now.getHours() * 60 + now.getMinutes();
+function isWithinPrayerTime(prayerHour, prayerMinute, timezone) {
+     const now = moment().tz(timezone);
+     const currentTime = now.hour() * 60 + now.minute();
      const prayerTime = parseInt(prayerHour) * 60 + parseInt(prayerMinute);
-
      return currentTime >= prayerTime && currentTime < prayerTime + 15;
 }
 
 // Dapatkan waktu salat berikutnya dan tampilkan dalam format timestamp Discord
-function getNextPrayerTime(prayerTimes) {
-     const now = new Date();  
-     const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
+function getNextPrayerTime(prayerTimes, timezone) {
+     const now = moment().tz(timezone);
+     const currentMinutes = now.hour() * 60 + now.minute();
      for (const [prayer, time] of Object.entries(prayerTimes)) {
           const prayerMinutes = parseInt(time.hours) * 60 + parseInt(time.minutes);
           if (prayerMinutes > currentMinutes) {
-               const nextPrayerTime = new Date();
-               nextPrayerTime.setHours(time.hours, time.minutes, 0, 0);
-
-               const timestamp = Math.floor(nextPrayerTime.getTime() / 1000);
+               const nextPrayerTime = moment().tz(timezone).set({ hour: parseInt(time.hours), minute: parseInt(time.minutes), second: 0, millisecond: 0 });
+               const timestamp = Math.floor(nextPrayerTime.valueOf() / 1000);
                return `Waktu salat selanjutnya: **${prayer} <t:${timestamp}:R>.**`;
           }
      }
@@ -62,20 +60,19 @@ function getNextPrayerTime(prayerTimes) {
 }
 
 // Membentuk Embed untuk jadwal salat
-function formatPrayerTimesEmbed(client, prayerTimes, city, customMessage) {
-     const now = new Date();
-     const currentTime = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+function formatPrayerTimesEmbed(client, prayerTimes, city, customMessage, timezone) {
+     const now = moment().tz(timezone);
+     const currentTime = now.format("HH:mm");
+     const dateStr = now.format("DD MMMM YYYY");
+     const tzLabel = timezone === "Asia/Jakarta" ? "WIB" : timezone;
 
      const fields = Object.entries(prayerTimes).map(([prayer, time]) => {
-          const highlight = isWithinPrayerTime(time.hours, time.minutes) ? "(Sedang Waktu Salat)" : "";
-          return { name: prayer, value: `\`\`\`${time.hours}:${time.minutes} WIB ${highlight}\`\`\``, inline: true };
+          const highlight = isWithinPrayerTime(time.hours, time.minutes, timezone) ? "(Sedang Waktu Salat)" : "";
+          return { name: prayer, value: `\`\`\`${time.hours}:${time.minutes} ${tzLabel} ${highlight}\`\`\``, inline: true };
      });
 
-     let description = `⏰ Sekarang: **${currentTime} WIB**\n📅 ${now.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}\n${getNextPrayerTime(prayerTimes)}\n\nUpdate in <t:${Math.floor((Date.now() + UPDATE_INTERVAL) / 1000)}:R>`;
-     
-     if (customMessage) {
-          description = `${customMessage}\n\n${description}`;
-     }
+     let description = `⏰ Sekarang: **${currentTime} ${tzLabel}**\n📅 ${dateStr}\n${getNextPrayerTime(prayerTimes, timezone)}\n\nUpdate in <t:${Math.floor((Date.now() + UPDATE_INTERVAL) / 1000)}:R>`;
+     if (customMessage) description = `${customMessage}\n\n${description}`;
 
      return new EmbedBuilder()
           .setTitle(`🕌 Jadwal Salat (${city})`)
@@ -95,7 +92,7 @@ async function updatePrayerMessage(client, guildId) {
                     guild: { guildId },
                     enabled: true
                },
-               include: { guild: true }
+               include: { guild: { include: { settings: true } } }
           });
 
           if (!prayerConfig) return;
@@ -110,7 +107,8 @@ async function updatePrayerMessage(client, guildId) {
           const prayerTimes = await fetchPrayerTimes(prayerConfig.city, prayerConfig.country);
           if (Object.keys(prayerTimes).length === 0) return;
 
-          const embed = formatPrayerTimesEmbed(client, prayerTimes, prayerConfig.city, prayerConfig.customMessage);
+          const timezone = prayerConfig.guild?.settings?.timezone || process.env.DEFAULT_TIMEZONE || "Asia/Jakarta";
+          const embed = formatPrayerTimesEmbed(client, prayerTimes, prayerConfig.city, prayerConfig.customMessage, timezone);
           
           // Try to update existing message or create new one
           let message = null;
