@@ -23,7 +23,6 @@ module.exports = async (client) => {
                });
                resource.volume.setVolume(0.5);
                
-               // Resource error handling
                resource.playStream.on('error', (err) => {
                     console.error(`❌ [LofiReconnect] Stream error (${guildId}):`, err.message);
                });
@@ -36,13 +35,6 @@ module.exports = async (client) => {
 
                player.on('error', (err) => {
                     console.error(`❌ [LofiReconnect] Player error (${guildId}):`, err.message);
-               });
-               player.on('stateChange', (o, n) => {
-                    console.log(`[LofiReconnect] Player state ${guildId}: ${o.status} -> ${n.status}`);
-                    // Detect immediate idle (stream/codec failure)
-                    if (o.status === 'playing' && n.status === 'idle') {
-                         console.error(`❌ [LofiReconnect] Playback stopped unexpectedly for ${guildId} - likely codec/FFmpeg issue`);
-                    }
                });
 
                player.play(resource);

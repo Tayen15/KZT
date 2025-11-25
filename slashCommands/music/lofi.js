@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, MessageFlags, EmbedBuilder } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior, VoiceConnectionStatus, entersState } = require('@discordjs/voice');
-const fetch = require('node-fetch');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, NoSubscriberBehavior, VoiceConnectionStatus, entersState } = require('@discordjs/voice');
 const { saveLofiSession } = require('../../utils/lofiStorage');
 
 const STREAM_URL = 'https://stream-157.zeno.fm/0r0xa792kwzuv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiIwcjB4YTc5Mmt3enV2IiwiaG9zdCI6InN0cmVhbS0xNTcuemVuby5mbSIsInJ0dGwiOjUsImp0aSI6IkVwRE53VEJIVGNDY0RJTmlpUzlRb1EiLCJpYXQiOjE3NDY4NzU2NTYsImV4cCI6MTc0Njg3NTcxNn0.A8kS0ZSXDoVvPX_gOCz2DJa0slpoJ2jt_7TryS5EKoo&zt='; // pakai URL milikmu
@@ -20,16 +19,6 @@ module.exports = {
           await interaction.deferReply();
 
           try {
-               console.log('🎧 [Lofi] Starting lofi stream setup...');
-
-               // Quick connectivity check (helps detect Heroku outbound/network issues)
-               try {
-                    const head = await fetch(STREAM_URL, { method: 'HEAD' });
-                    console.log(`🔎 [Lofi] HEAD status: ${head.status}`);
-               } catch (netErr) {
-                    console.warn('⚠️ [Lofi] HEAD request failed, stream may be unreachable:', netErr.message);
-               }
-
                const player = createAudioPlayer({
                     behaviors: {
                          noSubscriber: NoSubscriberBehavior.Play
@@ -37,11 +26,7 @@ module.exports = {
                });
 
                player.on('error', (err) => {
-                    console.error('❌ [LofiPlayer] Error:', err.message);
-               });
-
-               player.on('stateChange', (oldState, newState) => {
-                    console.log(`🔄 [LofiPlayer] ${oldState.status} -> ${newState.status}`);
+                    console.error('❌ [Lofi] Player error:', err.message);
                });
 
                const resource = createAudioResource(STREAM_URL, {
@@ -49,13 +34,8 @@ module.exports = {
                });
                resource.volume.setVolume(1.0);
                
-               // Log dependency info (FFmpeg, opus, sodium availability)
-               const { generateDependencyReport } = require('@discordjs/voice');
-               console.log('📦 [Lofi] Voice dependencies:\n' + generateDependencyReport());
-               
-               // Resource error handling
                resource.playStream.on('error', (err) => {
-                    console.error('❌ [LofiResource] Stream error:', err.message);
+                    console.error('❌ [Lofi] Stream error:', err.message);
                });
                
                player.play(resource);
@@ -67,18 +47,16 @@ module.exports = {
                     selfDeaf: true
                });
 
-               connection.on('stateChange', (oldState, newState) => {
-                    console.log(`🔌 [Voice] ${oldState.status} -> ${newState.status}`);
+               connection.on('error', (err) => {
+                    console.error('❌ [Lofi] Connection error:', err.message);
                });
 
                connection.subscribe(player);
 
-               // Await readiness (helps catch failed encryption libs / opus problems on Heroku)
                try {
                     await entersState(connection, VoiceConnectionStatus.Ready, 15_000);
-                    console.log('✅ [Voice] Connection ready.');
                } catch (readyErr) {
-                    console.error('❌ [Voice] Connection failed to become ready:', readyErr.message);
+                    console.error('❌ [Lofi] Connection failed to become ready:', readyErr.message);
                }
 
                saveLofiSession(interaction.guild.id, interaction.member.voice.channel.id);
@@ -91,10 +69,9 @@ module.exports = {
                     .setTimestamp();
 
                await interaction.editReply({ embeds: [embed] });
-               console.log('✅ [Lofi] Playback initialized and reply sent.');
 
           } catch (error) {
-               console.error('❌ [Lofi] Error playing lofi music:', error);
+               console.error('❌ [Lofi] Error:', error);
                await interaction.editReply({ content: '❌ Something went wrong while trying to play the lofi music!', flags: MessageFlags.Ephemeral });
           }
      }
