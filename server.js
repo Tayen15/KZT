@@ -16,10 +16,12 @@ const prisma = new PrismaClient();
 let sessionStore;
 try {
     if (process.env.MONGO_URI) {
+        // Use a distinct collection name to avoid conflicts with old Prisma session schema
         sessionStore = MongoStore.create({
             mongoUrl: process.env.MONGO_URI,
-            collectionName: 'sessions',
+            collectionName: 'web_sessions',
             ttl: 30 * 24 * 60 * 60, // 30 days in seconds
+            touchAfter: 24 * 3600 // reduce write frequency
         });
         console.log('✅ Using MongoDB session store');
     } else {
