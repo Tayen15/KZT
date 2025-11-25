@@ -28,7 +28,6 @@
           "npm": ">=9.x"
      },
      "dependencies": {
-          "@discordjs/opus": "github:discordjs/opus",
           "@discordjs/voice": "^0.18.0",
           "@prisma/client": "^6.18.0",
           "connect-mongo": "^5.1.0",
