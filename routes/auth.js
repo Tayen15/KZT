@@ -9,11 +9,29 @@ router.get('/login', passport.authenticate('discord'));
 router.get('/callback', 
     passport.authenticate('discord', {
         failureRedirect: '/',
+        failureMessage: true
     }),
     (req, res) => {
         res.redirect('/dashboard');
     }
 );
+
+// Error handler for auth failures
+router.use((err, req, res, next) => {
+    if (err.name === 'TokenError' || err.name === 'InternalOAuthError') {
+        console.error('❌ [Auth] OAuth Error:', err.message);
+        console.error('   Check Discord Developer Portal:');
+        console.error('   1. Verify Redirect URI matches:', process.env.DISCORD_CALLBACK_URL);
+        console.error('   2. Verify Client ID and Secret are correct');
+        return res.status(500).render('error', {
+            title: 'Authentication Error',
+            message: 'Failed to authenticate with Discord. Please check your OAuth settings.',
+            isAuthenticated: false,
+            user: null
+        });
+    }
+    next(err);
+});
 
 // Logout route
 router.get('/logout', (req, res) => {

@@ -15,6 +15,7 @@ passport.use(
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
+                console.log(`✅ [Auth] OAuth successful for ${profile.username}#${profile.discriminator}`);
                 // Find or create user in database
                 let user = await prisma.user.findUnique({
                     where: { discordId: profile.id }
