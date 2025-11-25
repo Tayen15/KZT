@@ -24,7 +24,7 @@
      "author": "Kyonezet",
      "license": "ISC",
      "engines": {
-          "node": ">=18.x",
+          "node": "20.x",
           "npm": ">=9.x"
      },
      "dependencies": {
