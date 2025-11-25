@@ -16,11 +16,9 @@ passport.use(
         async (accessToken, refreshToken, profile, done) => {
             try {
                 console.log(`✅ [Auth] OAuth successful for ${profile.username}#${profile.discriminator}`);
-                // Find or create user in database
-                let user = await prisma.user.findUnique({
-                    where: { discordId: profile.id }
-                });
 
+                // Minimal upsert for user (fast path to avoid Heroku H12 timeout)
+                let user = await prisma.user.findUnique({ where: { discordId: profile.id } });
                 if (!user) {
                     user = await prisma.user.create({
                         data: {
@@ -33,9 +31,7 @@ passport.use(
                             refreshToken
                         }
                     });
-                    console.log(`[Auth] New user created: ${profile.username}#${profile.discriminator}`);
                 } else {
-                    // Update existing user
                     user = await prisma.user.update({
                         where: { discordId: profile.id },
                         data: {
@@ -49,78 +45,16 @@ passport.use(
                     });
                 }
 
-                // Store guilds information
-                if (profile.guilds) {
-                    for (const guild of profile.guilds) {
-                        // Check if user is owner (Discord provides this flag)
-                        const isOwner = guild.owner === true;
-                        
-                        // Check if user has admin permissions (Administrator or Manage Server)
-                        // 0x8 = ADMINISTRATOR, 0x20 = MANAGE_GUILD
-                        const isAdmin = (guild.permissions & 0x8) === 0x8 || 
-                                       (guild.permissions & 0x20) === 0x20 || 
-                                       isOwner; // Owner is always admin
-
-                        // Find or create guild
-                        let dbGuild = await prisma.guild.findUnique({
-                            where: { guildId: guild.id }
-                        });
-
-                        if (!dbGuild) {
-                            dbGuild = await prisma.guild.create({
-                                data: {
-                                    guildId: guild.id,
-                                    name: guild.name,
-                                    icon: guild.icon,
-                                    ownerId: isOwner ? profile.id : ''
-                                }
-                            });
-                        } else {
-                            // Update guild info (name, icon might change)
-                            dbGuild = await prisma.guild.update({
-                                where: { guildId: guild.id },
-                                data: {
-                                    name: guild.name,
-                                    icon: guild.icon,
-                                    ownerId: isOwner ? profile.id : dbGuild.ownerId
-                                }
-                            });
-                        }
-
-                        // Create or update guild member relationship
-                        const existingMember = await prisma.guildMember.findUnique({
-                            where: {
-                                userId_guildId: {
-                                    userId: user.id,
-                                    guildId: dbGuild.id
-                                }
-                            }
-                        });
-
-                        if (!existingMember) {
-                            await prisma.guildMember.create({
-                                data: {
-                                    userId: user.id,
-                                    guildId: dbGuild.id,
-                                    isAdmin,
-                                    isOwner
-                                }
-                            });
-                        } else if (existingMember.isAdmin !== isAdmin || existingMember.isOwner !== isOwner) {
-                            await prisma.guildMember.update({
-                                where: {
-                                    userId_guildId: {
-                                        userId: user.id,
-                                        guildId: dbGuild.id
-                                    }
-                                },
-                                data: { 
-                                    isAdmin,
-                                    isOwner
-                                }
-                            });
-                        }
-                    }
+                // Defer heavy guild sync to background to avoid blocking callback
+                try {
+                    const { syncUserGuilds } = require('../utils/discordSync');
+                    setImmediate(() => {
+                        syncUserGuilds(prisma, profile, user.id)
+                            .then(() => console.log(`[Auth] Guild sync completed for ${profile.username}`))
+                            .catch(err => console.error('[Auth] Guild sync error:', err.message));
+                    });
+                } catch (bgErr) {
+                    console.warn('[Auth] Background guild sync not scheduled:', bgErr.message);
                 }
 
                 return done(null, user);
