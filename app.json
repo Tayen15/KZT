@@ -1,0 +1,74 @@
+{
+  "name": "KZT Discord Bot",
+  "description": "A powerful Discord bot featuring music, moderation, prayer times, server monitoring, and dashboard.",
+  "repository": "https://github.com/Tayen15/KZT",
+  "logo": "https://cdn.discordapp.com/attachments/990148601101570090/1121124784164577380/minecraft1Point.png",
+  "keywords": [
+    "discord",
+    "bot",
+    "music",
+    "moderation",
+    "dashboard",
+    "prisma",
+    "postgresql"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "addons": [],
+  "env": {
+    "DISCORD_TOKEN": {
+      "description": "Discord Bot Token from Discord Developer Portal",
+      "required": true
+    },
+    "CLIENT_ID": {
+      "description": "Discord Application Client ID",
+      "required": true
+    },
+    "CLIENT_SECRET": {
+      "description": "Discord Application Client Secret",
+      "required": true
+    },
+    "DATABASE_URL": {
+      "description": "PostgreSQL Database URL from Supabase (format: postgresql://user:password@host:5432/database)",
+      "required": true
+    },
+    "SESSION_SECRET": {
+      "description": "Random string for session encryption (generate with: openssl rand -base64 32)",
+      "required": true,
+      "generator": "secret"
+    },
+    "CALLBACK_URL": {
+      "description": "OAuth callback URL (will be: https://your-app-name.herokuapp.com/auth/discord/callback)",
+      "required": true
+    },
+    "DASHBOARD_URL": {
+      "description": "Dashboard base URL (will be: https://your-app-name.herokuapp.com)",
+      "required": true
+    },
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production",
+      "required": false
+    },
+    "GENIUS_CLIENT_ID": {
+      "description": "Genius API Client ID for lyrics feature (optional)",
+      "required": false
+    },
+    "GENIUS_API_TOKEN": {
+      "description": "Genius API Token for lyrics feature (optional)",
+      "required": false
+    }
+  },
+  "scripts": {
+    "postdeploy": "npx prisma migrate deploy && npx prisma generate"
+  }
+}

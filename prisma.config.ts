@@ -8,6 +8,7 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    url: env("DATABASE_URL"),
+    // Updated to MongoDB URI after migration
+    url: env("MONGO_URI"),
   },
 });

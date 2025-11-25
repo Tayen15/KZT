@@ -3,38 +3,28 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const passport = require('./middleware/passport');
-const MySQLStore = require('express-mysql-session')(session);
+const MongoStore = require('connect-mongo');
 
 console.log('🌐 Starting ByteBot Web Server (Web Only Mode)...');
 
 const app = express();
 
-// MySQL connection for session store
-const sessionStoreOptions = {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'kzt_bot',
-    createDatabaseTable: true,
-    schema: {
-        tableName: 'sessions',
-        columnNames: {
-            session_id: 'session_id',
-            expires: 'expires',
-            data: 'data'
-        }
-    }
-};
-
-// Try to create MySQL session store, fallback to memory store if fails
+// MongoDB session store
 let sessionStore;
 try {
-    sessionStore = new MySQLStore(sessionStoreOptions);
-    console.log('✅ Using MySQL session store');
+    if (process.env.MONGO_URI) {
+        sessionStore = MongoStore.create({
+            mongoUrl: process.env.MONGO_URI,
+            collectionName: 'sessions',
+            ttl: 30 * 24 * 60 * 60,
+        });
+        console.log('✅ Using MongoDB session store');
+    } else {
+        console.warn('⚠️  MONGO_URI not set, using memory store');
+    }
 } catch (error) {
-    console.warn('⚠️  MySQL session store failed, using memory store');
-    console.warn('   Please setup MySQL properly for production. See MYSQL_SETUP.md');
+    console.warn('⚠️  Mongo session store failed, using memory store');
+    console.warn('   Error:', error.message);
     sessionStore = undefined;
 }
 

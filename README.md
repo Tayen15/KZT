@@ -2,6 +2,16 @@
 
 ByteBot adalah bot Discord yang dirancang untuk meningkatkan pengalaman pengguna di server Discord Anda. Bot ini menyediakan berbagai fitur yang berguna dan mudah digunakan untuk membantu mengelola server dan memberikan hiburan kepada anggota.
 
+---
+
+## 🚀 Quick Deploy to Heroku
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Tayen15/KZT)
+
+📖 **Deployment Guide**: [QUICK_START_HEROKU.md](./QUICK_START_HEROKU.md)
+
+---
+
 ## Kegunaan
 Bot ini dapat digunakan untuk:
 - Mengelola server Discord dengan lebih efisien.

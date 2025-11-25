@@ -3,38 +3,29 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const passport = require('./middleware/passport');
-const MySQLStore = require('express-mysql-session')(session);
-const mysql = require('mysql2/promise');
+const { PrismaClient } = require('@prisma/client');
+const MongoStore = require('connect-mongo');
 
 const app = express();
+const prisma = new PrismaClient();
 
-// MySQL connection for session store
-const sessionStoreOptions = {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'kzt_bot',
-    createDatabaseTable: true,
-    schema: {
-        tableName: 'sessions',
-        columnNames: {
-            session_id: 'session_id',
-            expires: 'expires',
-            data: 'data'
-        }
-    }
-};
-
-// Try to create MySQL session store, fallback to memory store if fails
+// MongoDB session store (connect-mongo)
 let sessionStore;
 try {
-    sessionStore = new MySQLStore(sessionStoreOptions);
-    console.log('✅ Using MySQL session store');
+    if (process.env.MONGO_URI) {
+        sessionStore = MongoStore.create({
+            mongoUrl: process.env.MONGO_URI,
+            collectionName: 'sessions',
+            ttl: 30 * 24 * 60 * 60, // 30 days in seconds
+        });
+        console.log('✅ Using MongoDB session store');
+    } else {
+        console.warn('⚠️  MONGO_URI not set, falling back to memory session store');
+    }
 } catch (error) {
-    console.warn('⚠️  MySQL session store failed, using memory store for development');
-    console.warn('   Please setup MySQL properly for production. See MYSQL_SETUP.md');
-    sessionStore = undefined; // Use default memory store
+    console.warn('⚠️  Mongo session store init failed, using memory store');
+    console.warn('   Error:', error.message);
+    sessionStore = undefined; // fallback
 }
 
 // Middleware
@@ -44,7 +35,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Session configuration
 app.use(session({
-    store: sessionStore, // Will be undefined (memory store) if MySQL fails
+    store: sessionStore, // Undefined => memory store (dev only)
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
@@ -52,10 +43,10 @@ app.use(session({
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: 'lax', // Penting untuk OAuth
-        domain: process.env.NODE_ENV === 'production' ? '.oktaa.my.id' : undefined
+        sameSite: 'lax',
+        domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let Heroku handle domain
     },
-    proxy: true
+    proxy: process.env.NODE_ENV === 'production' // Trust proxy in production
 }));
 
 // Passport initialization
