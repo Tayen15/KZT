@@ -87,4 +87,17 @@ router.get('/status', (req, res) => {
     }
 });
 
+// Session debug (helps diagnose redirect loops and cookie issues)
+router.get('/session', (req, res) => {
+    res.json({
+        isAuthenticated: typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false,
+        sessionID: req.sessionID || null,
+        hasSession: !!req.session,
+        cookieHeader: req.headers['cookie'] || null,
+        callbackEnv: process.env.DISCORD_CALLBACK_URL,
+        forwardedProto: req.headers['x-forwarded-proto'] || null,
+        host: req.headers['host'] || null,
+    });
+});
+
 module.exports = router;

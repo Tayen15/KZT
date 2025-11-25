@@ -9,13 +9,8 @@ const MongoStore = require('connect-mongo');
 const app = express();
 const prisma = new PrismaClient();
 
-// Force HTTPS in production (Heroku passes x-forwarded-proto)
-app.use((req, res, next) => {
-    if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] === 'http') {
-        return res.redirect('https://' + req.headers.host + req.url);
-    }
-    next();
-});
+// NOTE: Do not force HTTPS here to avoid redirect loops behind Cloudflare/Flexible SSL.
+// TLS termination is handled by the proxy/CDN; cookies use `secure` in production.
 
 // MongoDB session store (connect-mongo)
 let sessionStore;
