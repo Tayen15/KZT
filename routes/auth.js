@@ -5,16 +5,43 @@ const passport = require('../middleware/passport');
 // Login route
 router.get('/login', passport.authenticate('discord'));
 
-// Callback route
-router.get('/callback', 
-    passport.authenticate('discord', {
-        failureRedirect: '/',
-        failureMessage: true
-    }),
-    (req, res) => {
-        res.redirect('/dashboard');
-    }
-);
+// Callback route with detailed error logging
+router.get('/callback', (req, res, next) => {
+    passport.authenticate('discord', (err, user, info) => {
+        if (err) {
+            console.error('❌ [Auth] OAuth Error object:', err);
+            console.error('   message:', err.message);
+            console.error('   type:', err.name);
+            console.error('   query.code:', req.query.code);
+            console.error('   callbackURL (env):', process.env.DISCORD_CALLBACK_URL);
+            console.error('   clientID (env):', process.env.DISCORD_CLIENT_ID);
+            // info may contain additional details
+            if (info) console.error('   info:', info);
+            return res.status(500).render('error', {
+                title: 'Authentication Error',
+                message: 'Discord OAuth failed. Check console logs for details.',
+                isAuthenticated: false,
+                user: null
+            });
+        }
+        if (!user) {
+            console.error('⚠️ [Auth] No user returned. Info:', info);
+            return res.redirect('/');
+        }
+        req.logIn(user, (loginErr) => {
+            if (loginErr) {
+                console.error('❌ [Auth] Login session error:', loginErr.message);
+                return res.status(500).render('error', {
+                    title: 'Session Error',
+                    message: 'Failed to establish session after OAuth.',
+                    isAuthenticated: false,
+                    user: null
+                });
+            }
+            return res.redirect('/dashboard');
+        });
+    })(req, res, next);
+});
 
 // Error handler for auth failures
 router.use((err, req, res, next) => {

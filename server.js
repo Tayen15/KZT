@@ -9,6 +9,14 @@ const MongoStore = require('connect-mongo');
 const app = express();
 const prisma = new PrismaClient();
 
+// Force HTTPS in production (Heroku passes x-forwarded-proto)
+app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] === 'http') {
+        return res.redirect('https://' + req.headers.host + req.url);
+    }
+    next();
+});
+
 // MongoDB session store (connect-mongo)
 let sessionStore;
 try {
@@ -80,6 +88,19 @@ app.getDiscordClient = () => discordClient;
 app.use((req, res, next) => {
     req.discordClient = discordClient;
     next();
+});
+
+// OAuth environment debug (remove after resolution)
+app.get('/auth/debug-env', (req, res) => {
+    res.json({
+        host: req.headers.host,
+        forwardedProto: req.headers['x-forwarded-proto'] || null,
+        nodeEnv: process.env.NODE_ENV,
+        callbackEnv: process.env.DISCORD_CALLBACK_URL,
+        clientId: process.env.DISCORD_CLIENT_ID,
+        cookieSecure: process.env.NODE_ENV === 'production',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Routes
