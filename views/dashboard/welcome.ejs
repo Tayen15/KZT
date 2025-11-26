@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= guild.name %> - Welcome Messages</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .color-preset {
+      @apply w-10 h-10 rounded-lg border-2 border-transparent cursor-pointer transition-all duration-200 hover:scale-110;
+    }
+    .color-preset.active {
+      @apply border-[#5865F2] ring-2 ring-[#5865F2]/50;
+    }
+    .bg-gallery-item {
+      @apply relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 border-2 border-transparent;
+    }
+    .bg-gallery-item.active {
+      @apply border-[#5865F2] ring-2 ring-[#5865F2]/50;
+    }
+  </style>
+</head>
+<body class="bg-[#1a1d23] text-white">
+  <div class="flex h-screen overflow-hidden">
+    <% const currentPage='welcome' ; %>
+    <%- include('../partials/dashboard-sidebar', { guild, currentPage, user, guilds }) %>
+
+    <main class="flex-1 overflow-y-auto ml-64">
+      <!-- Top Bar -->
+      <div class="sticky top-0 z-10 bg-[#23272f]/95 backdrop-blur-sm border-b border-[#3a3f4b] px-8 py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold">Welcome Messages</h1>
+            <p class="text-[#b9bbbe] text-sm mt-1">Customize advanced welcome messages for your community</p>
+          </div>
+          <a href="/dashboard" class="text-[#b9bbbe] hover:text-[#5865F2] transition-colors duration-200 flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-[#2b2f38]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span class="font-medium">Back to Servers</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Left Column: Settings Form -->
+          <div class="lg:col-span-2 space-y-6">
+            <form id="welcomeForm" action="/api/guild/<%= guild.guildId %>/welcome" method="POST" class="space-y-6">
+              <!-- Enable -->
+              <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h2 class="text-xl font-bold mb-1">Enable Welcome Messages</h2>
+                    <p class="text-[#b9bbbe] text-sm">Send a message when users join your server</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="enabled" value="true" <%= welcome.enabled ? 'checked' : '' %> class="sr-only peer">
+                    <div class="w-14 h-7 bg-[#23272f] rounded-full peer peer-checked:bg-[#5865F2] after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full"></div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Channel + DM -->
+              <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                <h2 class="text-lg font-semibold mb-4">Destination Settings</h2>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium mb-2">Welcome Channel</label>
+                    <select id="channelSelect" name="channelId" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors">
+                      <option value="">Loading channels...</option>
+                    </select>
+                    <p class="text-[#b9bbbe] text-xs mt-2">Bot must have permission to send messages</p>
+                  </div>
+                  <div class="flex items-center gap-3 p-3 bg-[#23272f] rounded-lg">
+                    <input type="checkbox" name="dmEnabled" value="true" <%= welcome.dmEnabled ? 'checked' : '' %> class="w-4 h-4 rounded" id="dmToggle">
+                    <label for="dmToggle" class="flex-1 cursor-pointer">
+                      <div class="font-medium">Send Direct Message</div>
+                      <div class="text-[#b9bbbe] text-xs">Also DM new members (may fail if privacy settings enabled)</div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message Template -->
+              <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                <h2 class="text-lg font-semibold mb-4">Message Template</h2>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium mb-2">Plain Message</label>
+                    <textarea id="messageInput" name="message" rows="3" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="Welcome {{mention}} to {{server}}!"><%= welcome.message || '' %></textarea>
+                    <p class="text-[#b9bbbe] text-xs mt-1.5">Placeholders: {{user}}, {{mention}}, {{server}}, {{memberCount}}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium mb-2">Embed Title</label>
+                    <input id="embedTitleInput" type="text" name="embedTitle" value="<%= welcome.embedTitle || '' %>" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="Welcome!">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium mb-2">Embed Description</label>
+                    <textarea id="embedDescInput" name="embedDescription" rows="3" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="Glad to have you here, {{user}}."><%= welcome.embedDescription || '' %></textarea>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium mb-2">Embed Color</label>
+                      <input id="embedColorInput" type="text" name="embedColor" value="<%= welcome.embedColor || '#5865F2' %>" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="#5865F2">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-2">Image URL</label>
+                      <input id="imageUrlInput" type="text" name="imageUrl" value="<%= welcome.imageUrl || '' %>" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="https://...">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Custom Welcome Image Generator -->
+              <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 class="text-lg font-semibold">Custom Welcome Image</h2>
+                    <p class="text-[#b9bbbe] text-sm mt-1">Generate a custom image for new members</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="useCustomImage" value="true" <%= welcome.useCustomImage ? 'checked' : '' %> class="sr-only peer" id="useCustomImageToggle">
+                    <div class="w-14 h-7 bg-[#23272f] rounded-full peer peer-checked:bg-[#5865F2] after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full"></div>
+                  </label>
+                </div>
+
+                <div id="customImageConfig" class="space-y-6 <%= welcome.useCustomImage ? '' : 'hidden' %>">
+                  <!-- Layout & Style -->
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium mb-2">Layout</label>
+                      <select name="layout" id="layoutSelect" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors">
+                        <option value="classic" <%= (welcome.layout || 'classic') === 'classic' ? 'selected' : '' %>>Classic</option>
+                        <option value="modern" <%= welcome.layout === 'modern' ? 'selected' : '' %>>Modern</option>
+                        <option value="minimal" <%= welcome.layout === 'minimal' ? 'selected' : '' %>>Minimal</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-2">Avatar Shape</label>
+                      <select name="avatarShape" id="avatarShapeSelect" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors">
+                        <option value="circle" <%= (welcome.avatarShape || 'circle') === 'circle' ? 'selected' : '' %>>Circle</option>
+                        <option value="square" <%= welcome.avatarShape === 'square' ? 'selected' : '' %>>Square</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-2">Font</label>
+                      <select name="font" id="fontSelect" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors">
+                        <option value="Discord" <%= (welcome.font || 'Discord') === 'Discord' ? 'selected' : '' %>>Discord</option>
+                        <option value="Arial" <%= welcome.font === 'Arial' ? 'selected' : '' %>>Arial</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Color Customization with Presets -->
+                  <div class="space-y-4">
+                    <h3 class="text-sm font-semibold text-[#b9bbbe] uppercase tracking-wide">Color Customization</h3>
+                    
+                    <!-- Circle/Border Color -->
+                    <div>
+                      <label class="block text-sm font-medium mb-2">Circle/Border Color</label>
+                      <div class="flex items-center gap-2">
+                        <div class="flex gap-2">
+                          <div class="color-preset" style="background: #FFFFFF" data-color="#FFFFFF" data-target="circleColor"></div>
+                          <div class="color-preset" style="background: #5865F2" data-color="#5865F2" data-target="circleColor"></div>
+                          <div class="color-preset" style="background: #57F287" data-color="#57F287" data-target="circleColor"></div>
+                          <div class="color-preset" style="background: #FEE75C" data-color="#FEE75C" data-target="circleColor"></div>
+                          <div class="color-preset" style="background: #ED4245" data-color="#ED4245" data-target="circleColor"></div>
+                        </div>
+                        <input type="text" name="circleColor" id="circleColorInput" value="<%= welcome.circleColor || '#FFFFFF' %>" class="flex-1 bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="#FFFFFF">
+                        <input type="color" id="circleColorPicker" value="<%= welcome.circleColor || '#FFFFFF' %>" class="w-12 h-10 rounded-lg cursor-pointer bg-transparent">
+                      </div>
+                    </div>
+
+                    <!-- Title Color -->
+                    <div>
+                      <label class="block text-sm font-medium mb-2">Title Color</label>
+                      <div class="flex items-center gap-2">
+                        <div class="flex gap-2">
+                          <div class="color-preset" style="background: #FFFFFF" data-color="#FFFFFF" data-target="titleColor"></div>
+                          <div class="color-preset" style="background: #5865F2" data-color="#5865F2" data-target="titleColor"></div>
+                          <div class="color-preset" style="background: #57F287" data-color="#57F287" data-target="titleColor"></div>
+                          <div class="color-preset" style="background: #FEE75C" data-color="#FEE75C" data-target="titleColor"></div>
+                          <div class="color-preset" style="background: #ED4245" data-color="#ED4245" data-target="titleColor"></div>
+                        </div>
+                        <input type="text" name="titleColor" id="titleColorInput" value="<%= welcome.titleColor || '#FFFFFF' %>" class="flex-1 bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="#FFFFFF">
+                        <input type="color" id="titleColorPicker" value="<%= welcome.titleColor || '#FFFFFF' %>" class="w-12 h-10 rounded-lg cursor-pointer bg-transparent">
+                      </div>
+                    </div>
+
+                    <!-- Username Color -->
+                    <div>
+                      <label class="block text-sm font-medium mb-2">Username Color</label>
+                      <div class="flex items-center gap-2">
+                        <div class="flex gap-2">
+                          <div class="color-preset" style="background: #FFFFFF" data-color="#FFFFFF" data-target="usernameColor"></div>
+                          <div class="color-preset" style="background: #5865F2" data-color="#5865F2" data-target="usernameColor"></div>
+                          <div class="color-preset" style="background: #57F287" data-color="#57F287" data-target="usernameColor"></div>
+                          <div class="color-preset" style="background: #FEE75C" data-color="#FEE75C" data-target="usernameColor"></div>
+                          <div class="color-preset" style="background: #ED4245" data-color="#ED4245" data-target="usernameColor"></div>
+                        </div>
+                        <input type="text" name="usernameColor" id="usernameColorInput" value="<%= welcome.usernameColor || '#FFFFFF' %>" class="flex-1 bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="#FFFFFF">
+                        <input type="color" id="usernameColorPicker" value="<%= welcome.usernameColor || '#FFFFFF' %>" class="w-12 h-10 rounded-lg cursor-pointer bg-transparent">
+                      </div>
+                    </div>
+
+                    <!-- Message Color -->
+                    <div>
+                      <label class="block text-sm font-medium mb-2">Message Color</label>
+                      <div class="flex items-center gap-2">
+                        <div class="flex gap-2">
+                          <div class="color-preset" style="background: #B9BBBE" data-color="#B9BBBE" data-target="messageColor"></div>
+                          <div class="color-preset" style="background: #FFFFFF" data-color="#FFFFFF" data-target="messageColor"></div>
+                          <div class="color-preset" style="background: #5865F2" data-color="#5865F2" data-target="messageColor"></div>
+                          <div class="color-preset" style="background: #57F287" data-color="#57F287" data-target="messageColor"></div>
+                          <div class="color-preset" style="background: #FEE75C" data-color="#FEE75C" data-target="messageColor"></div>
+                        </div>
+                        <input type="text" name="messageColor" id="messageColorInput" value="<%= welcome.messageColor || '#B9BBBE' %>" class="flex-1 bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="#B9BBBE">
+                        <input type="color" id="messageColorPicker" value="<%= welcome.messageColor || '#B9BBBE' %>" class="w-12 h-10 rounded-lg cursor-pointer bg-transparent">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Background Image Gallery -->
+                  <div class="space-y-3">
+                    <h3 class="text-sm font-semibold text-[#b9bbbe] uppercase tracking-wide">Background</h3>
+                    
+                    <!-- Gallery -->
+                    <div class="grid grid-cols-4 gap-3">
+                      <div class="bg-gallery-item h-20" data-bg-type="color" data-bg-value="#23272A" style="background: #23272A">
+                        <div class="flex items-center justify-center h-full text-xs font-medium">Dark</div>
+                      </div>
+                      <div class="bg-gallery-item h-20" data-bg-type="color" data-bg-value="#5865F2" style="background: #5865F2">
+                        <div class="flex items-center justify-center h-full text-xs font-medium">Blurple</div>
+                      </div>
+                      <div class="bg-gallery-item h-20" data-bg-type="color" data-bg-value="#57F287" style="background: #57F287">
+                        <div class="flex items-center justify-center h-full text-xs font-medium text-black">Green</div>
+                      </div>
+                      <div class="bg-gallery-item h-20" data-bg-type="image" data-bg-value="https://images.unsplash.com/photo-1557683316-973673baf926?w=1200" style="background: url('https://images.unsplash.com/photo-1557683316-973673baf926?w=300') center/cover">
+                        <div class="flex items-center justify-center h-full text-xs font-medium bg-black/30">Gradient</div>
+                      </div>
+                      <div class="bg-gallery-item h-20" data-bg-type="image" data-bg-value="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200" style="background: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=300') center/cover">
+                        <div class="flex items-center justify-center h-full text-xs font-medium bg-black/30">Abstract</div>
+                      </div>
+                      <div class="bg-gallery-item h-20" data-bg-type="image" data-bg-value="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1200" style="background: url('https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300') center/cover">
+                        <div class="flex items-center justify-center h-full text-xs font-medium bg-black/30">Space</div>
+                      </div>
+                      <div class="bg-gallery-item h-20" data-bg-type="image" data-bg-value="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200" style="background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300') center/cover">
+                        <div class="flex items-center justify-center h-full text-xs font-medium bg-black/30">Earth</div>
+                      </div>
+                      <div class="bg-gallery-item h-20 flex items-center justify-center border-2 border-dashed border-[#3a3f4b]" data-bg-type="custom">
+                        <svg class="w-6 h-6 text-[#b9bbbe]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    <!-- Custom URL Input -->
+                    <div id="customBgUrlSection" class="<%= welcome.bgImageUrl && !['#23272A','#5865F2','#57F287'].includes(welcome.bgImageUrl) ? '' : 'hidden' %>">
+                      <label class="block text-sm font-medium mb-2">Custom Background URL</label>
+                      <input type="text" id="customBgUrlInput" value="<%= welcome.bgImageUrl || '' %>" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="https://...">
+                    </div>
+
+                    <!-- Hidden inputs for bg values (controlled by JS) -->
+                    <input type="hidden" name="bgColor" id="bgColorInput" value="<%= welcome.bgColor || '#23272A' %>">
+                    <input type="hidden" name="bgImageUrl" id="bgImageUrlHidden" value="<%= welcome.bgImageUrl || '' %>">
+
+                    <!-- Overlay Settings -->
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium mb-2">Overlay Color</label>
+                        <div class="flex items-center gap-2">
+                          <input type="text" name="overlayColor" id="overlayColorInput" value="<%= welcome.overlayColor || '#000000' %>" class="flex-1 bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="#000000">
+                          <input type="color" id="overlayColorPicker" value="<%= welcome.overlayColor || '#000000' %>" class="w-12 h-10 rounded-lg cursor-pointer bg-transparent">
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium mb-2">Overlay Opacity (0-100)</label>
+                        <input type="number" name="overlayOpacity" id="overlayOpacityInput" value="<%= welcome.overlayOpacity || 50 %>" min="0" max="100" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="50">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Auto Role -->
+              <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                <h2 class="text-lg font-semibold mb-4">Auto Role</h2>
+                <label class="block text-sm font-medium mb-2">Role ID</label>
+                <input type="text" name="autoRoleId" value="<%= welcome.autoRoleId || '' %>" class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] transition-colors" placeholder="123456789012345678">
+                <p class="text-[#b9bbbe] text-xs mt-2">Bot must have permission to manage roles and the role must be below the bot's highest role.</p>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex items-center justify-end gap-3 pb-6">
+                <a href="/dashboard/guild/<%= guild.guildId %>" class="px-6 py-3 bg-[#23272f] border border-[#3a3f4b] rounded-lg hover:bg-[#3a3f4b] transition-colors font-medium">Cancel</a>
+                <button type="submit" class="px-6 py-3 bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105">Save Settings</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right Column: Live Preview -->
+          <div class="lg:col-span-1">
+            <div class="sticky top-24 space-y-6">
+              <!-- Message Preview -->
+              <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                <h3 class="text-sm font-semibold text-[#b9bbbe] uppercase tracking-wide mb-4">Message Preview</h3>
+                <div id="plainPreview" class="text-[#b9bbbe] text-sm"><em>Type a message to preview...</em></div>
+              </div>
+
+              <!-- Embed Preview -->
+              <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                <h3 class="text-sm font-semibold text-[#b9bbbe] uppercase tracking-wide mb-4">Embed Preview</h3>
+                <div id="embedPreview" class="border-l-4 border-[#5865F2] bg-[#23272f] rounded-r-lg p-4">
+                  <div id="embedPreviewTitle" class="font-bold text-lg mb-2">Welcome!</div>
+                  <div id="embedPreviewDesc" class="text-[#b9bbbe] text-sm">Your embed description will appear here</div>
+                  <div id="embedPreviewImage" class="mt-3"></div>
+                </div>
+              </div>
+
+              <!-- Custom Image Preview Note -->
+              <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6">
+                <div class="flex items-start gap-3">
+                  <svg class="w-6 h-6 text-[#5865F2] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h4 class="font-semibold mb-1">Custom Image Preview</h4>
+                    <p class="text-[#b9bbbe] text-sm">The custom welcome image will be generated when a new member joins. To test, invite a test account to your server after saving.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const guildId = '<%= guild.guildId %>';
+    const placeholders = {
+      '{{user}}': 'NewUser#0001',
+      '{{mention}}': '@NewUser',
+      '{{server}}': '<%= guild.name %>',
+      '{{memberCount}}': '1234'
+    };
+    const renderTpl = (tpl) => tpl ? Object.keys(placeholders).reduce((s,k)=> s.replaceAll(k, placeholders[k]), tpl) : '';
+
+    // Load channels from corrected API endpoint
+    async function loadChannels() {
+      try {
+        const res = await fetch(`/api/guild/${guildId}/channels`);
+        if (!res.ok) {
+          console.error('Failed to load channels:', res.statusText);
+          const select = document.getElementById('channelSelect');
+          select.innerHTML = '<option value="">Failed to load channels</option>';
+          return;
+        }
+        const data = await res.json();
+        const channels = data.channels || [];
+        const select = document.getElementById('channelSelect');
+        select.innerHTML = '<option value="">Select a text channel...</option>';
+        channels.filter(ch => ch.type === 'text').forEach(ch => {
+          const opt = document.createElement('option');
+          opt.value = ch.id;
+          opt.textContent = `# ${ch.name}`;
+          if ('<%= welcome.channelId || "" %>' === ch.id) opt.selected = true;
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Load channels failed', e);
+        const select = document.getElementById('channelSelect');
+        select.innerHTML = '<option value="">Error loading channels</option>';
+      }
+    }
+
+    // Update preview for message and embed
+    function updatePreview() {
+      // Plain message preview
+      const plainMsg = renderTpl(document.getElementById('messageInput')?.value || '');
+      const plainPreview = document.getElementById('plainPreview');
+      if (plainPreview) {
+        plainPreview.textContent = plainMsg || '';
+        plainPreview.innerHTML = plainMsg ? plainMsg.replace(/\n/g, '<br>') : '<em class="text-[#b9bbbe]">Type a message to preview...</em>';
+      }
+
+      // Embed preview
+      const embedTitle = renderTpl(document.getElementById('embedTitleInput')?.value || '');
+      const embedDesc = renderTpl(document.getElementById('embedDescInput')?.value || '');
+      const embedColor = document.getElementById('embedColorInput')?.value || '#5865F2';
+      const imgUrl = document.getElementById('imageUrlInput')?.value || '';
+
+      document.getElementById('embedPreviewTitle').textContent = embedTitle || 'Welcome!';
+      document.getElementById('embedPreviewDesc').textContent = embedDesc || 'Your embed description will appear here';
+      
+      // Update embed border color
+      const embedPreview = document.getElementById('embedPreview');
+      if (embedPreview && embedColor.startsWith('#')) {
+        embedPreview.style.borderLeftColor = embedColor;
+      }
+
+      // Update image
+      const imgWrap = document.getElementById('embedPreviewImage');
+      if (imgWrap) {
+        imgWrap.innerHTML = imgUrl ? `<img src="${imgUrl}" class="rounded-lg border border-[#3a3f4b] max-w-full" onerror="this.src=''" alt="Embed image">` : '';
+      }
+    }
+
+    // Color preset click handlers
+    function setupColorPresets() {
+      document.querySelectorAll('.color-preset').forEach(preset => {
+        preset.addEventListener('click', function() {
+          const color = this.dataset.color;
+          const target = this.dataset.target;
+          const input = document.getElementById(target + 'Input');
+          const picker = document.getElementById(target + 'Picker');
+          
+          if (input) input.value = color;
+          if (picker) picker.value = color;
+
+          // Update active state
+          document.querySelectorAll(`.color-preset[data-target="${target}"]`).forEach(p => p.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+    }
+
+    // Color picker sync
+    function setupColorPickers() {
+      const colorFields = ['circleColor', 'titleColor', 'usernameColor', 'messageColor', 'overlayColor'];
+      colorFields.forEach(field => {
+        const input = document.getElementById(field + 'Input');
+        const picker = document.getElementById(field + 'Picker');
+        
+        if (input && picker) {
+          // Sync picker to input
+          input.addEventListener('input', () => {
+            if (input.value.startsWith('#')) {
+              picker.value = input.value;
+            }
+          });
+
+          // Sync input to picker
+          picker.addEventListener('input', () => {
+            input.value = picker.value;
+            // Remove active state from presets
+            document.querySelectorAll(`.color-preset[data-target="${field}"]`).forEach(p => p.classList.remove('active'));
+          });
+        }
+      });
+    }
+
+    // Background gallery selection
+    function setupBackgroundGallery() {
+      document.querySelectorAll('.bg-gallery-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const bgType = this.dataset.bgType;
+          const bgValue = this.dataset.bgValue;
+
+          // Update active state
+          document.querySelectorAll('.bg-gallery-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+
+          const customSection = document.getElementById('customBgUrlSection');
+          const bgColorInput = document.getElementById('bgColorInput');
+          const bgImageUrlHidden = document.getElementById('bgImageUrlHidden');
+          const customUrlInput = document.getElementById('customBgUrlInput');
+
+          if (bgType === 'color') {
+            // Color background
+            bgColorInput.value = bgValue;
+            bgImageUrlHidden.value = '';
+            if (customUrlInput) customUrlInput.value = '';
+            customSection.classList.add('hidden');
+          } else if (bgType === 'image') {
+            // Preset image
+            bgColorInput.value = '';
+            bgImageUrlHidden.value = bgValue;
+            if (customUrlInput) customUrlInput.value = bgValue;
+            customSection.classList.add('hidden');
+          } else if (bgType === 'custom') {
+            // Custom URL
+            customSection.classList.remove('hidden');
+            if (customUrlInput) customUrlInput.focus();
+          }
+        });
+      });
+
+      // Handle custom URL input
+      const customUrlInput = document.getElementById('customBgUrlInput');
+      if (customUrlInput) {
+        customUrlInput.addEventListener('input', function() {
+          const bgImageUrlHidden = document.getElementById('bgImageUrlHidden');
+          const bgColorInput = document.getElementById('bgColorInput');
+          if (bgImageUrlHidden) bgImageUrlHidden.value = this.value;
+          if (bgColorInput) bgColorInput.value = '';
+        });
+      }
+    }
+
+    // Toggle custom image config visibility
+    function setupCustomImageToggle() {
+      const toggle = document.getElementById('useCustomImageToggle');
+      const configSection = document.getElementById('customImageConfig');
+      
+      if (toggle && configSection) {
+        toggle.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            configSection.classList.remove('hidden');
+          } else {
+            configSection.classList.add('hidden');
+          }
+        });
+      }
+    }
+
+    // Initialize preview highlighting for selected bg
+    function initBackgroundSelection() {
+      const currentBgImage = '<%= welcome.bgImageUrl || "" %>';
+      const currentBgColor = '<%= welcome.bgColor || "#23272A" %>';
+
+      document.querySelectorAll('.bg-gallery-item').forEach(item => {
+        const bgType = item.dataset.bgType;
+        const bgValue = item.dataset.bgValue;
+
+        if (bgType === 'color' && bgValue === currentBgColor && !currentBgImage) {
+          item.classList.add('active');
+        } else if (bgType === 'image' && bgValue === currentBgImage) {
+          item.classList.add('active');
+        } else if (bgType === 'custom' && currentBgImage && !['https://images.unsplash.com/photo-1557683316-973673baf926?w=1200','https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200','https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=1200','https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200'].includes(currentBgImage)) {
+          item.classList.add('active');
+          document.getElementById('customBgUrlSection').classList.remove('hidden');
+        }
+      });
+    }
+
+    // Initialize color preset active states
+    function initColorPresets() {
+      const colorFields = ['circleColor', 'titleColor', 'usernameColor', 'messageColor'];
+      colorFields.forEach(field => {
+        const currentValue = document.getElementById(field + 'Input')?.value;
+        if (currentValue) {
+          const matchingPreset = document.querySelector(`.color-preset[data-target="${field}"][data-color="${currentValue.toUpperCase()}"]`);
+          if (matchingPreset) {
+            matchingPreset.classList.add('active');
+          }
+        }
+      });
+    }
+
+    // Event listeners for preview updates
+    function setupPreviewUpdates() {
+      ['messageInput','embedTitleInput','embedDescInput','imageUrlInput','embedColorInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updatePreview);
+      });
+    }
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', () => {
+      loadChannels();
+      updatePreview();
+      setupColorPresets();
+      setupColorPickers();
+      setupBackgroundGallery();
+      setupCustomImageToggle();
+      initBackgroundSelection();
+      initColorPresets();
+      setupPreviewUpdates();
+    });
+  </script>
+</body>
+</html>

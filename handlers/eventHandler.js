@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const prisma = require('../utils/database');
 
 module.exports = (client) => {
     const eventPath = path.join(__dirname, '../events');
@@ -14,9 +15,9 @@ module.exports = (client) => {
         }
 
         if (event.once) {
-            client.once(event.name, (...args) => event.execute(...args, client));
+            client.once(event.name, (...args) => event.execute(...args, client, prisma));
         } else {
-            client.on(event.name, (...args) => event.execute(...args, client));
+            client.on(event.name, (...args) => event.execute(...args, client, prisma));
         }
     }
 };

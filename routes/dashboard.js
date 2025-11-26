@@ -511,4 +511,48 @@ router.get('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensur
     }
 });
 
+// Welcome message management (advanced)
+router.get('/guild/:guildId/welcome', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
+    try {
+        const guild = req.currentGuild;
+        const client = req.discordClient;
+
+        let welcome = await prisma.welcomeConfig.findFirst({
+            where: { guildId: guild.id }
+        });
+
+        if (!welcome) {
+            welcome = await prisma.welcomeConfig.create({
+                data: { guildId: guild.id }
+            });
+        }
+
+        // Build admin guilds for sidebar dropdown
+        const adminGuilds = req.user.guilds.filter(g => g.isAdmin).map(g => {
+            const guildData = g.guild;
+            let botInGuild = false;
+            if (client && client.guilds) {
+                const discordGuild = client.guilds.cache.get(guildData.guildId);
+                if (discordGuild) {
+                    botInGuild = true;
+                    guildData.icon = discordGuild.icon;
+                }
+            }
+            guildData.botInGuild = botInGuild;
+            return guildData;
+        });
+
+        res.render('dashboard/welcome', {
+            title: `${guild.name} - Welcome Messages`,
+            user: req.user,
+            guild,
+            welcome,
+            guilds: adminGuilds
+        });
+    } catch (error) {
+        console.error('❌ Error loading welcome page:', error);
+        res.status(500).render('error', { title: 'Error', message: 'Failed to load welcome settings', isAuthenticated: !!req.user });
+    }
+});
+
 module.exports = router;

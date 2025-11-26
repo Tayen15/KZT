@@ -846,6 +846,73 @@ router.post('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensu
     }
 });
 
+// Save Welcome Message Settings
+router.post('/guild/:guildId/welcome', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
+    try {
+        const guild = req.currentGuild;
+        const { 
+            enabled, channelId, message, embedTitle, embedDescription, embedColor, imageUrl, dmEnabled, autoRoleId,
+            useCustomImage, layout, font, circleColor, titleColor, usernameColor, messageColor, overlayColor, bgImageUrl, bgColor, avatarShape, overlayOpacity
+        } = req.body;
+
+        await prisma.welcomeConfig.upsert({
+            where: { guildId: guild.id },
+            update: {
+                enabled: enabled === 'true' || enabled === true,
+                channelId: channelId || null,
+                message: message || null,
+                embedTitle: embedTitle || null,
+                embedDescription: embedDescription || null,
+                embedColor: embedColor || null,
+                imageUrl: imageUrl || null,
+                dmEnabled: dmEnabled === 'true' || dmEnabled === true,
+                autoRoleId: autoRoleId || null,
+                useCustomImage: useCustomImage === 'true' || useCustomImage === true,
+                layout: layout || 'classic',
+                font: font || 'Discord',
+                circleColor: circleColor || null,
+                titleColor: titleColor || null,
+                usernameColor: usernameColor || null,
+                messageColor: messageColor || null,
+                overlayColor: overlayColor || null,
+                bgImageUrl: bgImageUrl || null,
+                bgColor: bgColor || null,
+                avatarShape: avatarShape || 'circle',
+                overlayOpacity: overlayOpacity ? parseInt(overlayOpacity) : 50,
+            },
+            create: {
+                guildId: guild.id,
+                enabled: enabled === 'true' || enabled === true,
+                channelId: channelId || null,
+                message: message || null,
+                embedTitle: embedTitle || null,
+                embedDescription: embedDescription || null,
+                embedColor: embedColor || null,
+                imageUrl: imageUrl || null,
+                dmEnabled: dmEnabled === 'true' || dmEnabled === true,
+                autoRoleId: autoRoleId || null,
+                useCustomImage: useCustomImage === 'true' || useCustomImage === true,
+                layout: layout || 'classic',
+                font: font || 'Discord',
+                circleColor: circleColor || null,
+                titleColor: titleColor || null,
+                usernameColor: usernameColor || null,
+                messageColor: messageColor || null,
+                overlayColor: overlayColor || null,
+                bgImageUrl: bgImageUrl || null,
+                bgColor: bgColor || null,
+                avatarShape: avatarShape || 'circle',
+                overlayOpacity: overlayOpacity ? parseInt(overlayOpacity) : 50,
+            }
+        });
+
+        res.redirect(`/dashboard/guild/${guild.guildId}/welcome?success=${encodeURIComponent('Welcome settings saved')}`);
+    } catch (error) {
+        console.error('❌ Error saving welcome settings:', error);
+        res.redirect(`/dashboard/guild/${req.params.guildId}/welcome?error=${encodeURIComponent('Failed to save settings')}`);
+    }
+});
+
 // Update existing rule
 router.put('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
