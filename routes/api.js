@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { ensureAuthenticated, ensureGuildAdmin, ensureBotOwner } = require('../middleware/auth');
+const { ensureAuthenticated, ensureGuildAdmin, ensureBotOwner, ensureBotInGuild } = require('../middleware/auth');
 const prisma = require('../utils/database');
 const { toggleCommand, getAllCommandToggles } = require('../middleware/commandToggle');
 const { ActivityType } = require('discord.js');
@@ -328,12 +328,73 @@ router.get('/owner/lofi', ensureAuthenticated, ensureBotOwner, async (req, res) 
     }
 });
 
+// Get channels for a guild (Owner only)
+router.get('/owner/guild/:guildId/channels', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const { guildId } = req.params;
+        const client = req.discordClient;
+
+        if (!client) {
+            return res.status(503).json({ success: false, error: 'Bot is not connected' });
+        }
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) {
+            return res.status(404).json({ success: false, error: 'Guild not found' });
+        }
+
+        // Get text channels where bot has permission to send messages
+        const textChannels = Array.from(guild.channels.cache.values())
+            .filter(channel => {
+                if (channel.type !== 0) return false; // Only text channels
+                const permissions = channel.permissionsFor(guild.members.me);
+                return permissions && permissions.has('SendMessages');
+            })
+            .map(channel => ({
+                id: channel.id,
+                name: channel.name,
+                position: channel.position
+            }))
+            .sort((a, b) => a.position - b.position);
+
+        res.json({ success: true, channels: textChannels });
+    } catch (error) {
+        console.error('[API] Error getting guild channels:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ===== Guild Settings API =====
 
+// Get guild info (member count, etc.)
+router.get('/guild/:guildId/info', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
+    try {
+        const { guildId } = req.params;
+        const client = req.discordClient;
 
+        if (!client) {
+            return res.status(503).json({ success: false, error: 'Bot is not connected' });
+        }
+
+        const discordGuild = client.guilds.cache.get(guildId);
+        if (!discordGuild) {
+            return res.status(404).json({ success: false, error: 'Guild not found' });
+        }
+
+        res.json({ 
+            success: true, 
+            memberCount: discordGuild.memberCount,
+            name: discordGuild.name,
+            icon: discordGuild.icon
+        });
+    } catch (error) {
+        console.error('[API] Error getting guild info:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // Get guild settings
-router.get('/guild/:guildId/settings', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/settings', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         let settings = await prisma.guildSettings.findUnique({
@@ -354,7 +415,7 @@ router.get('/guild/:guildId/settings', ensureAuthenticated, ensureGuildAdmin, as
 });
 
 // Update guild settings
-router.post('/guild/:guildId/settings', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.post('/guild/:guildId/settings', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const updates = req.body;
@@ -378,7 +439,7 @@ router.post('/guild/:guildId/settings', ensureAuthenticated, ensureGuildAdmin, a
 // ===== Prayer Times API =====
 
 // Get prayer times config
-router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         let prayerConfig = await prisma.prayerTime.findFirst({
@@ -399,7 +460,7 @@ router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, asyn
 });
 
 // Update prayer times config
-router.post('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.post('/guild/:guildId/prayer', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const updates = req.body;
@@ -496,7 +557,7 @@ router.post('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, asy
 // ===== Server Monitoring API =====
 
 // Get monitoring configs
-router.get('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/monitoring', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const monitors = await prisma.serverMonitoring.findMany({
@@ -511,7 +572,7 @@ router.get('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin, 
 });
 
 // Create or Update monitoring config
-router.post('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.post('/guild/:guildId/monitoring', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const body = req.body;
@@ -616,7 +677,7 @@ router.post('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin,
 });
 
 // Update monitoring config
-router.put('/guild/:guildId/monitoring/:id', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.put('/guild/:guildId/monitoring/:id', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const body = req.body;
@@ -659,7 +720,7 @@ router.put('/guild/:guildId/monitoring/:id', ensureAuthenticated, ensureGuildAdm
 });
 
 // Delete monitoring config
-router.delete('/guild/:guildId/monitoring/:id', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.delete('/guild/:guildId/monitoring/:id', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -677,7 +738,7 @@ router.delete('/guild/:guildId/monitoring/:id', ensureAuthenticated, ensureGuild
 // ===== Rules API =====
 
 // Get rules
-router.get('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const rulesConfig = await prisma.rule.findFirst({
@@ -694,7 +755,7 @@ router.get('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async
 // ===== Rules API =====
 
 // Get rules config
-router.get('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const rulesConfig = await prisma.rule.findFirst({
@@ -713,7 +774,7 @@ router.get('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async
 });
 
 // Get individual rule
-router.get('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const { ruleId } = req.params;
@@ -741,7 +802,7 @@ router.get('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureGuildAdmi
 });
 
 // Create/Add new rule
-router.post('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.post('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const { title, description } = req.body;
@@ -786,7 +847,7 @@ router.post('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, asyn
 });
 
 // Update existing rule
-router.put('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.put('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const { ruleId } = req.params;
@@ -826,7 +887,7 @@ router.put('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureGuildAdmi
 });
 
 // Delete rule
-router.delete('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.delete('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const { ruleId } = req.params;
@@ -855,7 +916,7 @@ router.delete('/guild/:guildId/rules/:ruleId', ensureAuthenticated, ensureGuildA
 });
 
 // Update rules config (channel, webhook, etc)
-router.put('/guild/:guildId/rules/config', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.put('/guild/:guildId/rules/config', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
         const { channelId, webhookUrl } = req.body;
@@ -891,7 +952,7 @@ router.put('/guild/:guildId/rules/config', ensureAuthenticated, ensureGuildAdmin
 // ===== Guild Channels API (for dropdowns) =====
 
 // Get channels for a specific guild (for admin dashboard)
-router.get('/guild/:guildId/channels', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/channels', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const { guildId } = req.params;
         const client = req.discordClient;

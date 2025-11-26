@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { ensureAuthenticated, ensureGuildAdmin, ensureBotOwner } = require('../middleware/auth');
+const { ensureAuthenticated, ensureGuildAdmin, ensureBotOwner, ensureBotInGuild } = require('../middleware/auth');
 const prisma = require('../utils/database');
 
 // TEST ROUTE - FOR DEVELOPMENT DEBUGGING ONLY
@@ -178,6 +178,87 @@ router.get('/owner/servers/:guildId', ensureAuthenticated, ensureBotOwner, async
     }
 });
 
+// Owner Logs - View bot activity logs
+router.get('/owner/logs', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Get log files from logs directory
+        const logsDir = path.join(__dirname, '../logs');
+        let logFiles = [];
+        
+        if (fs.existsSync(logsDir)) {
+            logFiles = fs.readdirSync(logsDir)
+                .filter(file => file.endsWith('.log'))
+                .map(file => ({
+                    name: file,
+                    path: path.join(logsDir, file),
+                    size: fs.statSync(path.join(logsDir, file)).size,
+                    modified: fs.statSync(path.join(logsDir, file)).mtime
+                }))
+                .sort((a, b) => b.modified - a.modified);
+        }
+        
+        res.render('dashboard/logs', {
+            title: 'Bot Logs - ByteBot',
+            user: req.user,
+            logFiles
+        });
+    } catch (error) {
+        console.error('[Dashboard] Error loading logs page:', error);
+        res.status(500).render('error', {
+            title: 'Error',
+            message: 'Failed to load logs page'
+        });
+    }
+});
+
+// Owner Stats - Detailed bot statistics
+router.get('/owner/stats', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const client = req.discordClient;
+        
+        if (!client) {
+            return res.status(503).render('error', {
+                title: 'Bot Offline',
+                message: 'The bot is currently offline or not connected.'
+            });
+        }
+
+        // Gather comprehensive statistics
+        const stats = {
+            guilds: client.guilds.cache.size,
+            users: client.users.cache.size,
+            channels: client.channels.cache.size,
+            commands: client.commands?.size || 0,
+            uptime: client.uptime,
+            ping: Math.round(client.ws.ping)
+        };
+
+        // Database stats
+        const dbStats = {
+            guilds: await prisma.guild.count(),
+            users: await prisma.user.count(),
+            prayerConfigs: await prisma.prayerTime.count(),
+            monitoringConfigs: await prisma.serverMonitoring.count()
+        };
+
+        res.render('dashboard/stats', {
+            title: 'Bot Statistics - ByteBot',
+            user: req.user,
+            stats,
+            dbStats
+        });
+    } catch (error) {
+        console.error('[Dashboard] Error loading stats page:', error);
+        res.status(500).render('error', {
+            title: 'Error',
+            message: 'Failed to load stats page'
+        });
+    }
+});
+
 // Helper function to format uptime
 function formatUptime(ms) {
     const seconds = Math.floor(ms / 1000);
@@ -201,22 +282,26 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         const adminGuilds = user.guilds.filter(g => g.isAdmin).map(g => {
             const guild = g.guild;
             
-            // Fetch real member count from Discord client if available
+            // Check if bot is in this guild
+            let botInGuild = false;
             if (client && client.guilds) {
                 const discordGuild = client.guilds.cache.get(guild.guildId);
                 if (discordGuild) {
+                    botInGuild = true;
                     guild.memberCount = discordGuild.memberCount;
                     guild.icon = discordGuild.icon;
                 }
             }
             
+            guild.botInGuild = botInGuild;
             return guild;
         });
 
         res.render('dashboard/index', {
             title: 'Dashboard',
             user,
-            guilds: adminGuilds
+            guilds: adminGuilds,
+            clientId: process.env.DISCORD_CLIENT_ID
         });
     } catch (error) {
         console.error('[Dashboard] Error loading dashboard:', error);
@@ -228,10 +313,11 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 });
 
 // Guild dashboard - specific guild settings
-router.get('/guild/:guildId', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guildId = req.params.guildId;
         const guild = req.currentGuild;
+        const client = req.discordClient;
 
         // Get guild settings
         let settings = await prisma.guildSettings.findUnique({
@@ -247,11 +333,30 @@ router.get('/guild/:guildId', ensureAuthenticated, ensureGuildAdmin, async (req,
             });
         }
 
+        // Get user's admin guilds for server switcher dropdown
+        const adminGuilds = req.user.guilds.filter(g => g.isAdmin).map(g => {
+            const guildData = g.guild;
+            
+            // Check if bot is in this guild
+            let botInGuild = false;
+            if (client && client.guilds) {
+                const discordGuild = client.guilds.cache.get(guildData.guildId);
+                if (discordGuild) {
+                    botInGuild = true;
+                    guildData.icon = discordGuild.icon;
+                }
+            }
+            
+            guildData.botInGuild = botInGuild;
+            return guildData;
+        });
+
         res.render('dashboard/guild', {
             title: `${guild.name} - Settings`,
             user: req.user,
             guild,
-            settings
+            settings,
+            guilds: adminGuilds
         });
     } catch (error) {
         console.error('[Dashboard] Error loading guild settings:', error);
@@ -263,9 +368,10 @@ router.get('/guild/:guildId', ensureAuthenticated, ensureGuildAdmin, async (req,
 });
 
 // Prayer times management
-router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
+        const client = req.discordClient;
 
         let prayerTimes = await prisma.prayerTime.findFirst({
             where: { guildId: guild.id }
@@ -277,11 +383,27 @@ router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, asyn
             });
         }
 
+        // Get user's admin guilds for server switcher dropdown
+        const adminGuilds = req.user.guilds.filter(g => g.isAdmin).map(g => {
+            const guildData = g.guild;
+            let botInGuild = false;
+            if (client && client.guilds) {
+                const discordGuild = client.guilds.cache.get(guildData.guildId);
+                if (discordGuild) {
+                    botInGuild = true;
+                    guildData.icon = discordGuild.icon;
+                }
+            }
+            guildData.botInGuild = botInGuild;
+            return guildData;
+        });
+
         res.render('dashboard/prayer', {
             title: `${guild.name} - Prayer Times`,
             user: req.user,
             guild,
-            prayerTimes
+            prayerTimes,
+            guilds: adminGuilds
         });
     } catch (error) {
         console.error('[Dashboard] Error loading prayer settings:', error);
@@ -293,9 +415,10 @@ router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureGuildAdmin, asyn
 });
 
 // Server monitoring management
-router.get('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/monitoring', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
+        const client = req.discordClient;
 
         let monitoring = await prisma.serverMonitoring.findFirst({
             where: { guildId: guild.id }
@@ -310,11 +433,27 @@ router.get('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin, 
             });
         }
 
+        // Get user's admin guilds for server switcher dropdown
+        const adminGuilds = req.user.guilds.filter(g => g.isAdmin).map(g => {
+            const guildData = g.guild;
+            let botInGuild = false;
+            if (client && client.guilds) {
+                const discordGuild = client.guilds.cache.get(guildData.guildId);
+                if (discordGuild) {
+                    botInGuild = true;
+                    guildData.icon = discordGuild.icon;
+                }
+            }
+            guildData.botInGuild = botInGuild;
+            return guildData;
+        });
+
         res.render('dashboard/monitoring', {
             title: `${guild.name} - Server Monitoring`,
             user: req.user,
             guild,
-            monitoring
+            monitoring,
+            guilds: adminGuilds
         });
     } catch (error) {
         console.error('[Dashboard] Error loading monitoring settings:', error);
@@ -326,9 +465,10 @@ router.get('/guild/:guildId/monitoring', ensureAuthenticated, ensureGuildAdmin, 
 });
 
 // Rules management
-router.get('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+router.get('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
         const guild = req.currentGuild;
+        const client = req.discordClient;
 
         let rulesConfig = await prisma.rule.findFirst({
             where: { guildId: guild.id }
@@ -339,12 +479,28 @@ router.get('/guild/:guildId/rules', ensureAuthenticated, ensureGuildAdmin, async
             (Array.isArray(rulesConfig.rules) ? rulesConfig.rules : []) : 
             [];
 
+        // Get user's admin guilds for server switcher dropdown
+        const adminGuilds = req.user.guilds.filter(g => g.isAdmin).map(g => {
+            const guildData = g.guild;
+            let botInGuild = false;
+            if (client && client.guilds) {
+                const discordGuild = client.guilds.cache.get(guildData.guildId);
+                if (discordGuild) {
+                    botInGuild = true;
+                    guildData.icon = discordGuild.icon;
+                }
+            }
+            guildData.botInGuild = botInGuild;
+            return guildData;
+        });
+
         res.render('dashboard/rules', {
             title: `${guild.name} - Rules`,
             user: req.user,
             guild,
             rulesConfig,
-            rules
+            rules,
+            guilds: adminGuilds
         });
     } catch (error) {
         console.error('[Dashboard] Error loading rules:', error);

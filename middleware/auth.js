@@ -6,6 +6,32 @@ function ensureAuthenticated(req, res, next) {
     res.redirect('/auth/login');
 }
 
+// Middleware to check if bot is in the guild
+async function ensureBotInGuild(req, res, next) {
+    const guildId = req.params.guildId;
+    const client = req.discordClient;
+
+    if (!client) {
+        return res.status(503).json({ 
+            success: false, 
+            error: 'Bot is currently offline' 
+        });
+    }
+
+    // Check if bot is in the guild
+    const botGuild = client.guilds.cache.get(guildId);
+    
+    if (!botGuild) {
+        // Bot not in guild - redirect to invite URL
+        const clientId = process.env.DISCORD_CLIENT_ID;
+        const inviteUrl = `https://discord.com/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands&guild_id=${guildId}&disable_guild_select=true`;
+        
+        return res.redirect(inviteUrl);
+    }
+
+    next();
+}
+
 // Middleware to check if user is admin of a guild
 async function ensureGuildAdmin(req, res, next) {
     if (!req.isAuthenticated()) {
@@ -50,5 +76,6 @@ function ensureBotOwner(req, res, next) {
 module.exports = {
     ensureAuthenticated,
     ensureGuildAdmin,
-    ensureBotOwner
+    ensureBotOwner,
+    ensureBotInGuild
 };
