@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
 const Genius = require('genius-lyrics');
-const config = require('../../config.json');
+const cfg = (() => { try { return require('../../config.json'); } catch { return {}; } })();
 
 module.exports = {
      data: new SlashCommandBuilder()
@@ -25,7 +25,11 @@ module.exports = {
           await interaction.deferReply({});
 
           try {
-               const genius = new Genius.Client(config.geniusApiToken);
+               const token = process.env.GENIUS_API_TOKEN || cfg.geniusApiToken;
+               if (!token) {
+                    return interaction.editReply({ content: 'GENIUS_API_TOKEN is not configured.', flags: MessageFlags.Ephemeral });
+               }
+               const genius = new Genius.Client(token);
 
                const searches = await genius.songs.search(songTitle);
                if (!searches || searches.length === 0) {

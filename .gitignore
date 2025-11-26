@@ -4,8 +4,10 @@ package-lock.json
 
 # Environment Variables
 .env
+.env.example
 .env.local
 .env.production
+.env.development
 
 # Database
 /generated/prisma

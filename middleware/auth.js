@@ -35,8 +35,9 @@ function ensureBotOwner(req, res, next) {
         return res.redirect('/auth/login');
     }
 
-    const config = require('../config.json');
-    if (req.user.discordId !== config.ownerId) {
+    const cfg = (() => { try { return require('../config.json'); } catch { return {}; } })();
+    const OWNER_ID = process.env.OWNER_ID || cfg.ownerId;
+    if (req.user.discordId !== OWNER_ID) {
         return res.status(403).render('error', {
             title: 'Access Denied',
             message: 'This page is only accessible to the bot owner.'

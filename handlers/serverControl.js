@@ -1,6 +1,10 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, MessageFlags } = require("discord.js");
 const { fetch } = require("undici");
-const { PTERODACTYL_API_KEY, PTERODACTYL_URL, SERVER_ID, SERVERCONTROL_CHANNELID } = require("../config.json");
+const cfg = (() => { try { return require("../config.json"); } catch { return {}; } })();
+const PTERODACTYL_API_KEY = process.env.PTERODACTYL_API_KEY || cfg.PTERODACTYL_API_KEY;
+const PTERODACTYL_URL = process.env.PTERODACTYL_URL || cfg.PTERODACTYL_URL;
+const SERVER_ID = process.env.SERVER_ID || cfg.SERVER_ID;
+const SERVERCONTROL_CHANNELID = process.env.SERVERCONTROL_CHANNELID || cfg.SERVERCONTROL_CHANNELID;
 const { getLastMessageId, saveLastMessageId } = require("../utils/jsonStorage");
 
 const UPDATE_INTERVAL = 15 * 1000;

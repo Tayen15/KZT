@@ -1,5 +1,6 @@
 const { Events, MessageFlags } = require('discord.js');
-const config = require('../config.json'); 
+const cfg = (() => { try { return require('../config.json'); } catch { return {}; } })();
+const OWNER_ID = process.env.OWNER_ID || cfg.ownerId;
 const { checkCommandEnabled } = require('../middleware/commandToggle'); 
 
 module.exports = {
@@ -29,12 +30,12 @@ module.exports = {
 		}
 
 		// Check if command is globally enabled (skip for owner)
-		if (interaction.user.id !== config.ownerId) {
+		if (interaction.user.id !== OWNER_ID) {
 			const isEnabled = await checkCommandEnabled(interaction);
 			if (!isEnabled) return;
 		}
 
-		if (command.ownerOnly && interaction.user.id !== config.ownerId) {
+		if (command.ownerOnly && interaction.user.id !== OWNER_ID) {
 			return interaction.reply({ content: 'This command is restricted to the bot owner.', flags: MessageFlags.Ephemeral });
 		}
 		if (command.requiredPermissions?.length && !interaction.member.permissions.has(command.requiredPermissions)) {

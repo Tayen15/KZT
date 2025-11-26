@@ -1,6 +1,23 @@
-require('./deploy-commands.js');
 require('dotenv').config();
+// Conditional slash command deployment
+const shouldDeploy = (process.env.DEPLOY_COMMANDS || 'true').toLowerCase() === 'true';
+if (shouldDeploy) {
+    try {
+        require('./deploy-commands.js');
+    } catch (e) {
+        console.warn('⚠️  Failed to run deploy-commands.js:', e.message);
+    }
+} else {
+    console.log('⏭️  Skipping slash command deployment (DEPLOY_COMMANDS=false)');
+}
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
+
+const isDev = process.env.NODE_ENV === 'development';
+if (isDev) {
+    console.log('🔧 Running in DEVELOPMENT mode');
+} else {
+    console.log('🚀 Running in PRODUCTION mode');
+}
 
 const client = new Client({
     intents: [

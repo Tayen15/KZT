@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated, ensureGuildAdmin, ensureBotOwner } = require('../middleware/auth');
 const prisma = require('../utils/database');
-const config = require('../config.json');
 
 // TEST ROUTE - FOR DEVELOPMENT DEBUGGING ONLY
 if (process.env.NODE_ENV === 'development') {

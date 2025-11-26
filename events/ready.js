@@ -1,6 +1,6 @@
 const { Events, ActivityType } = require('discord.js');
 const axios = require('axios');
-const config = require('../config.json');
+const cfg = (() => { try { return require('../config.json'); } catch { return {}; } })();
 const monitorServer = require("../handlers/monitorServer");
 const serverControl = require("../handlers/serverControl");
 const rules = require("../handlers/rules");
@@ -9,7 +9,8 @@ const lofiReconnect = require("../handlers/lofiReconnect");
 const { initializeCommandToggles } = require('../middleware/commandToggle');
 const prisma = require('../utils/database');
 
-const serverStatusURL = `https://api.mcsrvstat.us/3/${config.SERVER_IP}`;
+const MC_SERVER_IP = process.env.MC_SERVER_IP || cfg.SERVER_IP;
+const serverStatusURL = `https://api.mcsrvstat.us/3/${MC_SERVER_IP}`;
 
 module.exports = {
     name: Events.ClientReady,
@@ -56,8 +57,8 @@ module.exports = {
                 if (!botSettings) {
                     botSettings = await prisma.botSettings.create({
                         data: {
-                            activityType: config.presence.type || 'Playing',
-                            activityText: config.presence.name || 'over servers',
+                            activityType: (cfg.presence && cfg.presence.type) || 'Playing',
+                            activityText: (cfg.presence && cfg.presence.name) || 'over servers',
                             status: 'online'
                         }
                     });
@@ -108,9 +109,9 @@ module.exports = {
                     'Competing': ActivityType.Competing
                 };
                 
-                const fallbackType = activityTypeMap[config.presence.type] || ActivityType.Playing;
-                const fallbackText = config.presence.name && typeof config.presence.name === 'string'
-                    ? config.presence.name
+                const fallbackType = activityTypeMap[(cfg.presence && cfg.presence.type)] || ActivityType.Playing;
+                const fallbackText = (cfg.presence && cfg.presence.name) && typeof cfg.presence.name === 'string'
+                    ? cfg.presence.name
                     : 'over servers';
                 
                 client.user.setPresence({

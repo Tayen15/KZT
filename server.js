@@ -9,6 +9,13 @@ const MongoStore = require('connect-mongo');
 const app = express();
 const prisma = new PrismaClient();
 
+const isDev = process.env.NODE_ENV === 'development';
+if (isDev) {
+    console.log('🔧 Web server running in DEVELOPMENT mode');
+} else {
+    console.log('🚀 Web server running in PRODUCTION mode');
+}
+
 // NOTE: Do not force HTTPS here to avoid redirect loops behind Cloudflare/Flexible SSL.
 // TLS termination is handled by the proxy/CDN; cookies use `secure` in production.
 
