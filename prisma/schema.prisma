@@ -20,216 +20,256 @@ model User {
   refreshToken  String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
-  guilds        GuildMember[]
+
+  guilds GuildMember[]
 }
 
 // Guild Model - stores Discord servers
 model Guild {
-  id                String   @id @default(uuid()) @map("_id")
-  guildId           String   @unique
-  name              String
-  icon              String?
-  ownerId           String
-  memberCount       Int?
-  addedAt           DateTime @default(now())
-  
-  members           GuildMember[]
-  settings          GuildSettings?
-  prayerTimes       PrayerTime[]
-  rules             Rule[]
-  lofiSessions      LofiSession[]
-  serverMonitoring  ServerMonitoring[]
+  id          String   @id @default(uuid()) @map("_id")
+  guildId     String   @unique
+  name        String
+  icon        String?
+  ownerId     String
+  memberCount Int?
+  addedAt     DateTime @default(now())
+
+  members          GuildMember[]
+  settings         GuildSettings?
+  prayerTimes      PrayerTime[]
+  rules            Rule[]
+  lofiSessions     LofiSession[]
+  serverMonitoring ServerMonitoring[]
+  WelcomeConfig    WelcomeConfig?
 }
 
 // Guild Member - relationship between users and guilds
 model GuildMember {
-  id        String   @id @default(uuid()) @map("_id")
-  userId    String
-  guildId   String
-  isAdmin   Boolean  @default(false)
-  isOwner   Boolean  @default(false)
-  joinedAt  DateTime @default(now())
-  
-  user      User     @relation(fields: [userId], references: [id])
-  guild     Guild    @relation(fields: [guildId], references: [id])
-  
+  id       String   @id @default(uuid()) @map("_id")
+  userId   String
+  guildId  String
+  isAdmin  Boolean  @default(false)
+  isOwner  Boolean  @default(false)
+  joinedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  guild Guild @relation(fields: [guildId], references: [id])
+
   @@unique([userId, guildId])
 }
 
 // Guild Settings - dynamic configuration per guild
 model GuildSettings {
-  id                    String   @id @default(uuid()) @map("_id")
-  guildId               String   @unique
-  
-  prefix                String   @default("bt ")
-  language              String   @default("id")
-  timezone              String   @default("Asia/Jakarta")
-  
+  id      String @id @default(uuid()) @map("_id")
+  guildId String @unique
+
+  prefix   String @default("bt ")
+  language String @default("id")
+  timezone String @default("Asia/Jakarta")
+
   // Welcome/Leave Settings
-  welcomeEnabled        Boolean  @default(false)
-  welcomeChannelId      String?
-  welcomeMessage        String?
-  leaveEnabled          Boolean  @default(false)
-  leaveChannelId        String?
-  leaveMessage          String?
-  
+  welcomeEnabled   Boolean @default(false)
+  welcomeChannelId String?
+  welcomeMessage   String?
+  leaveEnabled     Boolean @default(false)
+  leaveChannelId   String?
+  leaveMessage     String?
+
   // Auto Role
-  autoRoleEnabled       Boolean  @default(false)
-  autoRoleId            String?
-  
+  autoRoleEnabled Boolean @default(false)
+  autoRoleId      String?
+
   // Moderation
-  moderationEnabled     Boolean  @default(false)
-  modLogChannelId       String?
-  
+  moderationEnabled Boolean @default(false)
+  modLogChannelId   String?
+
   // Music Settings
-  musicEnabled          Boolean  @default(true)
-  maxQueueSize          Int      @default(50)
-  defaultVolume         Int      @default(50)
-  
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  
-  guild                 Guild    @relation(fields: [guildId], references: [id])
+  musicEnabled  Boolean @default(true)
+  maxQueueSize  Int     @default(50)
+  defaultVolume Int     @default(50)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id])
 }
 
 // Prayer Times Configuration
 model PrayerTime {
-  id                String   @id @default(uuid()) @map("_id")
-  guildId           String
-  
-  enabled           Boolean  @default(false)
-  channelId         String?
-  city              String   @default("Jakarta")
-  country           String   @default("Indonesia")
-  method            Int      @default(20)
-  
-  notifyFajr        Boolean  @default(true)
-  notifyDhuhr       Boolean  @default(true)
-  notifyAsr         Boolean  @default(true)
-  notifyMaghrib     Boolean  @default(true)
-  notifyIsha        Boolean  @default(true)
-  
-  customMessage     String?
-  lastMessageId     String?
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  guild             Guild    @relation(fields: [guildId], references: [id])
+  id      String @id @default(uuid()) @map("_id")
+  guildId String
+
+  enabled   Boolean @default(false)
+  channelId String?
+  city      String  @default("Jakarta")
+  country   String  @default("Indonesia")
+  method    Int     @default(20)
+
+  notifyFajr    Boolean @default(true)
+  notifyDhuhr   Boolean @default(true)
+  notifyAsr     Boolean @default(true)
+  notifyMaghrib Boolean @default(true)
+  notifyIsha    Boolean @default(true)
+
+  customMessage String?
+  lastMessageId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id])
 }
 
 // Server Monitoring (Minecraft / Uptime Robot / Pterodactyl)
 model ServerMonitoring {
-  id                String   @id @default(uuid()) @map("_id")
-  guildId           String
-  
-  enabled           Boolean  @default(false)
-  type              String   @default("minecraft") // "minecraft", "uptime", or "pterodactyl"
-  channelId         String?
-  
+  id      String @id @default(uuid()) @map("_id")
+  guildId String
+
+  enabled   Boolean @default(false)
+  type      String  @default("minecraft") // "minecraft", "uptime", or "pterodactyl"
+  channelId String?
+
   // Minecraft Server Config
-  serverHost        String?
-  serverPort        Int?     @default(25565)
-  serverName        String?
-  checkInterval     Int?     @default(5) // minutes
-  
+  serverHost    String?
+  serverPort    Int?    @default(25565)
+  serverName    String?
+  checkInterval Int?    @default(5) // minutes
+
   // Notification Settings
-  notifyOnline      Boolean  @default(true)
-  notifyOffline     Boolean  @default(true)
-  notifyPlayerCount Boolean  @default(false)
-  
+  notifyOnline      Boolean @default(true)
+  notifyOffline     Boolean @default(true)
+  notifyPlayerCount Boolean @default(false)
+
   // Status Cache (runtime data)
-  isOnline          Boolean? @default(false)
-  currentPlayers    Int?
-  maxPlayers        Int?
-  version           String?
-  lastChecked       DateTime?
-  
+  isOnline       Boolean?  @default(false)
+  currentPlayers Int?
+  maxPlayers     Int?
+  version        String?
+  lastChecked    DateTime?
+
   // Uptime Robot Config
-  uptimeApiKey      String?
-  
+  uptimeApiKey String?
+
   // Pterodactyl Config
   pterodactylUrl    String?
   pterodactylApiKey String?
   serverId          String?
-  
-  lastMessageId     String?
-  updateInterval    Int      @default(60000)
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  guild             Guild    @relation(fields: [guildId], references: [id])
+
+  lastMessageId  String?
+  updateInterval Int     @default(60000)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id])
 }
 
 // Rules System
 model Rule {
-  id          String   @id @default(uuid()) @map("_id")
-  guildId     String
-  
-  channelId   String?
-  messageId   String?
-  webhookUrl  String?
-  
-  rules       Json     // Array of {name: string, value: string}
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  guild       Guild    @relation(fields: [guildId], references: [id])
+  id      String @id @default(uuid()) @map("_id")
+  guildId String
+
+  channelId  String?
+  messageId  String?
+  webhookUrl String?
+
+  rules Json // Array of {name: string, value: string}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id])
+}
+
+// Advanced Welcome Configuration
+model WelcomeConfig {
+  id      String @id @default(uuid()) @map("_id")
+  guildId String @unique
+
+  enabled   Boolean @default(false)
+  channelId String?
+
+  // Message Templates (support placeholders: {{user}}, {{mention}}, {{server}}, {{memberCount}})
+  message          String? // Plain message template
+  embedTitle       String?
+  embedDescription String?
+  embedColor       String? // Hex string, e.g. #5865F2
+  imageUrl         String?
+
+  // Custom Image Generator
+  useCustomImage Boolean @default(false)
+  layout         String  @default("classic") // classic, modern, minimal
+  font           String  @default("Discord") // Discord, Arial, etc
+  circleColor    String? // Hex for avatar border
+  titleColor     String? // Hex for "WELCOME" text
+  usernameColor  String? // Hex for username
+  messageColor   String? // Hex for custom message text
+  overlayColor   String? // Hex for overlay
+  bgImageUrl     String? // Background image URL
+  bgColor        String? // Fallback background color
+  avatarShape    String  @default("circle") // circle or square
+  overlayOpacity Int     @default(50) // 0-100
+
+  // Extra options
+  dmEnabled  Boolean @default(false)
+  autoRoleId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id])
 }
 
 // Lofi Sessions
 model LofiSession {
-  id          String   @id @default(uuid()) @map("_id")
-  guildId     String
-  channelId   String
-  
-  startedAt   DateTime @default(now())
-  isActive    Boolean  @default(true)
-  
-  guild       Guild    @relation(fields: [guildId], references: [id])
+  id        String @id @default(uuid()) @map("_id")
+  guildId   String
+  channelId String
+
+  startedAt DateTime @default(now())
+  isActive  Boolean  @default(true)
+
+  guild Guild @relation(fields: [guildId], references: [id])
 }
 
 // Last Messages (for editing instead of sending new)
 model LastMessage {
-  id          String   @id @default(uuid()) @map("_id")
-  key         String   @unique
-  messageId   String
-  channelId   String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String  @id @default(uuid()) @map("_id")
+  key       String  @unique
+  messageId String
+  channelId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Bot Settings (Global bot configuration)
 model BotSettings {
-  id                String   @id @default(uuid()) @map("_id")
-  
+  id String @id @default(uuid()) @map("_id")
+
   // Bot presence/activity
-  activityType      String   @default("Watching") // Playing, Watching, Listening, Competing
-  activityText      String   @default("over servers")
-  status            String   @default("online") // online, idle, dnd, invisible
-  
+  activityType String @default("Watching") // Playing, Watching, Listening, Competing
+  activityText String @default("over servers")
+  status       String @default("online") // online, idle, dnd, invisible
+
   // Maintenance mode
-  maintenanceMode   Boolean  @default(false)
+  maintenanceMode    Boolean @default(false)
   maintenanceMessage String?
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Command Toggle (Enable/Disable commands globally)
 model CommandToggle {
-  id          String   @id @default(uuid()) @map("_id")
-  commandName String   @unique
-  enabled     Boolean  @default(true)
-  category    String   // dev, info, music, moderation, minecraft
-  reason      String?  // Reason why command is disabled
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String  @id @default(uuid()) @map("_id")
+  commandName String  @unique
+  enabled     Boolean @default(true)
+  category    String // dev, info, music, moderation, minecraft
+  reason      String? // Reason why command is disabled
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Session Store for Express Sessions (Prisma Session Store)

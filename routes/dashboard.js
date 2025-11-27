@@ -511,4 +511,69 @@ router.get('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensur
     }
 });
 
+// Welcome message management (advanced)
+router.get('/guild/:guildId/welcome', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
+    try {
+        const guild = req.currentGuild;
+        const client = req.discordClient;
+
+        let welcome = await prisma.welcomeConfig.findFirst({
+            where: { guildId: guild.id }
+        });
+
+        if (!welcome) {
+            welcome = await prisma.welcomeConfig.create({
+                data: { guildId: guild.id }
+            });
+        }
+
+        // Get Discord guild data for channels and roles
+        const discordGuild = client?.guilds?.cache.get(guild.guildId);
+        let channels = [];
+        let roles = [];
+
+        if (discordGuild) {
+            // Get text channels only (type 0 = GUILD_TEXT)
+            channels = discordGuild.channels.cache
+                .filter(ch => ch.type === 0)
+                .map(ch => ({ id: ch.id, name: ch.name, position: ch.position }))
+                .sort((a, b) => a.position - b.position);
+
+            // Get roles (exclude @everyone)
+            roles = discordGuild.roles.cache
+                .filter(role => role.id !== guild.guildId)
+                .map(role => ({ id: role.id, name: role.name, color: role.hexColor, position: role.position }))
+                .sort((a, b) => b.position - a.position);
+        }
+
+        // Build admin guilds for sidebar dropdown
+        const adminGuilds = req.user.guilds.filter(g => g.isAdmin).map(g => {
+            const guildData = g.guild;
+            let botInGuild = false;
+            if (client && client.guilds) {
+                const discordGuild = client.guilds.cache.get(guildData.guildId);
+                if (discordGuild) {
+                    botInGuild = true;
+                    guildData.icon = discordGuild.icon;
+                }
+            }
+            guildData.botInGuild = botInGuild;
+            return guildData;
+        });
+
+        res.render('dashboard/welcome', {
+            title: `${guild.name} - Welcome Messages`,
+            user: req.user,
+            guild,
+            welcome,
+            channels,
+            roles,
+            guilds: adminGuilds
+        });
+    } catch (error) {
+        console.error('❌ Error loading welcome page:', error);
+        res.status(500).render('error', { title: 'Error', message: 'Failed to load welcome settings', isAuthenticated: !!req.user });
+    }
+});
+
 module.exports = router;

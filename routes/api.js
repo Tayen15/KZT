@@ -19,19 +19,19 @@ router.post('/owner/announce', ensureAuthenticated, ensureBotOwner, async (req, 
 
         let sentCount = 0;
         let failedGuilds = [];
-        const guilds = target === 'all' 
+        const guilds = target === 'all'
             ? Array.from(client.guilds.cache.values())
             : [client.guilds.cache.get(target)];
 
         for (const guild of guilds) {
             if (!guild) continue;
-            
+
             let channel = null;
-            
+
             // If specific channelId provided, try to use it
             if (channelId && target !== 'all') {
                 channel = guild.channels.cache.get(channelId);
-                
+
                 // Validate channel exists and bot has permission
                 if (channel && channel.type === 0) {
                     const permissions = channel.permissionsFor(guild.members.me);
@@ -84,8 +84,8 @@ router.post('/owner/announce', ensureAuthenticated, ensureBotOwner, async (req, 
             }
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: `Announcement sent to ${sentCount} server(s)`,
             sentCount,
             failedCount: failedGuilds.length,
@@ -112,8 +112,8 @@ router.post('/owner/reload', ensureAuthenticated, ensureBotOwner, async (req, re
         // Reload slash command handler
         require('../handlers/slashCommandHandler')(client);
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Commands reloaded successfully',
             count: client.commands.size
         });
@@ -141,9 +141,9 @@ router.post('/owner/leave/:guildId', ensureAuthenticated, ensureBotOwner, async 
         const guildName = guild.name;
         await guild.leave();
 
-        res.json({ 
-            success: true, 
-            message: `Left ${guildName} successfully` 
+        res.json({
+            success: true,
+            message: `Left ${guildName} successfully`
         });
     } catch (error) {
         console.error('[API] Error leaving guild:', error);
@@ -160,7 +160,7 @@ router.get('/owner/commands', ensureAuthenticated, ensureBotOwner, async (req, r
         }
 
         const toggles = await getAllCommandToggles();
-        
+
         // Get all commands from client
         const allCommands = Array.from(client.commands.values()).map(cmd => ({
             name: cmd.name || cmd.data.name,
@@ -204,9 +204,9 @@ router.post('/owner/commands/:commandName/toggle', ensureAuthenticated, ensureBo
         const category = command.category || 'other';
         await toggleCommand(commandName, enabled, category, reason);
 
-        res.json({ 
-            success: true, 
-            message: `Command ${commandName} ${enabled ? 'enabled' : 'disabled'}` 
+        res.json({
+            success: true,
+            message: `Command ${commandName} ${enabled ? 'enabled' : 'disabled'}`
         });
     } catch (error) {
         console.error('[API] Error toggling command:', error);
@@ -218,7 +218,7 @@ router.post('/owner/commands/:commandName/toggle', ensureAuthenticated, ensureBo
 router.get('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, res) => {
     try {
         let settings = await prisma.botSettings.findFirst();
-        
+
         if (!settings) {
             settings = await prisma.botSettings.create({
                 data: {
@@ -255,7 +255,7 @@ router.post('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, 
 
         // Update or create settings
         let settings = await prisma.botSettings.findFirst();
-        
+
         if (settings) {
             settings = await prisma.botSettings.update({
                 where: { id: settings.id },
@@ -289,7 +289,7 @@ router.post('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, 
             'Competing': ActivityType.Competing
         };
         const activityTypeEnum = activityTypeMap[validActivityType] || ActivityType.Playing;
-        
+
         // Build activity object
         // NOTE: Discord.js ALWAYS requires 'name' property, even for Custom status
         // For Custom status, Discord.js will automatically convert 'name' to 'state'
@@ -298,7 +298,7 @@ router.post('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, 
             type: activityTypeEnum,
             name: validActivityText  // Always use 'name', Discord.js handles Custom conversion
         };
-        
+
         client.user.setPresence({
             activities: [activity],
             status: validStatus
@@ -381,8 +381,8 @@ router.get('/guild/:guildId/info', ensureAuthenticated, ensureBotInGuild, ensure
             return res.status(404).json({ success: false, error: 'Guild not found' });
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             memberCount: discordGuild.memberCount,
             name: discordGuild.name,
             icon: discordGuild.icon
@@ -502,10 +502,10 @@ router.post('/guild/:guildId/prayer', ensureAuthenticated, ensureBotInGuild, ens
                     console.error('[Prayer] Error deleting message:', error);
                 }
             }
-            
+
             // Clear lastMessageId from database
             data.lastMessageId = null;
-            
+
             // Stop monitoring
             const { stopPrayerMonitoring } = require('../handlers/prayerTime');
             stopPrayerMonitoring(guild.guildId);
@@ -539,17 +539,17 @@ router.post('/guild/:guildId/prayer', ensureAuthenticated, ensureBotInGuild, ens
             // Form submission - redirect to dashboard
             return res.redirect(`/dashboard/guild/${guild.guildId}/prayer`);
         }
-        
+
         // API request - return JSON
         res.json({ success: true, message: 'Prayer times updated successfully' });
     } catch (error) {
         console.error('[API] Error updating prayer config:', error);
-        
+
         // Check if request is from form
         if (req.headers.accept && req.headers.accept.includes('text/html')) {
             return res.redirect(`/dashboard/guild/${req.params.guildId}/prayer?error=update_failed`);
         }
-        
+
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -587,18 +587,18 @@ router.post('/guild/:guildId/monitoring', ensureAuthenticated, ensureBotInGuild,
             enabled: body.enabled === 'true' || body.enabled === true,
             type: body.type || 'minecraft',
             channelId: body.channelId || null,
-            
+
             // Minecraft fields
             serverHost: body.serverHost || null,
             serverPort: parseInt(body.serverPort) || 25565,
             serverName: body.serverName || null,
             checkInterval: parseInt(body.checkInterval) || 5,
-            
+
             // Notification settings
             notifyOnline: body.notifyOnline === 'true' || body.notifyOnline === true,
             notifyOffline: body.notifyOffline === 'true' || body.notifyOffline === true,
             notifyPlayerCount: body.notifyPlayerCount === 'true' || body.notifyPlayerCount === true,
-            
+
             // Uptime/Pterodactyl fields
             uptimeApiKey: body.uptimeApiKey || null,
             pterodactylUrl: body.pterodactylUrl || null,
@@ -624,10 +624,10 @@ router.post('/guild/:guildId/monitoring', ensureAuthenticated, ensureBotInGuild,
                     console.error('[Monitoring] Error deleting message:', error);
                 }
             }
-            
+
             // Clear lastMessageId from database
             data.lastMessageId = null;
-            
+
             // Stop monitoring
             const { stopServerMonitoring } = require('../handlers/monitorServer');
             stopServerMonitoring(guild.guildId);
@@ -667,11 +667,11 @@ router.post('/guild/:guildId/monitoring', ensureAuthenticated, ensureBotInGuild,
         res.json({ success: true, monitor });
     } catch (error) {
         console.error('[API] Error saving monitor:', error);
-        
+
         if (req.headers.accept && req.headers.accept.includes('text/html')) {
             return res.redirect(`/dashboard/guild/${req.params.guildId}/monitoring?error=save_failed`);
         }
-        
+
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -687,18 +687,18 @@ router.put('/guild/:guildId/monitoring/:id', ensureAuthenticated, ensureBotInGui
             enabled: body.enabled === 'true' || body.enabled === true,
             type: body.type,
             channelId: body.channelId || null,
-            
+
             // Minecraft fields
             serverHost: body.serverHost || null,
             serverPort: body.serverPort ? parseInt(body.serverPort) : undefined,
             serverName: body.serverName || null,
             checkInterval: body.checkInterval ? parseInt(body.checkInterval) : undefined,
-            
+
             // Notification settings
             notifyOnline: body.notifyOnline === 'true' || body.notifyOnline === true,
             notifyOffline: body.notifyOffline === 'true' || body.notifyOffline === true,
             notifyPlayerCount: body.notifyPlayerCount === 'true' || body.notifyPlayerCount === true,
-            
+
             // Uptime/Pterodactyl fields
             uptimeApiKey: body.uptimeApiKey || undefined,
             pterodactylUrl: body.pterodactylUrl || undefined,
@@ -762,8 +762,8 @@ router.get('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensur
             where: { guildId: guild.id }
         });
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             rulesConfig,
             rules: rulesConfig?.rules || []
         });
@@ -843,6 +843,95 @@ router.post('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensu
     } catch (error) {
         console.error('[API] Error creating rule:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Save Welcome Message Settings
+router.post('/guild/:guildId/welcome', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
+    try {
+        const guild = req.currentGuild;
+
+        // Debug log to check req.body
+        console.log('📝 Received welcome config update:', {
+            hasBody: !!req.body,
+            bodyKeys: req.body ? Object.keys(req.body) : [],
+            contentType: req.headers['content-type']
+        });
+
+        // Ensure req.body exists
+        if (!req.body || Object.keys(req.body).length === 0) {
+            console.error('❌ req.body is empty or undefined');
+            return res.status(400).json({
+                success: false,
+                error: 'No data received. Please check form submission.'
+            });
+        }
+
+        const {
+            enabled, channelId, message, embedTitle, embedDescription, embedColor, imageUrl, dmEnabled, autoRoleId,
+            useCustomImage, layout, font, circleColor, titleColor, usernameColor, messageColor, overlayColor, bgImageUrl, bgColor, avatarShape, overlayOpacity
+        } = req.body;
+
+        await prisma.welcomeConfig.upsert({
+            where: { guildId: guild.id },
+            update: {
+                enabled: enabled === 'true' || enabled === true,
+                channelId: channelId || null,
+                message: message || null,
+                embedTitle: embedTitle || null,
+                embedDescription: embedDescription || null,
+                embedColor: embedColor || null,
+                imageUrl: imageUrl || null,
+                dmEnabled: dmEnabled === 'true' || dmEnabled === true,
+                autoRoleId: autoRoleId || null,
+                useCustomImage: useCustomImage === 'true' || useCustomImage === true,
+                layout: layout || 'classic',
+                font: font || 'Discord',
+                circleColor: circleColor || null,
+                titleColor: titleColor || null,
+                usernameColor: usernameColor || null,
+                messageColor: messageColor || null,
+                overlayColor: overlayColor || null,
+                bgImageUrl: bgImageUrl || null,
+                bgColor: bgColor || null,
+                avatarShape: avatarShape || 'circle',
+                overlayOpacity: overlayOpacity ? parseInt(overlayOpacity) : 50,
+            },
+            create: {
+                guildId: guild.id,
+                enabled: enabled === 'true' || enabled === true,
+                channelId: channelId || null,
+                message: message || null,
+                embedTitle: embedTitle || null,
+                embedDescription: embedDescription || null,
+                embedColor: embedColor || null,
+                imageUrl: imageUrl || null,
+                dmEnabled: dmEnabled === 'true' || dmEnabled === true,
+                autoRoleId: autoRoleId || null,
+                useCustomImage: useCustomImage === 'true' || useCustomImage === true,
+                layout: layout || 'classic',
+                font: font || 'Discord',
+                circleColor: circleColor || null,
+                titleColor: titleColor || null,
+                usernameColor: usernameColor || null,
+                messageColor: messageColor || null,
+                overlayColor: overlayColor || null,
+                bgImageUrl: bgImageUrl || null,
+                bgColor: bgColor || null,
+                avatarShape: avatarShape || 'circle',
+                overlayOpacity: overlayOpacity ? parseInt(overlayOpacity) : 50,
+            }
+        });
+
+        // Check if it's AJAX request (for dashboard form submission)
+        if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+            return res.json({ success: true, message: 'Welcome settings saved successfully' });
+        }
+
+        res.redirect(`/dashboard/guild/${guild.guildId}/welcome?success=${encodeURIComponent('Welcome settings saved')}`);
+    } catch (error) {
+        console.error('❌ Error saving welcome settings:', error);
+        res.redirect(`/dashboard/guild/${req.params.guildId}/welcome?error=${encodeURIComponent('Failed to save settings')}`);
     }
 });
 
@@ -1096,7 +1185,7 @@ router.get('/owner/servers/:guildId/members', ensureAuthenticated, ensureBotOwne
         // Filter by search if provided
         if (search) {
             const searchLower = search.toLowerCase();
-            members = members.filter(m => 
+            members = members.filter(m =>
                 m.user.username.toLowerCase().includes(searchLower) ||
                 m.user.tag.toLowerCase().includes(searchLower) ||
                 m.displayName.toLowerCase().includes(searchLower)
@@ -1136,8 +1225,8 @@ router.get('/owner/servers/:guildId/members', ensureAuthenticated, ensureBotOwne
             }
         }));
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             members: memberList,
             pagination: {
                 page: parseInt(page),
