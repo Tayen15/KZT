@@ -527,6 +527,25 @@ router.get('/guild/:guildId/welcome', ensureAuthenticated, ensureBotInGuild, ens
             });
         }
 
+        // Get Discord guild data for channels and roles
+        const discordGuild = client?.guilds?.cache.get(guild.guildId);
+        let channels = [];
+        let roles = [];
+
+        if (discordGuild) {
+            // Get text channels only (type 0 = GUILD_TEXT)
+            channels = discordGuild.channels.cache
+                .filter(ch => ch.type === 0)
+                .map(ch => ({ id: ch.id, name: ch.name, position: ch.position }))
+                .sort((a, b) => a.position - b.position);
+
+            // Get roles (exclude @everyone)
+            roles = discordGuild.roles.cache
+                .filter(role => role.id !== guild.guildId)
+                .map(role => ({ id: role.id, name: role.name, color: role.hexColor, position: role.position }))
+                .sort((a, b) => b.position - a.position);
+        }
+
         // Build admin guilds for sidebar dropdown
         const adminGuilds = req.user.guilds.filter(g => g.isAdmin).map(g => {
             const guildData = g.guild;
@@ -547,6 +566,8 @@ router.get('/guild/:guildId/welcome', ensureAuthenticated, ensureBotInGuild, ens
             user: req.user,
             guild,
             welcome,
+            channels,
+            roles,
             guilds: adminGuilds
         });
     } catch (error) {

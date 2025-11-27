@@ -6,7 +6,7 @@ const path = require('path');
  * @param {Object} options - Configuration options
  * @param {string} options.username - User's display name
  * @param {string} options.avatarUrl - URL to user's avatar
- * @param {string} options.layout - Layout style (classic, modern, minimal)
+ * @param {string} options.layout - Layout style (simple, left, right, text)
  * @param {string} options.bgImageUrl - Background image URL
  * @param {string} options.bgColor - Background color fallback
  * @param {string} options.circleColor - Avatar border color
@@ -16,14 +16,15 @@ const path = require('path');
  * @param {string} options.overlayColor - Overlay color
  * @param {number} options.overlayOpacity - Overlay opacity (0-100)
  * @param {string} options.avatarShape - Avatar shape (circle or square)
- * @param {string} options.font - Font name
+ * @param {string} options.font - Font name (gg sans, Arial, Helvetica, Impact, etc)
+ * @param {number} options.memberCount - Server member count
  * @returns {Promise<Buffer>} PNG image buffer
  */
 async function generateWelcomeImage(options) {
   const {
     username = 'User',
     avatarUrl,
-    layout = 'classic',
+    layout = 'simple',
     bgImageUrl,
     bgColor = '#23272A',
     circleColor = '#FFFFFF',
@@ -33,13 +34,36 @@ async function generateWelcomeImage(options) {
     overlayColor = '#000000',
     overlayOpacity = 50,
     avatarShape = 'circle',
-    font = 'Discord'
+    font = 'gg sans',
+    memberCount = 0
   } = options;
 
   const width = 1024;
-  const height = 450;
+  const height = 500;
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
+
+  // Map font names to actual font families
+  let fontFamily = 'Arial, sans-serif';
+  if (font === 'gg sans' || font === 'Discord') {
+    fontFamily = 'Arial, sans-serif'; // Fallback since gg sans may not be available
+  } else if (font === 'Helvetica') {
+    fontFamily = 'Helvetica, Arial, sans-serif';
+  } else if (font === 'Impact') {
+    fontFamily = 'Impact, Arial Black, sans-serif';
+  } else if (font === 'Georgia') {
+    fontFamily = 'Georgia, serif';
+  } else if (font === 'Courier New') {
+    fontFamily = 'Courier New, monospace';
+  } else if (font === 'Comic Sans MS') {
+    fontFamily = 'Comic Sans MS, cursive';
+  } else if (font === 'Verdana') {
+    fontFamily = 'Verdana, sans-serif';
+  } else if (font === 'Times New Roman') {
+    fontFamily = 'Times New Roman, serif';
+  } else if (font === 'Arial') {
+    fontFamily = 'Arial, sans-serif';
+  }
 
   // Draw background
   if (bgImageUrl) {
@@ -62,26 +86,31 @@ async function generateWelcomeImage(options) {
     ctx.fillRect(0, 0, width, height);
   }
 
-  // Layout-specific rendering
-  if (layout === 'classic') {
-    await drawClassicLayout(ctx, { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height });
-  } else if (layout === 'modern') {
-    await drawModernLayout(ctx, { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height });
+  // Layout-specific rendering with new layouts
+  if (layout === 'simple') {
+    await drawSimpleLayout(ctx, { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height, fontFamily, memberCount });
+  } else if (layout === 'left') {
+    await drawLeftLayout(ctx, { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height, fontFamily, memberCount });
+  } else if (layout === 'right') {
+    await drawRightLayout(ctx, { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height, fontFamily, memberCount });
+  } else if (layout === 'text') {
+    await drawTextLayout(ctx, { username, titleColor, usernameColor, messageColor, width, height, fontFamily, memberCount });
   } else {
-    await drawMinimalLayout(ctx, { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height });
+    // Fallback to simple for legacy layouts
+    await drawSimpleLayout(ctx, { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height, fontFamily, memberCount });
   }
 
   return canvas.toBuffer('image/png');
 }
 
-async function drawClassicLayout(ctx, options) {
-  const { username, avatarUrl, circleColor, titleColor, usernameColor, avatarShape, width, height } = options;
+// Simple Layout: Avatar center top, text below centered
+async function drawSimpleLayout(ctx, options) {
+  const { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height, fontFamily, memberCount } = options;
   const centerX = width / 2;
-  const centerY = height / 2;
 
   // Avatar (top center)
   const avatarSize = 180;
-  const avatarY = 100;
+  const avatarY = 130;
   
   if (avatarUrl) {
     try {
@@ -89,7 +118,6 @@ async function drawClassicLayout(ctx, options) {
       ctx.save();
       
       if (avatarShape === 'circle') {
-        // Circle clipping
         ctx.beginPath();
         ctx.arc(centerX, avatarY, avatarSize / 2, 0, Math.PI * 2);
         ctx.closePath();
@@ -97,15 +125,13 @@ async function drawClassicLayout(ctx, options) {
         ctx.drawImage(avatar, centerX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize);
         ctx.restore();
         
-        // Circle border
         ctx.strokeStyle = circleColor;
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.arc(centerX, avatarY, avatarSize / 2, 0, Math.PI * 2);
         ctx.stroke();
       } else {
-        // Square with rounded corners
-        const radius = 20;
+        const radius = 15;
         ctx.beginPath();
         roundRect(ctx, centerX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize, radius);
         ctx.closePath();
@@ -113,40 +139,46 @@ async function drawClassicLayout(ctx, options) {
         ctx.drawImage(avatar, centerX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize);
         ctx.restore();
         
-        // Square border
         ctx.strokeStyle = circleColor;
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 5;
         ctx.beginPath();
         roundRect(ctx, centerX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize, radius);
         ctx.stroke();
       }
     } catch (err) {
-      console.warn('⚠️ Failed to load avatar, using placeholder');
+      console.warn('⚠️ Failed to load avatar');
       drawPlaceholderAvatar(ctx, centerX, avatarY, avatarSize, circleColor, avatarShape);
     }
   } else {
     drawPlaceholderAvatar(ctx, centerX, avatarY, avatarSize, circleColor, avatarShape);
   }
 
-  // "WELCOME" title
-  ctx.fillStyle = titleColor;
-  ctx.font = 'bold 80px Arial';
+  // Text below
   ctx.textAlign = 'center';
-  ctx.fillText('WELCOME', centerX, avatarY + avatarSize / 2 + 100);
+  
+  ctx.fillStyle = titleColor;
+  ctx.font = `bold 48px ${fontFamily}`;
+  ctx.fillText('WELCOME', centerX, 310);
 
-  // Username
   ctx.fillStyle = usernameColor;
-  ctx.font = 'bold 50px Arial';
-  ctx.fillText(username.toUpperCase(), centerX, avatarY + avatarSize / 2 + 170);
+  ctx.font = `bold 40px ${fontFamily}`;
+  ctx.fillText(username, centerX, 370);
+
+  if (memberCount > 0) {
+    ctx.fillStyle = messageColor;
+    ctx.font = `28px ${fontFamily}`;
+    ctx.fillText(`You are the ${memberCount.toLocaleString()}th member!`, centerX, 420);
+  }
 }
 
-async function drawModernLayout(ctx, options) {
-  const { username, avatarUrl, circleColor, titleColor, usernameColor, avatarShape, width, height } = options;
+// Left Layout: Avatar left, text to the right
+async function drawLeftLayout(ctx, options) {
+  const { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height, fontFamily, memberCount } = options;
   
-  // Left-aligned avatar
   const avatarSize = 200;
   const avatarX = 150;
   const avatarY = height / 2;
+  const textX = 320;
 
   if (avatarUrl) {
     try {
@@ -162,12 +194,12 @@ async function drawModernLayout(ctx, options) {
         ctx.restore();
         
         ctx.strokeStyle = circleColor;
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
         ctx.stroke();
       } else {
-        const radius = 25;
+        const radius = 15;
         ctx.beginPath();
         roundRect(ctx, avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize, radius);
         ctx.closePath();
@@ -176,7 +208,7 @@ async function drawModernLayout(ctx, options) {
         ctx.restore();
         
         ctx.strokeStyle = circleColor;
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 5;
         ctx.beginPath();
         roundRect(ctx, avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize, radius);
         ctx.stroke();
@@ -188,26 +220,32 @@ async function drawModernLayout(ctx, options) {
     drawPlaceholderAvatar(ctx, avatarX, avatarY, avatarSize, circleColor, avatarShape);
   }
 
-  // Right-aligned text
-  const textX = avatarX + avatarSize / 2 + 80;
+  // Text to the right
+  ctx.textAlign = 'left';
   
   ctx.fillStyle = titleColor;
-  ctx.font = 'bold 70px Arial';
-  ctx.textAlign = 'left';
-  ctx.fillText('WELCOME', textX, avatarY - 30);
+  ctx.font = `bold 50px ${fontFamily}`;
+  ctx.fillText('WELCOME', textX, height / 2 - 40);
 
   ctx.fillStyle = usernameColor;
-  ctx.font = 'bold 55px Arial';
-  ctx.fillText(username, textX, avatarY + 50);
+  ctx.font = `bold 42px ${fontFamily}`;
+  ctx.fillText(username, textX, height / 2 + 20);
+
+  if (memberCount > 0) {
+    ctx.fillStyle = messageColor;
+    ctx.font = `30px ${fontFamily}`;
+    ctx.fillText(`You are the ${memberCount.toLocaleString()}th member!`, textX, height / 2 + 70);
+  }
 }
 
-async function drawMinimalLayout(ctx, options) {
-  const { username, avatarUrl, circleColor, titleColor, usernameColor, avatarShape, width, height } = options;
-  const centerX = width / 2;
-  const centerY = height / 2;
-
-  // Small centered avatar
-  const avatarSize = 120;
+// Right Layout: Avatar right, text to the left
+async function drawRightLayout(ctx, options) {
+  const { username, avatarUrl, circleColor, titleColor, usernameColor, messageColor, avatarShape, width, height, fontFamily, memberCount } = options;
+  
+  const avatarSize = 200;
+  const avatarX = width - 150;
+  const avatarY = height / 2;
+  const textX = width - 320;
 
   if (avatarUrl) {
     try {
@@ -216,48 +254,77 @@ async function drawMinimalLayout(ctx, options) {
       
       if (avatarShape === 'circle') {
         ctx.beginPath();
-        ctx.arc(centerX, centerY - 50, avatarSize / 2, 0, Math.PI * 2);
+        ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
-        ctx.drawImage(avatar, centerX - avatarSize / 2, centerY - 50 - avatarSize / 2, avatarSize, avatarSize);
+        ctx.drawImage(avatar, avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize);
         ctx.restore();
         
         ctx.strokeStyle = circleColor;
         ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.arc(centerX, centerY - 50, avatarSize / 2, 0, Math.PI * 2);
+        ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
         ctx.stroke();
       } else {
         const radius = 15;
         ctx.beginPath();
-        roundRect(ctx, centerX - avatarSize / 2, centerY - 50 - avatarSize / 2, avatarSize, avatarSize, radius);
+        roundRect(ctx, avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize, radius);
         ctx.closePath();
         ctx.clip();
-        ctx.drawImage(avatar, centerX - avatarSize / 2, centerY - 50 - avatarSize / 2, avatarSize, avatarSize);
+        ctx.drawImage(avatar, avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize);
         ctx.restore();
         
         ctx.strokeStyle = circleColor;
         ctx.lineWidth = 5;
         ctx.beginPath();
-        roundRect(ctx, centerX - avatarSize / 2, centerY - 50 - avatarSize / 2, avatarSize, avatarSize, radius);
+        roundRect(ctx, avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize, radius);
         ctx.stroke();
       }
     } catch (err) {
-      drawPlaceholderAvatar(ctx, centerX, centerY - 50, avatarSize, circleColor, avatarShape);
+      drawPlaceholderAvatar(ctx, avatarX, avatarY, avatarSize, circleColor, avatarShape);
     }
   } else {
-    drawPlaceholderAvatar(ctx, centerX, centerY - 50, avatarSize, circleColor, avatarShape);
+    drawPlaceholderAvatar(ctx, avatarX, avatarY, avatarSize, circleColor, avatarShape);
   }
 
-  // Text below
+  // Text to the left
+  ctx.textAlign = 'right';
+  
   ctx.fillStyle = titleColor;
-  ctx.font = 'bold 50px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('WELCOME', centerX, centerY + 80);
+  ctx.font = `bold 50px ${fontFamily}`;
+  ctx.fillText('WELCOME', textX, height / 2 - 40);
 
   ctx.fillStyle = usernameColor;
-  ctx.font = '40px Arial';
-  ctx.fillText(username, centerX, centerY + 140);
+  ctx.font = `bold 42px ${fontFamily}`;
+  ctx.fillText(username, textX, height / 2 + 20);
+
+  if (memberCount > 0) {
+    ctx.fillStyle = messageColor;
+    ctx.font = `30px ${fontFamily}`;
+    ctx.fillText(`You are the ${memberCount.toLocaleString()}th member!`, textX, height / 2 + 70);
+  }
+}
+
+// Text Only Layout: No avatar, text centered
+async function drawTextLayout(ctx, options) {
+  const { username, titleColor, usernameColor, messageColor, width, height, fontFamily, memberCount } = options;
+  const centerX = width / 2;
+
+  ctx.textAlign = 'center';
+  
+  ctx.fillStyle = titleColor;
+  ctx.font = `bold 50px ${fontFamily}`;
+  ctx.fillText('WELCOME', centerX, height / 2 - 40);
+
+  ctx.fillStyle = usernameColor;
+  ctx.font = `bold 42px ${fontFamily}`;
+  ctx.fillText(username, centerX, height / 2 + 20);
+
+  if (memberCount > 0) {
+    ctx.fillStyle = messageColor;
+    ctx.font = `30px ${fontFamily}`;
+    ctx.fillText(`You are the ${memberCount.toLocaleString()}th member!`, centerX, height / 2 + 70);
+  }
 }
 
 function drawPlaceholderAvatar(ctx, x, y, size, color, shape) {

@@ -12,15 +12,43 @@ module.exports = {
       const cfg = await prisma.welcomeConfig.findFirst({ where: { guildId: guildRecord.id } });
       if (!cfg || !cfg.enabled) return;
 
-      // Prepare placeholders
+      // Prepare placeholders with bracket syntax
       const placeholders = {
-        '{{user}}': `${member.user.username}#${member.user.discriminator}`,
+        '[user]': member.user.username,
+        '[user.mention]': `<@${member.id}>`,
+        '[user.username]': member.user.username,
+        '[user.id]': member.id,
+        '[user.avatar]': member.user.displayAvatarURL({ extension: 'png', size: 256 }),
+        '[server.name]': member.guild.name,
+        '[server.id]': member.guild.id,
+        '[server.icon]': member.guild.iconURL() || '',
+        '[membercount]': String(member.guild.memberCount ?? member.guild.members.cache.size),
+        '[membercount.ordinal]': `${(member.guild.memberCount ?? member.guild.members.cache.size).toLocaleString()}th`,
+        // Legacy support for old syntax
+        '{{user}}': member.user.username,
         '{{mention}}': `<@${member.id}>`,
         '{{server}}': member.guild.name,
         '{{memberCount}}': String(member.guild.memberCount ?? member.guild.members.cache.size)
       };
 
-      const render = (tpl) => tpl ? Object.keys(placeholders).reduce((s,k)=> s.replaceAll(k, placeholders[k]), tpl) : null;
+      const render = (tpl) => {
+        if (!tpl) return null;
+        let result = tpl;
+        
+        // Replace placeholders
+        Object.keys(placeholders).forEach(k => {
+          result = result.replaceAll(k, placeholders[k]);
+        });
+        
+        // Convert bracket mentions to Discord format
+        // [#channelId] -> <#channelId>
+        result = result.replace(/\[#(\d{17,19})\]/g, '<#$1>');
+        
+        // [@roleId] -> <@&roleId>
+        result = result.replace(/\[@(\d{17,19})\]/g, '<@&$1>');
+        
+        return result;
+      };
 
       // Generate custom image if enabled
       let customImageAttachment = null;
@@ -30,7 +58,7 @@ module.exports = {
           const imageBuffer = await generateWelcomeImage({
             username: member.user.username,
             avatarUrl,
-            layout: cfg.layout || 'classic',
+            layout: cfg.layout || 'simple',
             bgImageUrl: cfg.bgImageUrl,
             bgColor: cfg.bgColor || '#23272A',
             circleColor: cfg.circleColor || '#FFFFFF',
@@ -40,7 +68,8 @@ module.exports = {
             overlayColor: cfg.overlayColor || '#000000',
             overlayOpacity: cfg.overlayOpacity || 50,
             avatarShape: cfg.avatarShape || 'circle',
-            font: cfg.font || 'Discord'
+            font: cfg.font || 'gg sans',
+            memberCount: member.guild.memberCount ?? member.guild.members.cache.size
           });
           customImageAttachment = new AttachmentBuilder(imageBuffer, { name: 'welcome.png' });
         } catch (err) {
