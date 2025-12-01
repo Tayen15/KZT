@@ -1,33 +1,11 @@
 {
-    "prefix": "bt ",
+    "prefix": "* ",
     "presence": {
         "type": "Playing",
         "name": "Hi, im Bytebot!"
     },
     "clientID": "1006542146628751400",
-    "guildID": "990148600422084638",
     "ownerId": "746598982049988619",
-    "SERVER_IP": "play.firtiansyah.my.id",
-    "SERVER_NAME": "Algorithmic Realms",
-    "SERVER_PORT": 25565,
-    "iconLink": "https://cdn.discordapp.com/attachments/990148601101570090/1121124784164577380/minecraft1Point.png",
-
-    "UPTIME_API_KEY": "u1114523-a31e1d75f0ed9637210bc80c",
-    "MONITOR_CHANNELID": "1182534679157542993",
-
-    "PTERODACTYL_API_KEY": "ptlc_CifsnLDJjvA0ExlY9DCxeq2ij8SJfbAqnAXstirNrTV",
-    "SERVER_ID": "cacd8168-83ed-4de1-958a-1cf287f2f555",
-    "PTERODACTYL_URL": "https://panel.firtiansyah.my.id",
-    "SERVERCONTROL_CHANNELID": "1348167357477949450",
-    "UPDATE_INTERVAL": 60000,
-
-    "PRAYER_API_URL": "https://api.aladhan.com/v1/timingsByCity",
-    "PRAYER_CHANNELID": "1350004539360808960",
-    "CITY": "Depok",
-    "COUNTRY": "Indonesia",
-
-    "geniusClientID": "nVJxDhi10dBMag9RM0illLGJIm9QqikA1BpJ3VfN2xuCTzeHHtK6fskYfqdSHQiA",
-    "geniusApiToken": "IXNj2izQUDsYFcFroWdo9HTVsTBJy9skWRLWCZo3ZcCTtA5zoUJPbhbXV0HC0BzL",
 
     "sendmessages": {
         "messageId": "1375062194600935486",
