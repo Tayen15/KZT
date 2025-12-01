@@ -7,7 +7,7 @@
 
 @layer base {
   body {
-    @apply bg-dark-primary text-text-primary font-sans;
+    font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   }
 }
 
@@ -17,11 +17,11 @@
   }
   
   .btn-primary {
-    @apply bg-discord hover:bg-discord-hover text-white;
+    @apply bg-[#5865F2] hover:bg-[#4752c4] text-white;
   }
   
   .btn-secondary {
-    @apply bg-dark-card hover:bg-dark-hover border border-border-dark text-text-primary;
+    @apply bg-[#2b2f38] hover:bg-[#32363f] border border-[#3a3f4b] text-white;
   }
   
   .btn-danger {
@@ -41,24 +41,24 @@
   }
   
   .card {
-    @apply bg-dark-card border border-border-dark rounded-lg p-6 mb-6;
+    @apply bg-[#2b2f38] border border-[#3a3f4b] rounded-lg p-6 mb-6;
   }
   
   .form-input,
   .form-select,
   .form-textarea {
-    @apply w-full px-4 py-3 bg-dark-primary border border-border-dark rounded text-text-primary focus:outline-none focus:border-discord;
+    @apply w-full px-4 py-3 bg-[#1a1d23] border border-[#3a3f4b] rounded text-white focus:outline-none focus:border-[#5865F2];
   }
   
   .form-label {
-    @apply block mb-2 font-semibold text-text-primary;
+    @apply block mb-2 font-semibold text-white;
   }
   
   .sidebar-item {
-    @apply block px-6 py-3 text-text-secondary hover:bg-dark-hover hover:text-text-primary transition-all border-l-3 border-transparent hover:border-discord;
+    @apply block px-6 py-3 text-[#b9bbbe] hover:bg-[#32363f] hover:text-white transition-all border-l-4 border-transparent hover:border-[#5865F2];
   }
   
   .sidebar-item.active {
-    @apply bg-dark-hover text-text-primary border-discord;
+    @apply bg-[#32363f] text-white border-[#5865F2];
   }
 }
