@@ -119,6 +119,13 @@ app.get('/commands', (req, res) => {
     });
 });
 
+// Terms & Privacy combined page
+app.get('/privacy', (req, res) => {
+    res.render('privacy', {
+        title: 'Terms & Privacy'
+    });
+});
+
 // Error handling
 app.use((req, res) => {
     res.status(404).render('error', {
