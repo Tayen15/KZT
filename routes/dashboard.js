@@ -383,6 +383,18 @@ router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureBotInGuild, ensu
             });
         }
 
+        // Get Discord guild data for channels
+        const discordGuild = client?.guilds?.cache.get(guild.guildId);
+        let channels = [];
+
+        if (discordGuild) {
+            // Get text channels only (type 0 = GUILD_TEXT)
+            channels = discordGuild.channels.cache
+                .filter(ch => ch.type === 0)
+                .map(ch => ({ id: ch.id, name: ch.name, position: ch.position }))
+                .sort((a, b) => a.position - b.position);
+        }
+
         // Get user's admin guilds for server switcher dropdown
         const adminGuilds = req.user.guilds.filter(g => g.isAdmin).map(g => {
             const guildData = g.guild;
@@ -403,6 +415,7 @@ router.get('/guild/:guildId/prayer', ensureAuthenticated, ensureBotInGuild, ensu
             user: req.user,
             guild,
             prayerTimes,
+            channels,
             guilds: adminGuilds
         });
     } catch (error) {
