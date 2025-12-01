@@ -123,6 +123,73 @@ Write self-documenting code with clear variable names and minimal inline comment
 
 Use concise single-line descriptions for simple changes, combine multiple related edits into one descriptive sentence (e.g., "Update Prisma schema for MongoDB compatibility, remove unsupported cascade deletes, and add @map annotations for \_id fields"), avoid bullet points or multi-paragraph explanations, prefix with action verbs (Add, Update, Fix, Remove, Refactor), keep messages under 100 characters when possible.
 
+### Version Management & Changelog
+
+**Semantic Versioning** (`package.json` version field follows `MAJOR.MINOR.PATCH` format):
+- **MAJOR** (x.0.0): Breaking changes, major architecture changes, API incompatibilities
+- **MINOR** (0.x.0): New features, enhancements, non-breaking additions
+- **PATCH** (0.0.x): Bug fixes, small improvements, documentation updates
+
+**When to Bump Version:**
+- **Major Update (1.0.0 → 2.0.0)**: 
+  - Database schema breaking changes (require data migration)
+  - Discord.js version upgrade (v13 → v14)
+  - Complete UI/UX redesign
+  - Removal of deprecated features
+  - Change authentication flow (OAuth changes)
+  
+- **Minor Update (1.0.0 → 1.1.0)**:
+  - New dashboard features (welcome message, prayer times, etc.)
+  - New bot commands or handlers
+  - New integrations (music, monitoring)
+  - UI enhancements (new components, galleries)
+  - Database model additions (no breaking changes)
+  
+- **Patch Update (1.0.0 → 1.0.1)**:
+  - Bug fixes (canvas rendering, EJS syntax)
+  - Performance improvements
+  - Security patches
+  - Documentation updates
+  - Dependency minor updates
+  - CSS/styling tweaks
+
+**Changelog Format** (document in commit messages or CHANGELOG.md):
+```markdown
+## [1.2.0] - 2025-11-28
+### Added
+- Welcome message feature with canvas image generator
+- Real-time preview using logged-in user data
+- Nature anime background gallery (landscape, sakura, forest)
+- Placeholder system for dynamic content ([user.mention], [server.name])
+
+### Fixed
+- Canvas text rendering with async avatar loading
+- EJS syntax errors causing page unresponsiveness
+- Overlay opacity slider real-time updates
+
+### Changed
+- Simplified [user.mention] placeholder to @username styling
+- Updated TailwindCSS color picker patterns
+```
+
+**Version Update Workflow:**
+1. Determine change type (major/minor/patch)
+2. Update `package.json` version field
+3. Document changes in commit message or CHANGELOG.md
+4. Tag git commit: `git tag v1.2.0`
+5. Push with tags: `git push --tags`
+6. Deploy to Heroku (triggers auto-build)
+
+**Example Version History:**
+- `v1.0.0` - Initial release with bot commands + basic dashboard
+- `v1.1.0` - Added prayer times feature + guild settings
+- `v1.2.0` - Welcome message feature with canvas generator
+- `v1.2.1` - Fixed canvas rendering bugs
+- `v2.0.0` - Migrated PostgreSQL → MongoDB (breaking)
+
+**Deprecation Notice:**
+When removing features, mark as deprecated for 1 minor version before removal in next major version. Document in commit message and console warnings.
+
 ## Web Design Guidelines
 
 ### Color Palette (Discord-Inspired Dark Theme)
