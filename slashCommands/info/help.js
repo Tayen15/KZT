@@ -55,8 +55,8 @@ module.exports = {
         { name: 'category', type: 'STRING', required: false, description: '(Optional) Category to view commands' }
     ],
     async execute(interaction) {
-        const config = require('../../config.json'); 
-        const isOwner = interaction.user.id === config.ownerId;
+        const ownerID = process.env.OWNER_ID;
+        const isOwner = interaction.user.id === ownerID;
 
         // Filter commands based on authorization
         const authorizedCommands = Array.from(interaction.client.commands.values()).filter(cmd => {

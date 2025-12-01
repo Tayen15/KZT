@@ -1,4 +1,4 @@
-const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
+const { EmbedBuilder, SlashCommandBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,6 +19,6 @@ module.exports = {
             ].join('\n'))
             .setTimestamp();
 
-        await interaction.editReply({ embeds: [pingEmbed] });
+        await interaction.editReply({ embeds: [pingEmbed], flags: MessageFlags.Ephemeral });
     },
 };

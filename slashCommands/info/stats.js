@@ -43,7 +43,7 @@ module.exports = {
                 .setFooter({ text: `Latency: ${Math.round(interaction.client.ws.ping)}ms` })
                 .setTimestamp();
 
-            interaction.reply({ embeds: [statsEmbed] });
+            interaction.reply({ embeds: [statsEmbed], flags: MessageFlags.Ephemeral });
         });
     },
 };

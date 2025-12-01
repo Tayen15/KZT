@@ -1,6 +1,6 @@
 const { Events, MessageFlags } = require('discord.js');
 const cfg = (() => { try { return require('../config.json'); } catch { return {}; } })();
-const OWNER_ID = process.env.OWNER_ID || cfg.ownerId;
+const OWNER_ID = process.env.OWNER_ID;
 const { checkCommandEnabled } = require('../middleware/commandToggle'); 
 
 module.exports = {

@@ -1,4 +1,5 @@
-const { prefix, ownerID } = require('../config');
+const { prefix } = require('../config');
+const ownerID = process.env.OWNER_ID;
 const { Events } = require('discord.js');
 
 module.exports = {
