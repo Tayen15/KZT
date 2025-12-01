@@ -863,3 +863,270 @@ resetBtn.addEventListener("click", () => {
 - **Color Picker Updates**: Throttle canvas updates during color picker drag
 - **Preview Rendering**: Only update visible preview sections (hide canvas when useCustomImage is false)
 - **Form Submission**: Disable save button during API request to prevent duplicate submissions
+
+## Dashboard Feature Development Pattern (Full-Stack Workflow)
+
+### When Adding New Dashboard Features
+
+**CRITICAL**: Every dashboard feature must follow this complete flow - Web → Database → API → Discord Bot. Never implement only web UI without backend integration.
+
+### 1. Database Layer (Prisma Schema)
+
+**Pattern**: Create/update model in `prisma/schema.prisma`
+```prisma
+model FeatureName {
+  id        String   @id @default(uuid()) @map("_id")
+  guildId   String   @unique
+  enabled   Boolean  @default(false)
+  // ... feature-specific fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+**After schema changes**:
+```bash
+npx prisma db push      # Push to MongoDB
+npx prisma generate     # Regenerate Prisma client
+```
+
+### 2. Dashboard Route (GET - Display Form)
+
+**Pattern**: `routes/dashboard.js` - fetch Discord data + database settings
+
+```javascript
+router.get('/guild/:guildId/feature', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
+    const guild = req.currentGuild;
+    const client = req.discordClient;
+    
+    // Get or create database record
+    let settings = await prisma.featureName.findFirst({ where: { guildId: guild.id } });
+    if (!settings) {
+        settings = await prisma.featureName.create({ data: { guildId: guild.id } });
+    }
+    
+    // Fetch Discord data (channels, roles, etc)
+    const discordGuild = client?.guilds?.cache.get(guild.guildId);
+    let channels = [];
+    if (discordGuild) {
+        channels = discordGuild.channels.cache
+            .filter(ch => ch.type === 0) // Text channels only
+            .map(ch => ({ id: ch.id, name: ch.name, position: ch.position }))
+            .sort((a, b) => a.position - b.position);
+    }
+    
+    res.render('dashboard/feature', { guild, settings, channels, guilds: adminGuilds, user: req.user });
+});
+```
+
+### 3. API Route (POST - Save Settings)
+
+**Pattern**: `routes/api.js` - validate, save to DB, return JSON
+
+```javascript
+router.post('/guild/:guildId/feature', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    const { guildId } = req.params;
+    const { enabled, channelId, ...otherFields } = req.body;
+    
+    try {
+        // Validate Discord resources exist
+        const client = req.discordClient;
+        const discordGuild = client?.guilds?.cache.get(guildId);
+        if (channelId && !discordGuild?.channels?.cache.has(channelId)) {
+            return res.status(400).json({ success: false, message: 'Channel not found' });
+        }
+        
+        // Update database
+        await prisma.featureName.upsert({
+            where: { guildId },
+            update: { enabled: enabled === 'true', channelId, ...otherFields },
+            create: { guildId, enabled: enabled === 'true', channelId, ...otherFields }
+        });
+        
+        res.json({ success: true, message: 'Settings saved successfully' });
+    } catch (error) {
+        console.error('❌ Error saving settings:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+```
+
+### 4. Discord Bot Integration (Handler)
+
+**Pattern**: Create handler in `handlers/featureName.js` - listen to DB, execute Discord actions
+
+```javascript
+const { prisma } = require('../utils/database');
+
+async function setupFeature(client) {
+    const allSettings = await prisma.featureName.findMany({ where: { enabled: true } });
+    
+    allSettings.forEach(settings => {
+        const guild = client.guilds.cache.get(settings.guildId);
+        if (!guild) return;
+        
+        const channel = guild.channels.cache.get(settings.channelId);
+        if (!channel) return;
+        
+        // Execute Discord bot logic
+        // e.g., send message, create event listener, etc.
+    });
+}
+
+module.exports = { setupFeature };
+```
+
+**Load handler in `bot.js` or `index.js`**:
+```javascript
+const { setupFeature } = require('./handlers/featureName');
+client.once('ready', () => {
+    setupFeature(client);
+});
+```
+
+### 5. EJS View (Consistent UI Pattern)
+
+**Layout Structure** (3-column grid):
+```html
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left: Form (col-span-2) -->
+    <div class="lg:col-span-2">
+        <form action="/api/guild/<%= guild.guildId %>/feature" method="POST">
+            <!-- Form cards here -->
+        </form>
+    </div>
+    
+    <!-- Right: Info Panel (col-span-1) -->
+    <div class="lg:col-span-1">
+        <div class="sticky top-24">
+            <!-- Status, preview, or info -->
+        </div>
+    </div>
+</div>
+```
+
+**Form Card Pattern**:
+```html
+<div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-xl p-6 hover:border-[#5865F2]/50 transition-all duration-300">
+    <div class="flex items-center gap-3 mb-4">
+        <div class="p-2 bg-[#5865F2]/10 rounded-lg">
+            <svg class="w-5 h-5 text-[#5865F2]">...</svg>
+        </div>
+        <div>
+            <h2 class="text-lg font-semibold">Section Title</h2>
+            <p class="text-[#b9bbbe] text-sm">Description</p>
+        </div>
+    </div>
+    <!-- Form inputs -->
+</div>
+```
+
+**Channel Dropdown Pattern** (ALWAYS use dropdown, NEVER manual input):
+```html
+<select id="channelSelect" name="channelId" required class="w-full bg-[#23272f] border border-[#3a3f4b] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#5865F2] focus:ring-2 focus:ring-[#5865F2]/20 transition-all">
+    <option value="">Loading channels...</option>
+</select>
+
+<script>
+const channelsData = JSON.parse('<%- JSON.stringify(channels) %>');
+function loadChannels() {
+    const select = document.getElementById('channelSelect');
+    select.innerHTML = '<option value="">Select a text channel...</option>';
+    channelsData.forEach(ch => {
+        const opt = document.createElement('option');
+        opt.value = ch.id;
+        opt.textContent = `# ${ch.name}`;
+        if ('<%= settings.channelId || "" %>' === ch.id) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+document.addEventListener('DOMContentLoaded', loadChannels);
+</script>
+```
+
+**Save CTA Pattern** (Floating, NEVER static button):
+```html
+<!-- Inside form, after all cards -->
+<div id="saveCtaAlert" class="fixed bottom-6 right-6 z-50 bg-[#2b2f38] text-white px-3 py-2 rounded-lg shadow-lg border border-[#3a3f4b] flex items-center gap-3 text-sm font-semibold transition-all duration-300 opacity-0 pointer-events-none">
+    <span>Unsaved changes detected</span>
+    <div class="flex gap-2">
+        <button type="button" id="resetBtn" class="px-2 py-1 hover:underline">Reset</button>
+        <button type="submit" id="saveBtn" class="bg-[#23272f] text-[#5865F2] px-3 py-1 rounded-md hover:bg-[#5865F2] hover:text-white transition-colors">Save Settings</button>
+    </div>
+</div>
+
+<script>
+const form = document.querySelector('form');
+const saveCta = document.getElementById('saveCtaAlert');
+let initialFormState = new FormData(form);
+
+function formChanged() {
+    const current = new FormData(form);
+    for (let [key, value] of initialFormState.entries()) {
+        if (current.get(key) !== value) return true;
+    }
+    return false;
+}
+
+form.addEventListener('input', () => {
+    if (formChanged()) {
+        saveCta.classList.remove('opacity-0', 'pointer-events-none');
+    } else {
+        saveCta.classList.add('opacity-0', 'pointer-events-none');
+    }
+});
+
+saveBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const urlParams = new URLSearchParams();
+    for (let [key, value] of formData.entries()) urlParams.append(key, value);
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: urlParams,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            saveCta.classList.add('bg-[#57F287]');
+            saveBtn.textContent = '✓ Saved!';
+            setTimeout(() => {
+                saveCta.classList.remove('bg-[#57F287]');
+                saveCta.classList.add('bg-[#2b2f38]');
+                saveBtn.textContent = 'Save Settings';
+            }, 2000);
+        }
+    });
+});
+</script>
+```
+
+### Design Consistency Checklist
+
+✅ **Database**: Model created with `@map("_id")`, proper field types
+✅ **GET Route**: Fetches Discord data (channels/roles) + database settings
+✅ **POST Route**: Validates Discord resources, saves to DB, returns JSON
+✅ **Bot Handler**: Reads DB settings, executes Discord actions
+✅ **UI Layout**: 3-column grid (form left, info right)
+✅ **Form Cards**: Icon + title + description pattern
+✅ **Channel Input**: Dropdown with `JSON.parse()`, never manual input
+✅ **Save CTA**: Floating bottom-right, change detection, success/error feedback
+✅ **EJS Data**: Pass `channels`, `roles`, `guilds`, `user`, `settings`
+
+### Common Mistakes to Avoid
+
+❌ **Don't**: Create web UI without API endpoint
+❌ **Don't**: Create API endpoint without bot handler
+❌ **Don't**: Use manual text input for Discord IDs (channels, roles, users)
+❌ **Don't**: Use static submit buttons instead of floating Save CTA
+❌ **Don't**: Forget to validate Discord resources exist before saving
+❌ **Don't**: Forget `JSON.parse()` wrapper for EJS arrays in JavaScript
+❌ **Don't**: Create new inconsistent card/button styles
+
+✅ **Do**: Follow complete flow (DB → Route → API → Handler)
+✅ **Do**: Use dropdowns for all Discord resource selectors
+✅ **Do**: Validate on both frontend and backend
+✅ **Do**: Reuse existing card/button patterns
+✅ **Do**: Test full flow from web form to Discord bot action
+
+
