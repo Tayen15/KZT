@@ -1,7 +1,25 @@
+<!-- Hamburger Menu Button (Mobile Only) -->
+<button id="mobileSidebarToggle" class="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#2b2f38] border border-[#3a3f4b] rounded-lg hover:border-[#5865F2] transition-all">
+    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+</button>
+
+<!-- Mobile Overlay -->
+<div id="mobileOverlay" class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
 <!-- Full Dashboard Sidebar for Guild Pages -->
 <aside
-  class="w-64 bg-[#23272f] border-r border-[#3a3f4b] flex-shrink-0 flex flex-col h-screen fixed left-0 top-0"
+  class="w-64 bg-[#23272f] border-r border-[#3a3f4b] flex-shrink-0 flex flex-col h-screen fixed left-0 top-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out"
+  id="dashboardSidebar"
 >
+  <!-- Close Button (Mobile Only) -->
+  <button id="closeSidebarBtn" class="lg:hidden absolute top-4 right-4 p-2 text-[#b9bbbe] hover:text-white transition-colors z-10">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </button>
+
   <!-- Bot Logo/Header -->
   <div class="p-4 border-b border-[#3a3f4b]">
     <a
@@ -405,3 +423,50 @@
     </div>
   </div>
 </aside>
+
+<!-- Mobile Sidebar Toggle Script -->
+<script>
+  // Mobile sidebar toggle
+  const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+  const dashboardSidebar = document.getElementById('dashboardSidebar');
+  const mobileOverlay = document.getElementById('mobileOverlay');
+  const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+  function openMobileSidebar() {
+    dashboardSidebar.classList.remove('-translate-x-full');
+    mobileOverlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent scroll
+  }
+
+  function closeMobileSidebar() {
+    dashboardSidebar.classList.add('-translate-x-full');
+    mobileOverlay.classList.add('hidden');
+    document.body.style.overflow = ''; // Restore scroll
+  }
+
+  if (mobileSidebarToggle) {
+    mobileSidebarToggle.addEventListener('click', openMobileSidebar);
+  }
+
+  if (closeSidebarBtn) {
+    closeSidebarBtn.addEventListener('click', closeMobileSidebar);
+  }
+
+  if (mobileOverlay) {
+    mobileOverlay.addEventListener('click', closeMobileSidebar);
+  }
+
+  // Close sidebar on ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !dashboardSidebar.classList.contains('-translate-x-full')) {
+      closeMobileSidebar();
+    }
+  });
+
+  // Close sidebar when switching to desktop view
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1024) { // lg breakpoint
+      closeMobileSidebar();
+    }
+  });
+</script>

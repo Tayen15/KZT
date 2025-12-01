@@ -13,7 +13,7 @@
         <%- include('../partials/dashboard-sidebar', { guild, currentPage, user, guilds }) %>
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto ml-64">
+        <main class="flex-1 overflow-y-auto ml-0 lg:ml-64 transition-all duration-300">
             <!-- Sticky Top Bar -->
             <div class="sticky top-0 z-10 bg-[#23272f]/95 backdrop-blur-sm border-b border-[#3a3f4b] px-8 py-4">
                 <div class="flex items-center justify-between">
@@ -102,7 +102,7 @@
     </div>
 
     <!-- Add/Edit Rule Modal -->
-    <div id="ruleModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div id="ruleModal" class="fixed inset-0 bg-black/50 items-center justify-center z-50 p-4" style="display: none;">
         <div class="bg-[#2b2f38] border border-[#3a3f4b] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div class="sticky top-0 bg-[#2b2f38] border-b border-[#3a3f4b] p-6">
                 <div class="flex items-center justify-between">
@@ -160,11 +160,11 @@
             document.getElementById('modalTitle').textContent = 'Add New Rule';
             document.getElementById('ruleForm').reset();
             document.getElementById('ruleId').value = '';
-            document.getElementById('ruleModal').classList.remove('hidden');
+            document.getElementById('ruleModal').style.display = 'flex';
         }
 
         function closeRuleModal() {
-            document.getElementById('ruleModal').classList.add('hidden');
+            document.getElementById('ruleModal').style.display = 'none';
         }
 
         function editRule(ruleId) {
@@ -176,7 +176,7 @@
                     document.getElementById('ruleId').value = rule.id;
                     document.getElementById('ruleTitle').value = rule.title;
                     document.getElementById('ruleDescription').value = rule.description;
-                    document.getElementById('ruleModal').classList.remove('hidden');
+                    document.getElementById('ruleModal').style.display = 'flex';
                 })
                 .catch(err => alert('Failed to load rule'));
         }

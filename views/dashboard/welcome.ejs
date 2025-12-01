@@ -104,7 +104,7 @@
         <% const currentPage='welcome' ; %>
             <%- include('../partials/dashboard-sidebar', { guild, currentPage, user, guilds }) %>
 
-                <main class="flex-1 overflow-y-auto ml-64">
+                <main class="flex-1 overflow-y-auto ml-0 lg:ml-64 transition-all duration-300">
                     <!-- Top Bar -->
                     <div class="sticky top-0 z-10 bg-[#23272f]/95 backdrop-blur-sm border-b border-[#3a3f4b] px-8 py-4">
                         <div class="flex items-center justify-between">
@@ -1008,7 +1008,7 @@
                                                     </div>
                                                     <div>
                                                         <label
-                                                            class="block text-sm font-medium mb-2 flex items-center justify-between">
+                                                            class="flex items-center justify-between text-sm font-medium mb-2">
                                                             <span>Overlay Opacity</span>
                                                             <span class="text-[#5865F2] font-bold"
                                                                 id="overlayOpacityValue">
@@ -1090,8 +1090,8 @@
         const guildId = '<%= guild.guildId %>';
 
         // Server-side data
-        const channelsData = (<% - JSON.stringify(channels || []) %>);
-        const rolesData = (<% - JSON.stringify(roles || []) %>);
+        const channelsData = JSON.parse('<%- JSON.stringify(channels || []) %>');
+        const rolesData = JSON.parse('<%- JSON.stringify(roles || []) %>');
         const guildData = {
             name: '<%= guild.name %>',
             memberCount: <%= guild.memberCount || 1234 %>
