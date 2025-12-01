@@ -1107,10 +1107,11 @@ saveBtn.addEventListener('click', (e) => {
 ✅ **GET Route**: Fetches Discord data (channels/roles) + database settings
 ✅ **POST Route**: Validates Discord resources, saves to DB, returns JSON
 ✅ **Bot Handler**: Reads DB settings, executes Discord actions
-✅ **UI Layout**: 3-column grid (form left, info right)
-✅ **Form Cards**: Icon + title + description pattern
-✅ **Channel Input**: Dropdown with `JSON.parse()`, never manual input
-✅ **Save CTA**: Floating bottom-right, change detection, success/error feedback
+✅ **UI Layout**: 3-column grid (form left, info right), responsive with `ml-0 lg:ml-64`
+✅ **Form Cards**: Icon + title + description pattern (use `form-card.ejs` component)
+✅ **Channel Input**: Dropdown with `JSON.parse()`, never manual input (use `channel-dropdown.ejs`)
+✅ **Save CTA**: Floating bottom-right (use `save-cta.ejs` + `save-cta.js`)
+✅ **Status Badge**: Use `status-badge.ejs` component for enabled/disabled states
 ✅ **EJS Data**: Pass `channels`, `roles`, `guilds`, `user`, `settings`
 
 ### Common Mistakes to Avoid
@@ -1122,11 +1123,253 @@ saveBtn.addEventListener('click', (e) => {
 ❌ **Don't**: Forget to validate Discord resources exist before saving
 ❌ **Don't**: Forget `JSON.parse()` wrapper for EJS arrays in JavaScript
 ❌ **Don't**: Create new inconsistent card/button styles
+❌ **Don't**: Hardcode components inline when reusable components exist
 
 ✅ **Do**: Follow complete flow (DB → Route → API → Handler)
 ✅ **Do**: Use dropdowns for all Discord resource selectors
 ✅ **Do**: Validate on both frontend and backend
-✅ **Do**: Reuse existing card/button patterns
+✅ **Do**: Reuse existing card/button patterns via components
 ✅ **Do**: Test full flow from web form to Discord bot action
+✅ **Do**: Use component includes instead of inline repetitive code
+
+## Modular Component System
+
+### Available Components (`views/components/`)
+
+#### 1. Save CTA (`save-cta.ejs` + `public/js/components/save-cta.js`)
+**Purpose**: Floating save alert with unsaved changes detection
+
+**Usage**:
+```ejs
+<!-- Inside form tag -->
+<%- include('../components/save-cta') %>
+
+<!-- After closing form tag -->
+<script src="/js/components/save-cta.js"></script>
+```
+
+**Features**:
+- Detects FormData changes
+- Shows floating alert when unsaved
+- Reset button restores initial values
+- Save button submits via fetch API
+- Visual feedback (green=success, red=error)
+- Warns before leaving page
+
+**Requirements**: Form must have `action` attribute for POST URL
+
+---
+
+#### 2. Channel Dropdown (`channel-dropdown.ejs`)
+**Purpose**: Discord channel selector with auto-population
+
+**Usage**:
+```ejs
+<%- include('../components/channel-dropdown', { 
+    channels: channels, 
+    selectedChannelId: settings.channelId || '', 
+    fieldName: 'channelId' 
+}) %>
+```
+
+**Parameters**:
+- `channels` (required): Array of channel objects from Discord API
+- `selectedChannelId` (optional): Pre-selected channel ID
+- `fieldName` (optional): Form input name (default: `channelId`)
+
+**Features**:
+- Self-contained (inline script)
+- Category grouping with optgroups
+- JSON.parse() wrapper for EJS arrays
+- Pre-selection support
+
+**Route Requirements**: Pass `channels` array from Discord API:
+```javascript
+const channels = discordGuild.channels.cache
+    .filter(ch => ch.type === 0)
+    .map(ch => ({ id: ch.id, name: ch.name, position: ch.position }))
+    .sort((a, b) => a.position - b.position);
+```
+
+---
+
+#### 3. Status Badge (`status-badge.ejs`)
+**Purpose**: Visual indicator for enabled/disabled states
+
+**Usage**:
+```ejs
+<%- include('../components/status-badge', { 
+    enabled: settings.enabled, 
+    enabledText: 'Active', 
+    disabledText: 'Inactive' 
+}) %>
+```
+
+**Parameters**:
+- `enabled` (required): Boolean state
+- `enabledText` (optional): Custom label for enabled (default: "Enabled")
+- `disabledText` (optional): Custom label for disabled (default: "Disabled")
+
+**Features**:
+- Green badge with checkmark (enabled)
+- Gray badge with X (disabled)
+- Inline component (no external deps)
+
+---
+
+#### 4. Form Card (`form-card.ejs`)
+**Purpose**: Consistent card layout for form sections
+
+**Usage**:
+```ejs
+<%- include('../components/form-card', { 
+    icon: '<svg class="w-5 h-5 text-[#5865F2]">...</svg>', 
+    title: 'Section Title', 
+    description: 'Optional description',
+    content: '<div class="space-y-3"><!-- Form inputs here --></div>'
+}) %>
+```
+
+**Parameters**:
+- `icon` (required): SVG icon HTML string
+- `title` (required): Card heading
+- `description` (optional): Subtitle text
+- `content` (required): HTML content for card body
+
+**Features**:
+- Icon with blurple background
+- Hover border effect
+- Consistent spacing
+
+---
+
+### Component Development Guidelines
+
+**When to Create a Component**:
+- Code appears in 3+ dashboard pages
+- Pattern is visually/functionally consistent
+- Reduces inline code by >30 lines
+
+**When NOT to Create a Component**:
+- Feature-specific logic (e.g., canvas preview)
+- One-time use UI
+- Tightly coupled to single page
+
+**Component File Structure**:
+```
+views/components/
+├── component-name.ejs        # HTML template
+public/js/components/
+├── component-name.js         # JavaScript logic (if needed)
+```
+
+**Component Template Pattern**:
+```ejs
+<!-- Component Name -->
+<!-- Usage: <%- include('../components/name', { param: value }) %> -->
+
+<div class="component-wrapper">
+    <!-- Component HTML -->
+    <% if (typeof optionalParam !== 'undefined' && optionalParam) { %>
+    <!-- Optional content -->
+    <% } %>
+</div>
+
+<% if (typeof inlineScript !== 'undefined' && inlineScript) { %>
+<script>
+    // Self-contained JavaScript (no external deps)
+</script>
+<% } %>
+```
+
+**Naming Conventions**:
+- Files: `kebab-case.ejs` (e.g., `save-cta.ejs`)
+- Parameters: `camelCase` (e.g., `selectedChannelId`)
+- CSS classes: Tailwind utility classes only
+
+---
+
+### Responsive Design Patterns
+
+**Mobile Sidebar** (`dashboard-sidebar.ejs`):
+- Hidden on mobile: `transform -translate-x-full lg:translate-x-0`
+- Hamburger button: `lg:hidden` (visible mobile only)
+- Close button: Inside sidebar, `lg:hidden`
+- Overlay: `lg:hidden`, click to close
+- ESC key closes sidebar
+
+**Main Content Area**:
+```html
+<main class="flex-1 overflow-y-auto ml-0 lg:ml-64 transition-all duration-300">
+```
+- Mobile: `ml-0` (full width)
+- Desktop: `lg:ml-64` (256px left margin for sidebar)
+- Smooth transition on resize
+
+**Breakpoints**:
+- Mobile: `< 1024px` (lg breakpoint)
+- Desktop: `>= 1024px`
+
+**Grid Layouts**:
+```html
+<!-- 3-column responsive grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Form cards (2/3 on desktop) -->
+    <div class="lg:col-span-2">
+        <!-- Forms -->
+    </div>
+    
+    <!-- Info panel (1/3 on desktop) -->
+    <div class="lg:col-span-1">
+        <div class="sticky top-24">
+            <!-- Sticky info content -->
+        </div>
+    </div>
+</div>
+```
+
+**Testing Responsive Design**:
+1. Open DevTools responsive mode
+2. Test breakpoints: 375px, 768px, 1024px, 1440px
+3. Verify hamburger menu works
+4. Check sidebar slide animation
+5. Ensure content doesn't overflow
+
+---
+
+### Migration to Components
+
+**Before** (Inline Code):
+```html
+<div id="saveCtaAlert" class="fixed bottom-6...">
+    <span>Unsaved changes</span>
+    <button id="saveBtn">Save</button>
+</div>
+<script>
+    // 100+ lines of inline JavaScript
+    const form = document.querySelector('form');
+    // ...
+</script>
+```
+
+**After** (Component):
+```html
+<%- include('../components/save-cta') %>
+<script src="/js/components/save-cta.js"></script>
+```
+
+**Benefits**:
+- ✅ 120+ lines → 2 lines
+- ✅ Consistent behavior across pages
+- ✅ Easier to maintain/update
+- ✅ Cached by browser (JS file)
+
+**Refactor Checklist**:
+- [ ] Identify repeated code patterns
+- [ ] Extract to component file
+- [ ] Add usage documentation in header comments
+- [ ] Replace inline code with `include()`
+- [ ] Test on all affected pages
+- [ ] Update copilot instructions if new pattern
 
 
