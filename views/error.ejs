@@ -1,87 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> - ByteBot</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>
+        <%= title %> - ByteBot
+    </title>
+    <link rel="stylesheet" href="/css/output.css">
 </head>
-<body class="bg-[#1a1d23] text-white min-h-screen flex items-center justify-center">
-    <div class="container mx-auto px-4">
-        <div class="max-w-2xl mx-auto text-center">
-            <!-- Error Icon -->
-            <div class="mb-8 inline-block">
-                <div class="w-24 h-24 bg-[#2b2f38] border-4 border-[#ED4245] rounded-full flex items-center justify-center mx-auto">
-                    <svg class="w-12 h-12 text-[#ED4245]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
+
+<body class="bg-[#1a1d23] text-text-primary min-h-screen flex flex-col">
+    <%- include('partials/navbar') %>
+
+        <section class="py-24 text-center bg-gradient-to-b from-dark-secondary to-dark-primary">
+
+            <div class="container mx-auto px-4">
+                <div class="max-w-2xl mx-auto text-center">
+                    <!-- Error Icon -->
+                    <div class="mb-8 inline-block">
+                        <div
+                            class="w-24 h-24 bg-[#2b2f38] border-4 border-[#ED4245] rounded-full flex items-center justify-center mx-auto">
+                            <svg class="w-12 h-12 text-[#ED4245]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Error Title -->
+                    <h1 class="text-4xl text-white font-bold mb-4">
+                        <%= title %>
+                    </h1>
+
+                    <!-- Error Message -->
+                    <p class="text-[#b9bbbe] text-lg mb-8 max-w-lg mx-auto">
+                        <%= message %>
+                    </p>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-4 justify-center">
+                        <a href="/"
+                            class="bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 inline-flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            <span>Go Home</span>
+                        </a>
+
+                        <% if (typeof isAuthenticated !=='undefined' && isAuthenticated) { %>
+                            <a href="/dashboard"
+                                class="bg-[#2b2f38] hover:bg-[#3a3f4b] border border-[#3a3f4b] hover:border-[#5865F2] text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 inline-flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <span>Dashboard</span>
+                            </a>
+                            <% } else { %>
+                                <a href="javascript:history.back()"
+                                    class="bg-[#2b2f38] hover:bg-[#3a3f4b] border border-[#3a3f4b] hover:border-[#5865F2] text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 inline-flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                    </svg>
+                                    <span>Go Back</span>
+                                </a>
+                                <% } %>
+                    </div>
+
                 </div>
             </div>
+        </section>
 
-            <!-- Error Title -->
-            <h1 class="text-4xl font-bold mb-4"><%= title %></h1>
-            
-            <!-- Error Message -->
-            <p class="text-[#b9bbbe] text-lg mb-8 max-w-lg mx-auto"><%= message %></p>
-            
-            <!-- Action Buttons -->
-            <div class="flex flex-wrap gap-4 justify-center">
-                <a href="/" 
-                   class="bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 inline-flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    <span>Go Home</span>
-                </a>
-                
-                <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
-                    <a href="/dashboard" 
-                       class="bg-[#2b2f38] hover:bg-[#3a3f4b] border border-[#3a3f4b] hover:border-[#5865F2] text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 inline-flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                        <span>Dashboard</span>
-                    </a>
-                <% } else { %>
-                    <a href="javascript:history.back()" 
-                       class="bg-[#2b2f38] hover:bg-[#3a3f4b] border border-[#3a3f4b] hover:border-[#5865F2] text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 inline-flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                        </svg>
-                        <span>Go Back</span>
-                    </a>
-                <% } %>
-            </div>
-
-            <!-- Additional Help -->
-            <div class="mt-12 p-6 bg-[#2b2f38] border border-[#3a3f4b] rounded-lg max-w-lg mx-auto">
-                <h3 class="text-lg font-bold mb-3 flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5 text-[#5865F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Need Help?
-                </h3>
-                <p class="text-[#b9bbbe] text-sm mb-4">
-                    If you continue to experience issues, please contact us:
-                </p>
-                <div class="flex flex-wrap gap-3 justify-center">
-                    <a href="https://discord.com/invite/your-support-server" target="_blank"
-                       class="text-sm bg-[#5865F2]/20 hover:bg-[#5865F2]/30 text-[#5865F2] px-4 py-2 rounded-lg transition-colors duration-200 inline-flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                        </svg>
-                        Join Support Server
-                    </a>
-                    <a href="https://github.com/yourusername/bytebot/issues" target="_blank"
-                       class="text-sm bg-[#2b2f38] hover:bg-[#3a3f4b] border border-[#3a3f4b] text-[#b9bbbe] hover:text-white px-4 py-2 rounded-lg transition-all duration-200 inline-flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.606 9.606 0 0112 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.203 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48C19.137 20.107 22 16.373 22 11.969 22 6.463 17.522 2 12 2z"/>
-                        </svg>
-                        Report Issue
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+        <%- include('partials/footer') %>
 </body>
+
 </html>
