@@ -1,16 +1,9 @@
 const { Events, ActivityType } = require('discord.js');
-const axios = require('axios');
 const cfg = (() => { try { return require('../config.json'); } catch { return {}; } })();
-const monitorServer = require("../handlers/monitorServer");
-const serverControl = require("../handlers/serverControl");
-const rules = require("../handlers/rules");
 const prayerTime = require("../handlers/prayerTime");
 const lofiReconnect = require("../handlers/lofiReconnect");
 const { initializeCommandToggles } = require('../middleware/commandToggle');
 const prisma = require('../utils/database');
-
-const MC_SERVER_IP = process.env.MC_SERVER_IP || cfg.SERVER_IP;
-const serverStatusURL = `https://api.mcsrvstat.us/3/${MC_SERVER_IP}`;
 
 module.exports = {
     name: Events.ClientReady,
@@ -42,11 +35,9 @@ module.exports = {
         // Initialize command toggles
         await initializeCommandToggles(client.commands);
 
-        // await monitorServer(client);
-        // await serverControl(client);
+        // Start background handlers (prayerTime and lofiReconnect only — others handled in index.js)
         await prayerTime(client);
         await lofiReconnect(client);
-        // await rules.sendRules(client.channels.cache.get(config.RULES_CHANNELID));
 
         async function updatePresence() {
             try {

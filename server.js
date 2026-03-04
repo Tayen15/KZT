@@ -1,13 +1,15 @@
 require('dotenv').config();
 const express = require('express');
+const compression = require('compression');
 const path = require('path');
 const session = require('express-session');
 const passport = require('./middleware/passport');
-const { PrismaClient } = require('@prisma/client');
 const MongoStore = require('connect-mongo');
 
 const app = express();
-const prisma = new PrismaClient();
+
+// Compress all responses to reduce memory/bandwidth usage
+app.use(compression());
 
 const isDev = process.env.NODE_ENV === 'development';
 if (isDev) {
@@ -41,9 +43,9 @@ try {
 }
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
 
 // Session configuration
 app.use(session({

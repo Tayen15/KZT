@@ -41,6 +41,7 @@ model Guild {
   lofiSessions     LofiSession[]
   serverMonitoring ServerMonitoring[]
   WelcomeConfig    WelcomeConfig?
+  socialAlerts     SocialAlert[]
 }
 
 // Guild Member - relationship between users and guilds
@@ -280,4 +281,65 @@ model Session {
   expiresAt DateTime
 
   @@map("sessions")
+}
+
+// Social Media Alert System (YouTube, Twitch, Twitter/X)
+model SocialAlert {
+  id      String @id @default(uuid()) @map("_id")
+  guildId String
+
+  enabled   Boolean @default(false)
+  platform  String // "youtube", "twitch", "twitter", "instagram"
+  channelId String? // Discord channel ID for notifications
+
+  // Account Configuration
+  username   String? // Social media username/handle
+  channelUrl String? // Full URL to channel/profile
+  userId     String? // Platform-specific user ID
+
+  // Notification Settings
+  notifyLive   Boolean @default(true) // For Twitch/YouTube live streams
+  notifyVideo  Boolean @default(true) // For YouTube videos
+  notifyPost   Boolean @default(true) // For Twitter/Instagram posts
+  customRole   String? // Role ID to mention (@everyone, @role)
+  customEmbed  Boolean @default(true) // Use custom embed or simple message
+
+  // Message Templates
+  liveMessage  String? // Template for live notification
+  videoMessage String? // Template for video notification
+  postMessage  String? // Template for post notification
+
+  // Embed Customization
+  embedColor   String  @default("#5865F2")
+  embedTitle   String?
+  showThumbnail Boolean @default(true)
+  showAuthor    Boolean @default(true)
+
+  // Polling Configuration
+  checkInterval Int @default(5) // Minutes between checks
+  lastChecked   DateTime?
+  lastContentId String? // Last video/stream/post ID to prevent duplicates
+
+  // Statistics
+  totalAlerts   Int @default(0)
+  lastAlertDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild Guild @relation(fields: [guildId], references: [id])
+}
+
+// Feature Toggle (Admin control for dashboard features)
+model FeatureToggle {
+  id          String  @id @default(uuid()) @map("_id")
+  featureKey  String  @unique // "prayer_times", "welcome_message", "social_alerts", etc
+  enabled     Boolean @default(true)
+  name        String // Display name
+  description String // What this feature does
+  category    String // "dashboard", "bot", "integration"
+  icon        String? // Icon class or emoji
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

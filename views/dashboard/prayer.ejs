@@ -54,7 +54,7 @@
     <div class="flex h-screen overflow-hidden">
         <!-- Dashboard Sidebar -->
         <% const currentPage='prayer' ; %>
-        <%- include('../partials/dashboard-sidebar', { guild, currentPage, user, guilds }) %>
+        <%- include('../partials/dashboard-sidebar', { guild, currentPage, user, guilds, featureStates }) %>
 
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto ml-0 lg:ml-64 transition-all duration-300">

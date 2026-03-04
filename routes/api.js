@@ -1270,4 +1270,231 @@ router.get('/owner/servers', ensureAuthenticated, ensureBotOwner, async (req, re
     }
 });
 
+// ===== Social Alert API =====
+
+// Guard: normalize check interval into safe presets (minutes)
+function normalizeCheckInterval(body) {
+    try {
+        const speed = (body?.checkIntervalSpeed || '').toString().toLowerCase();
+        if (speed === 'fast') return 5;
+        if (speed === 'slow') return 15;
+
+        const raw = parseInt(body?.checkInterval, 10);
+        if (Number.isFinite(raw)) {
+            // Any value <= 7 minutes counts as fast; otherwise slow
+            return raw <= 7 ? 5 : 15;
+        }
+        // Default to slow to reduce rate-limit risk
+        return 15;
+    } catch {
+        return 15;
+    }
+}
+
+// Create new social alert
+router.post('/guild/:guildId/social-alert', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    try {
+        const { guildId } = req.params;
+        const { platform, username, channelUrl, channelId, notifyLive, notifyVideo, notifyPost, customRole, embedColor } = req.body;
+
+        const safeInterval = normalizeCheckInterval(req.body);
+
+        const guild = await prisma.guild.findUnique({ where: { guildId } });
+        if (!guild) {
+            return res.status(404).json({ success: false, message: 'Guild not found' });
+        }
+
+        // Validate channel exists
+        const client = req.discordClient;
+        const discordGuild = client?.guilds?.cache.get(guildId);
+        if (channelId && !discordGuild?.channels?.cache.has(channelId)) {
+            return res.status(400).json({ success: false, message: 'Channel not found' });
+        }
+
+        const alert = await prisma.socialAlert.create({
+            data: {
+                guildId: guild.id,
+                platform,
+                username: username || null,
+                channelUrl: channelUrl || null,
+                channelId: channelId || null,
+                notifyLive: notifyLive === 'true',
+                notifyVideo: notifyVideo === 'true',
+                notifyPost: notifyPost === 'true',
+                customRole: customRole || null,
+                embedColor: embedColor || '#5865F2',
+                checkInterval: safeInterval
+            }
+        });
+
+        // Reload guild alerts to start monitoring
+        try {
+            const { reloadGuildAlerts } = require('../handlers/socialAlert');
+            reloadGuildAlerts(client, guild.id);
+        } catch (e) {
+            console.warn('⚠️  Failed to reload guild alerts after create:', e.message);
+        }
+
+        res.json({ success: true, message: 'Social alert created successfully', alert });
+    } catch (error) {
+        console.error('❌ Error creating social alert:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// Update social alert
+router.put('/guild/:guildId/social-alert/:alertId', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    try {
+        const { guildId, alertId } = req.params;
+        const { enabled, platform, username, channelUrl, channelId, notifyLive, notifyVideo, notifyPost, customRole, embedColor } = req.body;
+
+        const safeInterval = normalizeCheckInterval(req.body);
+
+        const guild = await prisma.guild.findUnique({ where: { guildId } });
+        if (!guild) {
+            return res.status(404).json({ success: false, message: 'Guild not found' });
+        }
+
+        // Validate channel exists
+        const client = req.discordClient;
+        const discordGuild = client?.guilds?.cache.get(guildId);
+        if (channelId && !discordGuild?.channels?.cache.has(channelId)) {
+            return res.status(400).json({ success: false, message: 'Channel not found' });
+        }
+
+        const alert = await prisma.socialAlert.update({
+            where: { id: alertId },
+            data: {
+                enabled: enabled === 'true',
+                platform,
+                username: username || null,
+                channelUrl: channelUrl || null,
+                channelId: channelId || null,
+                notifyLive: notifyLive === 'true',
+                notifyVideo: notifyVideo === 'true',
+                notifyPost: notifyPost === 'true',
+                customRole: customRole || null,
+                embedColor: embedColor || '#5865F2',
+                checkInterval: safeInterval
+            }
+        });
+
+        // Reload guild alerts to update monitoring
+        try {
+            const { reloadGuildAlerts } = require('../handlers/socialAlert');
+            reloadGuildAlerts(client, guild.id);
+        } catch (e) {
+            console.warn('⚠️  Failed to reload guild alerts after update:', e.message);
+        }
+
+        res.json({ success: true, message: 'Social alert updated successfully', alert });
+    } catch (error) {
+        console.error('❌ Error updating social alert:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// Delete social alert
+router.delete('/guild/:guildId/social-alert/:alertId', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    try {
+        const { alertId } = req.params;
+
+        // Get alert before deleting
+        const alert = await prisma.socialAlert.findUnique({ where: { id: alertId } });
+        if (!alert) {
+            return res.status(404).json({ success: false, message: 'Alert not found' });
+        }
+
+        // Stop monitoring for this alert
+        try {
+            const { stopMonitoring } = require('../handlers/socialAlert');
+            stopMonitoring(alertId);
+        } catch (e) {
+            console.warn('⚠️  Failed to stop monitoring before delete:', e.message);
+        }
+
+        await prisma.socialAlert.delete({ where: { id: alertId } });
+        res.json({ success: true, message: 'Social alert deleted successfully' });
+    } catch (error) {
+        console.error('❌ Error deleting social alert:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// Toggle social alert
+router.patch('/guild/:guildId/social-alert/:alertId/toggle', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
+    try {
+        const { guildId, alertId } = req.params;
+        const { enabled } = req.body;
+
+        const alert = await prisma.socialAlert.update({
+            where: { id: alertId },
+            data: { enabled: enabled === 'true' }
+        });
+
+        // Reload guild alerts to start/stop monitoring
+        try {
+            const client = req.discordClient;
+            const guild = await prisma.guild.findFirst({ where: { guildId } });
+            if (guild) {
+                const { reloadGuildAlerts } = require('../handlers/socialAlert');
+                reloadGuildAlerts(client, guild.id);
+            }
+        } catch (e) {
+            console.warn('⚠️  Failed to reload guild alerts after toggle:', e.message);
+        }
+
+        res.json({ success: true, message: `Social alert ${alert.enabled ? 'enabled' : 'disabled'}`, alert });
+    } catch (error) {
+        console.error('❌ Error toggling social alert:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// ===== Feature Toggle API (Owner Only) =====
+
+// Toggle feature on/off
+router.patch('/owner/features/:featureKey/toggle', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const { featureKey } = req.params;
+        const { enabled } = req.body;
+
+        const feature = await prisma.featureToggle.update({
+            where: { featureKey },
+            data: { enabled: enabled === true || enabled === 'true' }
+        });
+
+        res.json({ 
+            success: true, 
+            message: `${feature.name} ${feature.enabled ? 'enabled' : 'disabled'}`,
+            feature 
+        });
+    } catch (error) {
+        console.error('❌ Error toggling feature:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// Update feature details
+router.put('/owner/features/:featureKey', ensureAuthenticated, ensureBotOwner, async (req, res) => {
+    try {
+        const { featureKey } = req.params;
+        const { name, description, category, icon } = req.body;
+
+        const feature = await prisma.featureToggle.update({
+            where: { featureKey },
+            data: { name, description, category, icon }
+        });
+
+        res.json({ 
+            success: true, 
+            message: 'Feature updated successfully',
+            feature 
+        });
+    } catch (error) {
+        console.error('❌ Error updating feature:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
 module.exports = router;
