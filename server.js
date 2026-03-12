@@ -47,7 +47,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'An unexpected error occurred.' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`🌐 Bot API server running on port ${PORT}`));
 
 module.exports = app;
