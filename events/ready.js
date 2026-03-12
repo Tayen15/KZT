@@ -31,12 +31,6 @@ module.exports = {
 
         client.isReady = true;
 
-<<<<<<< HEAD
-=======
-        // Initialize command toggles
-        await initializeCommandToggles(client.commands);
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
-
         // Start background handlers (prayerTime and lofiReconnect only — others handled in index.js)
         await prayerTime(client);
         await lofiReconnect(client);
