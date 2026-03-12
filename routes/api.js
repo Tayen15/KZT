@@ -4,6 +4,25 @@ const { ensureAuthenticated, ensureGuildAdmin, ensureBotOwner, ensureBotInGuild 
 const prisma = require('../utils/database');
 const { ActivityType } = require('discord.js');
 
+// ===== Public API =====
+
+router.get('/health', (req, res) => {
+    const client = req.discordClient;
+    if (!client) {
+        return res.status(503).json({
+            status: 'offline',
+            message: 'Discord client not initialized'
+        });
+    }
+
+    res.json({
+        status: client.isReady() ? 'online' : 'offline',
+        uptime: client.uptime,
+        ping: client.ws.ping,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // ===== Owner API =====
 
 // Send announcement to all guilds or specific guild
