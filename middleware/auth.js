@@ -104,12 +104,7 @@ function ensureBotInGuild(req, res, next) {
 
 module.exports = {
     ensureAuthenticated,
-<<<<<<< HEAD
     ensureBotOwner,
     ensureGuildAdmin,
-=======
-    ensureGuildAdmin,
-    ensureBotOwner,
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
     ensureBotInGuild
 };
