@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment Variables
+.env
+.env.example
+.env.local
+.env.production
+.env.development
+
+# Database
+/generated/prisma
+*.db
+*.sqlite
+
+# Documentation (Internal)
+REFACTORING_SUMMARY.md
+MYSQL_SETUP.md
+OWNER_DASHBOARD.md
+COMMAND_TOGGLE_SYSTEM.md
+QUICK_FIX.md
+SETUP.md
+QUICK_START_PM2.md
+
+# PM2 Logs & Runtime
+logs/
+*.log
+.pm2/
+pids/
+
+# Prisma
+prisma/session-model.prisma
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Backup files
+*.sql
+*.backup
+mysql-export.json
