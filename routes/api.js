@@ -158,11 +158,7 @@ router.get('/owner/commands', ensureAuthenticated, ensureBotOwner, async (req, r
             return res.status(503).json({ success: false, error: 'Bot is not connected' });
         }
 
-<<<<<<< HEAD
         const toggles = []; // Feature was removed from source codebase
-=======
-        const toggles = await getAllCommandToggles();
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
 
         // Get all commands from client
         const allCommands = Array.from(client.commands.values()).map(cmd => ({
@@ -205,11 +201,7 @@ router.post('/owner/commands/:commandName/toggle', ensureAuthenticated, ensureBo
         }
 
         const category = command.category || 'other';
-<<<<<<< HEAD
         // await toggleCommand(commandName, enabled, category, reason); (Feature removed)
-=======
-        await toggleCommand(commandName, enabled, category, reason);
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
 
         res.json({
             success: true,
@@ -221,7 +213,6 @@ router.post('/owner/commands/:commandName/toggle', ensureAuthenticated, ensureBo
     }
 });
 
-<<<<<<< HEAD
 // Get bot live stats
 router.get('/owner/stats', ensureAuthenticated, ensureBotOwner, async (req, res) => {
     try {
@@ -257,8 +248,6 @@ router.get('/owner/stats', ensureAuthenticated, ensureBotOwner, async (req, res)
     }
 });
 
-=======
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
 // Get bot settings
 router.get('/owner/settings', ensureAuthenticated, ensureBotOwner, async (req, res) => {
     try {
@@ -891,7 +880,6 @@ router.post('/guild/:guildId/rules', ensureAuthenticated, ensureBotInGuild, ensu
     }
 });
 
-<<<<<<< HEAD
 // Get Welcome Message Settings
 router.get('/guild/:guildId/welcome', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
@@ -906,8 +894,6 @@ router.get('/guild/:guildId/welcome', ensureAuthenticated, ensureBotInGuild, ens
     }
 });
 
-=======
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
 // Save Welcome Message Settings
 router.post('/guild/:guildId/welcome', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
@@ -1135,7 +1121,6 @@ router.get('/guild/:guildId/channels', ensureAuthenticated, ensureBotInGuild, en
     }
 });
 
-<<<<<<< HEAD
 // Get roles for a guild
 router.get('/guild/:guildId/roles', ensureAuthenticated, ensureBotInGuild, ensureGuildAdmin, async (req, res) => {
     try {
@@ -1163,8 +1148,6 @@ router.get('/guild/:guildId/roles', ensureAuthenticated, ensureBotInGuild, ensur
     }
 });
 
-=======
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
 // Get channels for owner dashboard (for specific guild)
 router.get('/owner/guild/:guildId/channels', ensureAuthenticated, ensureBotOwner, async (req, res) => {
     try {
@@ -1366,7 +1349,6 @@ router.get('/owner/servers', ensureAuthenticated, ensureBotOwner, async (req, re
 
 // ===== Social Alert API =====
 
-<<<<<<< HEAD
 // Get social alerts for a guild
 router.get('/guild/:guildId/social-alert', ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
     try {
@@ -1383,8 +1365,6 @@ router.get('/guild/:guildId/social-alert', ensureAuthenticated, ensureGuildAdmin
     }
 });
 
-=======
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
 // Guard: normalize check interval into safe presets (minutes)
 function normalizeCheckInterval(body) {
     try {
@@ -1566,7 +1546,6 @@ router.patch('/guild/:guildId/social-alert/:alertId/toggle', ensureAuthenticated
 
 // ===== Feature Toggle API (Owner Only) =====
 
-<<<<<<< HEAD
 // Get all features
 router.get('/owner/features', ensureAuthenticated, ensureBotOwner, async (req, res) => {
     try {
@@ -1578,8 +1557,6 @@ router.get('/owner/features', ensureAuthenticated, ensureBotOwner, async (req, r
     }
 });
 
-=======
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
 // Toggle feature on/off
 router.patch('/owner/features/:featureKey/toggle', ensureAuthenticated, ensureBotOwner, async (req, res) => {
     try {
@@ -1624,7 +1601,6 @@ router.put('/owner/features/:featureKey', ensureAuthenticated, ensureBotOwner, a
     }
 });
 
-<<<<<<< HEAD
 // Owner: Live active memory logs
 router.get('/owner/logs/live', ensureAuthenticated, ensureBotOwner, (req, res) => {
     res.json({ success: true, logs: global.recentLogs || [] });
@@ -1673,6 +1649,4 @@ router.get('/owner/logs/:filename', ensureAuthenticated, ensureBotOwner, (req, r
     }
 });
 
-=======
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
 module.exports = router;
