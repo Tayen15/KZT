@@ -28,15 +28,6 @@ module.exports = {
 			return;
 		}
 
-<<<<<<< HEAD
-
-=======
-		// Check if command is globally enabled (skip for owner)
-		if (interaction.user.id !== OWNER_ID) {
-			const isEnabled = await checkCommandEnabled(interaction);
-			if (!isEnabled) return;
-		}
->>>>>>> 6a9d0ee6d88ccf950457f7efca7e22143f99d123
 
 		if (command.ownerOnly && interaction.user.id !== OWNER_ID) {
 			return interaction.reply({ content: 'This command is restricted to the bot owner.', flags: MessageFlags.Ephemeral });
