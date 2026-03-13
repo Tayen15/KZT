@@ -16,9 +16,9 @@ router.get('/health', (req, res) => {
     }
 
     res.json({
-        status: client.isReady() ? 'online' : 'offline',
+        status: client.uptime ? 'online' : 'offline',
         uptime: client.uptime,
-        ping: client.ws.ping,
+        ping: client.ws?.ping,
         timestamp: new Date().toISOString()
     });
 });
@@ -1218,8 +1218,14 @@ router.get('/owner/servers/:guildId', ensureAuthenticated, ensureBotOwner, async
             return res.status(404).json({ success: false, error: 'Guild not found' });
         }
 
-        // Fetch all members if not cached
-        await guild.members.fetch();
+        // Fetch owner info if not cached (avoids rate limit from fetching all members)
+        if (!guild.members.cache.has(guild.ownerId)) {
+            try {
+                await guild.members.fetch(guild.ownerId);
+            } catch (err) {
+                console.warn(`[API] Rate limit/Error fetching owner for guild ${guildId}:`, err.message);
+            }
+        }
 
         // Get server info
         const serverInfo = {
@@ -1272,8 +1278,16 @@ router.get('/owner/servers/:guildId/members', ensureAuthenticated, ensureBotOwne
             return res.status(404).json({ success: false, error: 'Guild not found' });
         }
 
-        // Fetch all members if not cached
-        await guild.members.fetch();
+        // Try to fetch members if cache isn't fully populated, but handle rate limits
+        try {
+            if (guild.members.cache.size < guild.memberCount) {
+                // If it's a huge guild, this still might hit intents/limits or take long
+                // but at least we catch the GatewayRateLimitError
+                await guild.members.fetch({ time: 10000 });
+            }
+        } catch (err) {
+            console.warn(`[API] Rate limit/Time out fetching members for ${guildId}, using cache.`, err.message);
+        }
 
         // Get all members
         let members = Array.from(guild.members.cache.values());
