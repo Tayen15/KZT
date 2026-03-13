@@ -1,11 +1,11 @@
 const { getLofiSessions } = require('../utils/lofiStorage');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior, StreamType } = require('@discordjs/voice');
 
-const STREAM_URL = 'https://stream-157.zeno.fm/0r0xa792kwzuv?zt=eyJhbGciOiJIUzI1NiJ9.eyJzdHJlYW0iOiIwcjB4YTc5Mmt3enV2IiwiaG9zdCI6InN0cmVhbS0xNTcuemVuby5mbSIsInJ0dGwiOjUsImp0aSI6IkVwRE53VEJIVGNDY0RJTmlpUzlRb1EiLCJpYXQiOjE3NDY4NzU2NTYsImV4cCI6MTc0Njg3NTcxNn0.A8kS0ZSXDoVvPX_gOCz2DJa0slpoJ2jt_7TryS5EKoo&zt=';
+const STREAM_URL = 'http://stream.zeno.fm/0r0xa792kwzuv';
 const RECONNECT_INTERVAL = 30000; // 30 detik
 
 module.exports = async (client) => {
-     const sessions = await getLofiSessions();     
+     const sessions = await getLofiSessions();
 
      if (!sessions || sessions.length === 0) {
           console.log('[LofiReconnect] No active lofi sessions to reconnect');
@@ -19,12 +19,12 @@ module.exports = async (client) => {
                if (!channel || channel.type !== 2) continue;
 
                const resource = createAudioResource(STREAM_URL, {
-                    inlineVolume: true
+                    inputType: StreamType.Arbitrary,
+                    inlineVolume: false
                });
-               resource.volume.setVolume(0.5);
-               
+
                resource.playStream.on('error', (err) => {
-                    console.error(`❌ [LofiReconnect] Stream error (${guildId}):`, err.message);
+                    console.error('❌ [LofiReconnect] Stream error:' + err.message);
                });
 
                const player = createAudioPlayer({
@@ -34,7 +34,7 @@ module.exports = async (client) => {
                });
 
                player.on('error', (err) => {
-                    console.error(`❌ [LofiReconnect] Player error (${guildId}):`, err.message);
+                    console.error('❌ [LofiReconnect] Player error:' + err.message);
                });
 
                player.play(resource);
@@ -52,13 +52,12 @@ module.exports = async (client) => {
                     try {
                          const status = player.state.status;
                          const res = await fetch(STREAM_URL, { method: 'HEAD' });
-               
+                         
                          if (status !== AudioPlayerStatus.Playing || !res.ok) {
-               
                               const newResource = createAudioResource(STREAM_URL, {
-                                   inlineVolume: true
+                                   inputType: StreamType.Arbitrary,
+                                   inlineVolume: false
                               });
-                              newResource.volume.setVolume(0.5);
                               player.play(newResource);
                          }
                     } catch (err) {
@@ -66,9 +65,9 @@ module.exports = async (client) => {
                     }
                }, RECONNECT_INTERVAL);
 
-               console.log(`[LofiReconnect] Reconnected to ${guild.name} - #${channel.name}`);
+               console.log('[LofiReconnect] Reconnected to ' + guild.name + ' - #' + channel.name);
           } catch (err) {
-               console.error(`[LofiReconnect] Error on ${guildId}:`, err.message);
+               console.error('[LofiReconnect] Error on ' + guildId + ':', err.message);
           }
      }
 };
